@@ -39,4 +39,5 @@ Some Basics about JesFs:
 - Easy to use with a Standard API like “fopen” “fclose” “fread” “fwrite”, …
 - Strictly taylored to Ultra-Low-Power Embedded Systems.
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone (JesFs was originally developed on a CC1310 with TI-RTOS).
-- Sample applications für the TI-Launchpad CC13xx/26xx and others
+- Sample applications für the TI-Launchpad CC13xx/26xx and others (see JesFs_Test.pdf)
+
