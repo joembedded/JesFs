@@ -1,15 +1,17 @@
 # JesFs - Jo's Embedded Serial File System 
-**for Standard Serial NOR-Flash**
+**for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
 Embedded Device (not something “big” like an Embedded Linux, but something 
 that can run with small batteries for years): it is commonly integrated 
-“somewhere in the code”. Difficult to change! But if the language data is in files, 
-changes are easy. Same for graphics, setups, everything… 
+“somewhere in the code”.  
+Difficult to change! But if the language data is in files, 
+changes are easy. Same for graphics, setups, everything…
 It even allows to change the firmware on the Embedded Device from many different sources!
 
 Think of Embedded Devices, that even can get their latest firmware by themselves! E.g. over 
-WiFi, Mobile Internet, Bluetooth, … Suddenly all options are open! And if you have concerns about 
+WiFi, Mobile Internet, Bluetooth, Uart, Radio-Link, …  
+Suddenly all options are open! And if you have concerns about 
 the security: don’t worry: problem already solved, as you’ll see later..
 
 The main problem for “very small devices” – until now – was the “File System”: 
@@ -32,6 +34,7 @@ Some Basics about JesFs:
 
 - Ultra-Small RAM and code footprint: can be used on the smallest MCUs with only 8kB program memory or less (like the famous MSP430-series, almost all kind of 32-Bit ARM cores (M0, M3, M4, ….)). Only 200 bytes of RAM are sufficient!
 - Completely “Open Source” and written in Standard C.
+- Works with Serial NOR-Flash from **8kB to 16MB**, but could also be used with CPU-internal NOR-Flash
 - Works hand-in-hand with the Ultra-Small JesFsBoot Secure bootloader (requires less than 8kB on standard ARM cores, including an AES-128 encryption engine for reliable Over-the-Air-Updates (“OTA”)).
 - Includes optimised Wear Leveling (for maximum life of the memory).
 - A special mode was added to allow millions of write cycles, especially for data collection event reports and journaling aplications.
