@@ -1,8 +1,6 @@
 /* my_uart.c
 * Simple printf/gets-replacement for CC13xx etc.. 
 * TI-RTOS
-*
-* (C)2018 www.joembedded.de
 */
 
 /* For usleep() */
@@ -33,13 +31,15 @@
 //#define UART_TIMEOUT_MSEC 10000	// If defined, gets() returns after Idle Time - Here: 10000 = 10 sec
 
 /**** my_printf: printf-Wrapper ****/
-static UART_Handle def_uart; // Handler
+static UART_Handle def_uart;
 
 void my_putchar(char c){
     UART_write(def_uart,&c,1);
 }
 
-/* Dont know if the 'outbuf' needs to be static, but I guess TI-RTOS copies it */
+/* Mann weiss nicht genau, ob der Puffer dynamisch sein darf,
+* wahrscheinlich kopiert ihn TI-RTOS vorher weg.
+* Bei Problemen: statisch machen... */
 void my_printf(char* fmt, ...){
 	/*static*/ char outbuf[MAX_UART_OUT+1]; // Auf maximale Laenge aufpassen!
     size_t ulen;
@@ -51,6 +51,7 @@ void my_printf(char* fmt, ...){
 }
 
 // String holen mit Timeout vom init()
+
 int16_t my_gets(char* input, int16_t max_uart_in){ 
     int16_t idx=0;
     int32_t res;
@@ -59,29 +60,27 @@ int16_t my_gets(char* input, int16_t max_uart_in){
         res=UART_read(def_uart, &c,1);
         if(res>0){
             if(c=='\n' || c=='\r') break;    // NL CR oder was auch immer
-            else if(c==8){	// Backspace
-               if(idx>0){
-                 idx--;
-#ifdef ECHO     // If defined Echo Input, DEL needs 3 chars
-				 UART_write(def_uart, &c,1);
-				 c=' ';
-                 UART_write(def_uart, &c,1);
-				 c=8;
-				 UART_write(def_uart, &c,1);
-#endif
-               }
-            }else if(c>=' ' && c<128 && idx<max_uart_in){
-				input[idx++]=c;
-#ifdef ECHO   // If defined Echo Input
+            else if(c==8 && idx>0){	// Backspace
+                idx--;
+#ifdef ECHO  
+				UART_write(def_uart, &c,1); // ECHO
+				c=' ';
                 UART_write(def_uart, &c,1);
+				c=8;
+				UART_write(def_uart, &c,1);
+#endif
+			}else if(c>=' ' && c<128 && idx<max_uart_in){
+				input[idx++]=c;
+#ifdef ECHO  
+                UART_write(def_uart, &c,1); // ECHO
 #endif
 				}
         }else{
-            idx=0;  // No Input..
+            idx=0;  // Nix eingegeben
             break;
         }
     }
-    input[idx]=0;   // Terminate String
+    input[idx]=0;   // Term.
     return idx;
 }
 
@@ -99,14 +98,14 @@ int16_t my_uart_open(void){
     uartParams.readEcho = UART_ECHO_OFF;
     uartParams.baudRate = 115200;   // <--- 115kBd
 
-/*** Enable for Callback
+/*** Enablen fuer Callback
     uartParams.readMode = UART_MODE_CALLBACK;
     uartParams.readCallback = _my_uart_read_cb;
 ****/
 #if UART_TIMEOUT_MSEC
-	uartParams.readTimeout = UART_TIMEOUT_MSEC*100; // Systicks, means 10usec/Tick
+	uartParams.readTimeout = UART_TIMEOUT_MSEC*100; // Systicks, also 10usec/Tick
 #endif
-    def_uart = UART_open(Board_UART0, &uartParams); // Closed never...
+    def_uart = UART_open(Board_UART0, &uartParams); // Close fehlt noch...
     if(!def_uart) return -1;   // Watchdog will kill
     return 0; // OK
 }
