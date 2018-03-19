@@ -2,7 +2,7 @@
 
 Just think of very simple things like language data: on a “very small” 
 Embedded Device (not something “big” like an Embedded Linux, but something 
-than can run with small batteries for years): it is commonly integrated 
+that can run with small batteries for years): it is commonly integrated 
 “somewhere in the code”. Difficult to change! But if the language data is in files, 
 changes are easy. Same for graphics, setups, everything… 
 It even allows to change the firmware on the Embedded Device from many different sources!
