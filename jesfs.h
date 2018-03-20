@@ -4,9 +4,13 @@
 * JesFs - Jo's Embedded Serial File System
 * Tested on Win and TI-RTOS CC1310 Launchpad
 *
-* (C) joembedded@gmail.com 2018
+* (C)2018 joembedded@gmail.com - www.joembedded.de
+*
+* --------------------------------------------
 * Please regard: This is Copyrighted Software!
-* It may be used for education or non-commercial use, but without any warranty!
+* --------------------------------------------
+*
+* It may be used for education or non-commercial use, and without any warranty!
 * For commercial use, please read the included docu and the file 'license.txt'
 *******************************************************************************/
 
@@ -44,6 +48,9 @@
 -130: Try to write to (unclosed) file in RAW with unknown end position
 -131: Sector corrupted: Empty marked sector not empty
 -132: File is empty
+-133: Rename not possible with Files open as READ or RAW
+-134: Rename requires an empty File as new Filename
+-135: Both files must be open for Rename
  */
 
 #ifdef __cplusplus
@@ -68,7 +75,6 @@ extern "C"{
 #define MACRONIX_MANU_TYP    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
 
 //------------------- Area for User Settings END -------------------------------
-
 
 #define FNAMELEN 25  // maximum filename len (Byte 26 must be 0, as in regular strings)...
 
@@ -115,9 +121,52 @@ typedef struct{
 	uint8_t  disk_flags;    // file flags on disk´(written by fs_close)
 } FS_STAT;
 
+// Standard sizes for this implementation, see docu
+#define SF_SECTOR_PH 4096   // SFlash-Physical Sector in Bytes
+#define SF_BUFFER_SIZE_B   128 // 32 LONGS
+// Working Buf Flash
+typedef union{
+    uint8_t u8[SF_BUFFER_SIZE_B];
+    uint16_t u16[SF_BUFFER_SIZE_B/2];
+    uint32_t u32[SF_BUFFER_SIZE_B/4];
+}  SF_BUFFER;
+
+
+// Structure, describing the Flash
+typedef struct{
+    // -- Ausgefuellt von Interpret_ID --
+    // z.B.
+    // M25P40:     512kbB Manufacturer:20 Type:20 Density:13 ! ATTENTEION: No 4k-Ops, hence: not useabale for JesFs - > NotOK
+    // MX25R8035:  1MByte Manufacturer:C2 Type:28 Density:14 -> Ok, tested
+    // MX25R6435F: 8MByte Manufacturer:C2 Type:28 Density:17 -> Ok (should work)
+    // MT25QL128ABA 16Byte Manufacturer:20 Type:BA Density:18 -> Ok (should work)
+    // etc..
+
+    uint32_t identification;
+    uint32_t total_flash_size;    // Max. available space. Here up to 2GB possible
+
+    // -- jesfs Header,
+    // Init-Infos
+    uint32_t lusect_adr;
+    uint32_t available_disk_size;    // Available Disk space in Bytes ('todelete' or echt free)
+
+    uint16_t files_used;    // Used Header Sectors
+    uint16_t files_active;    // Active files (Used-Active=Deleted)
+
+    uint16_t sectors_todelete;  // Counts in 1, only informative
+    uint16_t sectors_clear;   // Counts in 1, only informative
+    uint16_t sectors_unknown;  // Counts in 1, only informative. Shouls be zero...
+
+    // Internal Buffer. Should be at least 64 Bytes. Default: 128 Bytes
+    SF_BUFFER databuf;
+} SFLASH_INFO;
+
+extern SFLASH_INFO sflash_info; //Describes Flash
+
 //-------------------- HighLevel Functions --------------------------
 int16_t fs_start(uint8_t mode);
 void fs_deepsleep(void);
+
 int16_t fs_format(uint32_t f_id);
 int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz);
 int16_t fs_rewind(FS_DESC *pdesc);
@@ -125,8 +174,10 @@ int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags);
 int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len);
 int16_t fs_close(FS_DESC *pdesc);
 int16_t fs_delete(FS_DESC *pdesc);
-int16_t fs_info(FS_STAT *pstat, uint16_t fno );
+int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc);
 uint32_t fs_get_crc32(FS_DESC *pdesc);
+
+int16_t fs_info(FS_STAT *pstat, uint16_t fno);
 
 #ifdef __cplusplus
 }

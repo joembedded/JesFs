@@ -4,9 +4,13 @@
 * The following parts are only relevant for
 * the (internal) medium/low level drivers
 *
-* (C) joembedded@gmail.com 2018
+* (C)2018 joembedded@gmail.com - www.joembedded.de
+*
+* --------------------------------------------
 * Please regard: This is Copyrighted Software!
-* It may be used for education or non-commercial use, but without any warranty!
+* --------------------------------------------
+*
+* It may be used for education or non-commercial use, and without any warranty!
 * For commercial use, please read the included docu and the file 'license.txt'
 *******************************************************************************/
 
@@ -20,11 +24,8 @@ extern "C"{
 // #define DEBUG_FORCE_MINIDISK_DENSITY 0x0F // (1<<x), but >= 2 Sectors, here 0xF: 32kB = 8 Sectors
 
 #define MIN_DENSITY 0x0D   	// 0x13: 512k, smaller doesn not make sense, except for tests, 0x0D is the minimum
-
 #define MAX_DENSITY 0x18    // 0x18: 16 MB is the maximum for 3-byte addressed Flash. (But up to 2GB is possible)
 
-// Standard-Groesse, auf den SW in dieser Implmenentierung angepasst ist, see Docu
-#define SF_SECTOR_PH 4096   // SFlash-Physical Sektor in Bytes
 
 // Header eines jede Sektors
 #define HEADER_SIZE_L   3  // alo 12 Bytes
@@ -34,76 +35,18 @@ extern "C"{
 
 //------------------- Internal JesFS Functions ------------------------
 
-/* HEADER eines jeden Sektors:
-* MAGIC/USAGE - USAGE
-* OWNER
-* NEXT
-*
-* Aufbau Header SektorenN und Sekto0
-* USAGE: 0: Zum Loeschen freigegeben, FFFFFFFF: komplett frei, ansonsten belegt
-*/
-
-/* Header am Dateianfang (nur in Sektoren SECTOR_MAGIC_HEAD_xxx)
- * LEN     Nach Anlage FFFFFFFF, wird erst ggf. bei CLOSE geschrieben
- * CRC32   Nach Anlage FFFFFFFF
- * DATEINAME[FNAMELEN]
- * FLAGS_OPEN         Flags bei Erstellung
- * FLAGS_MANAGEMENT   Verwaltungsflags (init mit FF)
- * (Danach die Dateidaten...)
- */
-
 #define HEADER_MAGIC 				0x4673654A   //'JesF'
-#define SECTOR_MAGIC_HEAD_ACTIVE    0xFFFF293A  //':)': Belegter Sektor (Dateianfang AKTIV), 0; ToDelete, FFFFFFFF: Frei
-#define SECTOR_MAGIC_HEAD_DELETED   0xFFFF2130  //'0!': Belegter Sektor (Dateianfang inaktiv)
-#define SECTOR_MAGIC_DATA           0xFFFF5D5B  //'[]': Belegter Sektor (Daten)
-#define SECTOR_MAGIC_TODELETE       0xFFFF4040  // '@@' Freigegebener Sektor (Daten)
+#define SECTOR_MAGIC_HEAD_ACTIVE    0xFFFF293A
+#define SECTOR_MAGIC_HEAD_DELETED   0xFFFF2130
+#define SECTOR_MAGIC_DATA           0xFFFF5D5B
+#define SECTOR_MAGIC_TODELETE       0xFFFF4040
 
-// Zum Verwalten
+// Easy Access B W L
 typedef union{
 	uint8_t     u8[4];
 	uint16_t    u16[2];
 	uint32_t    u32;
 } SF_LONGWORDBYTE;  // Structure for byte/word/long access
-
-#define SF_BUFFER_SIZE_B   128 // 32 LONGS
-// Puffer fuers Flash
-typedef union{
-	uint8_t u8[SF_BUFFER_SIZE_B];
-	uint16_t u16[SF_BUFFER_SIZE_B/2];
-	uint32_t u32[SF_BUFFER_SIZE_B/4];
-}  SF_BUFFER;
-
-
-// Struktur, die das Flash beschreibt.
-typedef struct{
-	// -- Ausgefuellt von Interpret_ID --
-	// z.B.
-	// M25P40:     512kbB Manufacturer:20 Type:20 Density:13 ! Achtung keine 4k-Ops, daher hier NICHT verwendbar - > NotOK
-	// MX25R8035:  1MByte Manufacturer:C2 Type:28 Density:14 -> Ok, tested
-	// MX25R6435F: 8MByte Manufacturer:C2 Type:28 Density:17 -> Ok (should work)
-	// MT25QL128ABA 16Byte Manufacturer:20 Type:BA Density:18 -> Ok (should work)
-	// etc..
-
-	uint32_t identification;
-	uint32_t total_flash_size;    // Maximal verfuegbarer Platz. Hier bis 2GB verwaltbar.
-
-	// -- jesfs Header,
-	// Init-Infos
-	uint32_t lusect_adr;    // Adresse des letzten verwendetn Sektors, der naechste freie kommt danach
-	uint32_t available_disk_size;    // Soviel Platz ist auf Dist noch frei (todelete oder echt free)
-
-	uint16_t files_used;    // Zaehlt in 1 Ben. bei open
-	uint16_t files_active;    // Zaehlt in 1, rein informativ
-
-	uint16_t sectors_todelete;  // Zaehlt in 1, rein informativ
-	uint16_t sectors_clear; // Zaehlt in 1, rein informativ
-	uint16_t sectors_unknown;  // Zaehlt in 1, rein informativ
-
-	// Puffer fuer Sektorn die ersten HEADER_SIZE_L Longs sind reserviert fuer den gerade bearbeiteten Sektor
-	SF_BUFFER databuf;     // mind. so gross, dass Dateianfang reinpasst
-} SFLASH_INFO;
-
-extern SFLASH_INFO sflash_info; // Beschreibt das Flash
 
 //------------------- LowLevel SPI Functions Depending on Hardware! -------
 void sflash_wait_usec(uint32_t usec);
