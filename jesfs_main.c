@@ -44,7 +44,6 @@
  #include <ti/drivers/Watchdog.h>
 #endif
 
-
 /* Board Header file */
 #include "Board.h"
 
@@ -54,7 +53,7 @@
 
 /* ----------------------- Globals ---------------------------- */
 uint8_t sbuffer[256]; // Test buffer
-FS_DESC fs_desc;
+FS_DESC fs_desc, fs_desc_b; // _b for rename etc..
 FS_STAT fs_stat;
 
 #ifdef USE_WATCHDOG
@@ -240,6 +239,15 @@ void *mainThread(void *arg0){
             case 'z':
                my_printf("'z' CRC32: Disk:%x, Run:%x\n",fs_get_crc32(&fs_desc),fs_desc.file_crc32);
                break;
+
+            case 'n': // Rename (Open) File to
+                my_printf("'n' Rename File to '%s'\n",pc); // rename also allows changing Flags (eg. Hidden or Sync)
+                i=SF_OPEN_CREATE|SF_OPEN_WRITE;  // ensures new File is avail. and empty
+                if(fs_desc.open_flags&SF_OPEN_CRC) i|= SF_OPEN_CRC; // Optionally Take CRC to new File
+                res=fs_open(&fs_desc_b,pc,i); // Must be a new name (not the same)
+                if(!res) res=fs_rename(&fs_desc,&fs_desc_b);
+                my_printf("Rename Res:%d\n",res);
+                break;
 
             case 'q':    // Quit: System Reset.
                 my_printf("'q' Exit in 3 secs...\n");
