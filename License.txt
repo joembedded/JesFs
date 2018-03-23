@@ -1,0 +1,23 @@
+* ------------------------------------------------------
+* (C)2018 joembedded@gmail.com - www.joembedded.de
+* ------------------------------------------------------
+*
+
+--- License of "Fair Use" ---
+
+I designed this sofware, because I required it for own use.
+Hence I tried to make it as stable and reliable as possible 
+and necessary for the designated applications (which normally are
+for the scientific or industrial market).
+
+This software may be used as "Fair Use" license.
+This means: everybody cany use it for free under the following conditions:
+
+1.) As long as it is used for education or non-commercial use.
+2.) I give no warranty for this software! Using it is at your own risk!
+
+If you want to use the software in commercial products, please contact me.
+
+***
+
+
