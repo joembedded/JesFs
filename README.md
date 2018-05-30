@@ -60,5 +60,6 @@ Some Basics about JesFs:
   void fs_deepsleep(void);
 
   int16_t fs_info(FS_STAT *pstat, uint16_t fno);
-  ```
+  void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
+```
 
