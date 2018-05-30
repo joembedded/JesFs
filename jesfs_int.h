@@ -1,6 +1,8 @@
 /*******************************************************************************
 * JesFs_int.h
 *
+* JesFs - Jo's Embedded Serial File System
+*
 * The following parts are only relevant for
 * the (internal) medium/low level drivers
 *
@@ -65,6 +67,7 @@ void fs_strcpy(char *d, char *s);
 void fs_memset(uint8_t *p, uint8_t v, uint32_t n);
 int16_t fs_strcmp(char *s1, char *s2);
 uint32_t fs_track_crc32(uint8_t *pdata, uint32_t wlen, uint32_t crc_run);
+uint32_t fs_get_secs(void); // Unix-Secs
 
 //------------------- MediumLevel SPI Functions ------------------------
 void sflash_bytecmd(uint8_t cmd, uint8_t more);

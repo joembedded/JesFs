@@ -1,6 +1,8 @@
 /* my_uart.h
 * Simple printf/gets-replacement for CC13xx etc.. 
 * TI-RTOS
+*
+* (C)2018 www.www.joembedded.de
 */
 
 // Globals/Setup

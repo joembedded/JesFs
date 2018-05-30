@@ -1,8 +1,10 @@
 /*******************************************************************************
-* JesFs.h: Header Files for JesFs
+* JesFs.h: Header Files for JesFs and JeDi
 *
 * JesFs - Jo's Embedded Serial File System
-* Tested on Win and TI-RTOS CC1310 Launchpad
+* JeDi  - Jo's Embedded Disk Inside
+*
+* Tested on Win and TI-RTOS CC131x Launchpad
 *
 * (C)2018 joembedded@gmail.com - www.joembedded.de
 *
@@ -51,6 +53,10 @@
 -133: Rename not possible with Files open as READ or RAW
 -134: Rename requires an empty File as new Filename
 -135: Both files must be open for Rename
+-136: Erase Sector failed
+-137: Write to Flash Failed
+-138: Verify Failed
+-138: Voltage too low for Write/Erase
  */
 
 #ifdef __cplusplus
@@ -76,7 +82,7 @@ extern "C"{
 
 //------------------- Area for User Settings END -------------------------------
 
-#define FNAMELEN 25  // maximum filename len (Byte 26 must be 0, as in regular strings)...
+#define FNAMELEN 21  // maximum filename len (Byte 22 must be 0, as in regular strings)...
 
 // Startflags (fs_start())
 #define FS_START_NORMAL   0 // ca. 20 msec per MB on an empty Flash
@@ -90,12 +96,13 @@ extern "C"{
 #define SF_OPEN_WRITE     4 // open for writing
 #define SF_OPEN_RAW       8 // just open
 #define SF_OPEN_CRC    	  16 // if set: calculate CRC32 for file while reading/writing
-#define SF_OPEN_ESC_MODE  32 // *** Reserved for >V1.x, see Docu ***
+#define SF_XOPEN_UNCLOSED  32 // File is/was not closed. Set (informative) by fs_stat() (disc_flags) or fs_open (open_flags)
+
 // The following Flags are not relevant for the Filesystem, but for external cccess
 #define SF_OPEN_EXT_SYNC   64 // File should be synced to external filesystem
 #define SF_OPEN_EXT_HIDDEN 128 // File is normally NOT accessible from outside (e.g. for KeyStore-Files, etc..)
 
-// Flags for Statistic
+// Flags for File-List
 #define FS_STAT_ACTIVE 1
 #define FS_STAT_INACTIVE 2
 #define FS_STAT_UNCLOSED 4
@@ -107,18 +114,20 @@ typedef struct{
 	uint32_t    file_pos; // end pos is the current file len
 	uint32_t    file_len;  // len after open (set by fs_open)
 	uint32_t    file_crc32; // running CRC32 according ISO 3309, FFFFFFFF if not used (only with SF_OPEN_CRC)
+	uint32_t    file_ctime; // Creation Time of the file UNIX-Time in seconds since 1.1.1970, 0:00:00
 
 	uint16_t    _sadr_rel;   // Hidden, relative
-	uint8_t     open_flags;  // current file flags (set by fs_open)
+	uint8_t     open_flags;  // current file flags (set by fs_open) OR  file_flags on disk OR (opt) SF_XOPEN_UNCLOSED
 } FS_DESC;
 
 // Statistic descriptor
 typedef struct{
-	char fname[FNAMELEN+1]; // Max. filenam len V1.0 (25+0x00)
+	char fname[FNAMELEN+1]; // Max. filenam len V1.0 (21+0x00)
+	uint32_t file_ctime; // Creation Time of the file UNIX-Time in seconds since 1.1.1970, 0:00:00
 	uint32_t file_len;
 	uint32_t file_crc32; // CRC32 in Flash for this file, according ISO 3309, FFFFFFFF if not used (only with SF_OPEN_CRC)
 	uint32_t _head_sadr;   // Hidden, head of file
-	uint8_t  disk_flags;    // file flags on disk´(written by fs_close)
+	uint8_t  disk_flags;    // file flags on disk´(written by fs_close) OR (opt) SF_XOPEN_UNCLOSED
 } FS_STAT;
 
 // Standard sizes for this implementation, see docu
@@ -126,16 +135,16 @@ typedef struct{
 #define SF_BUFFER_SIZE_B   128 // 32 LONGS
 // Working Buf Flash
 typedef union{
-    uint8_t u8[SF_BUFFER_SIZE_B];
-    uint16_t u16[SF_BUFFER_SIZE_B/2];
-    uint32_t u32[SF_BUFFER_SIZE_B/4];
+	uint8_t u8[SF_BUFFER_SIZE_B];
+	uint16_t u16[SF_BUFFER_SIZE_B/2];
+	uint32_t u32[SF_BUFFER_SIZE_B/4];
 }  SF_BUFFER;
 
 
 // Structure, describing the Flash
 typedef struct{
-    // -- Ausgefuellt von Interpret_ID --
-    // z.B.
+	// -- Ausgefuellt von Interpret_ID --
+	// z.B.
     // M25P40:     512kbB Manufacturer:20 Type:20 Density:13 ! ATTENTEION: No 4k-Ops, hence: not useabale for JesFs - > NotOK
     // MX25R8035:  1MByte Manufacturer:C2 Type:28 Density:14 -> Ok, tested
     // MX25R6435F: 8MByte Manufacturer:C2 Type:28 Density:17 -> Ok (should work)
@@ -144,6 +153,7 @@ typedef struct{
 
     uint32_t identification;
     uint32_t total_flash_size;    // Max. available space. Here up to 2GB possible
+	uint32_t creation_date; // UNIX-Time in seconds since 1.1.1970, 0:00:00 (Time when formated)
 
     // -- jesfs Header,
     // Init-Infos
@@ -153,9 +163,12 @@ typedef struct{
     uint16_t files_used;    // Used Header Sectors
     uint16_t files_active;    // Active files (Used-Active=Deleted)
 
-    uint16_t sectors_todelete;  // Counts in 1, only informative
-    uint16_t sectors_clear;   // Counts in 1, only informative
-    uint16_t sectors_unknown;  // Counts in 1, only informative. Shouls be zero...
+#ifdef JSTAT
+	 uint16_t sectors_todelete;  // Counts in 1, not really required, just for statistics
+	 uint16_t sectors_clear;   // Counts in 1, not really required, just for statistics
+	 uint16_t sectors_unknown;  // Counts in 1, Should be zero... Bot really required, just for statistics
+#endif
+
 
     // Internal Buffer. Should be at least 64 Bytes. Default: 128 Bytes
     SF_BUFFER databuf;
@@ -163,11 +176,21 @@ typedef struct{
 
 extern SFLASH_INFO sflash_info; //Describes Flash
 
+// required by fs_sec1970_to_date()
+typedef struct{ // Structure for a full date (readable)
+	uint8_t sec;
+	uint8_t min;
+	uint8_t h;
+	uint8_t d;
+	uint8_t m;
+	uint16_t a; // 1970 - 2100+
+} FS_DATE;
+
 //-------------------- HighLevel Functions --------------------------
 int16_t fs_start(uint8_t mode);
 void fs_deepsleep(void);
 
-int16_t fs_format(uint32_t f_id);
+int16_t fs_format(void);
 int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz);
 int16_t fs_rewind(FS_DESC *pdesc);
 int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags);
@@ -178,6 +201,7 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc);
 uint32_t fs_get_crc32(FS_DESC *pdesc);
 
 int16_t fs_info(FS_STAT *pstat, uint16_t fno);
+void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 
 #ifdef __cplusplus
 }
