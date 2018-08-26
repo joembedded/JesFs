@@ -153,7 +153,7 @@ typedef struct{
 
     uint32_t identification;
     uint32_t total_flash_size;    // Max. available space. Here up to 2GB possible
-	uint32_t creation_date; // UNIX-Time in seconds since 1.1.1970, 0:00:00 (Time when formated)
+	uint32_t creation_date; // UNIX-Time in seconds since 1.1.1970, 0:00:00 (Time when formated) 0x0xFFFFFFFF not allowed!
 
     // -- jesfs Header,
     // Init-Infos

@@ -173,7 +173,7 @@ void *mainThread(void *arg0){
 	my_printf("\n*** JesFs *Demo* V1.0 "__TIME__ " " __DATE__ " ***\n\n");
 	my_printf("(C)2018 joembedded@gmail.com - www.joembedded.de\n\n");
 
-#ifdef WATCHDOG
+#ifdef USE_WATCHDOG
 	my_printf("Watchdog: ON\n");
 #else
     my_printf("Watchdog: OFF\n");
@@ -181,12 +181,11 @@ void *mainThread(void *arg0){
 
 #ifdef CC1310_LAUNCHXL
     my_printf("Board: CC1310_LAUNCHXL\n");
-#elif defined(BTRACK)
-    my_printf("Board: BTrack(V1)\n");
+#elif defined(LTRAX)
+    my_printf("Board: LTRAX (V1)\n");
 #else
  #error "Unknown Board"
 #endif
-
 
 
 	my_printf("Filesystem Init:%d\n",fs_start(FS_START_NORMAL));
@@ -197,7 +196,6 @@ void *mainThread(void *arg0){
 	res=ll_read_vdisk("default.disk",0);  // Erstmal unformatiert
 	my_printf("Res: %d, Init:%d\n",res, fs_start(FS_START_NORMAL));
 #endif
-
 
 	while (1) {
 		GPIO_toggle(Board_GPIO_RLED);
@@ -421,6 +419,12 @@ void *mainThread(void *arg0){
 			    conv_secs_to_date_sbuffer(asecs);
 			    my_printf("'!': Time: [%s] (%u secs)\n",sbuffer,asecs);
 			    break;
+
+ #ifdef USE_WATCHDOG
+			case '#':   // #RESET is sent by JesFsCon to reset the Board
+			    if(strcmp(input,"#RESET")) break;
+			    SysCtrlSystemReset(); // Up to (TI-RTOS+Debugger) what happens: Reset, Stall, Nirvana, .. See TI docu.
+ #endif
 #endif
 /******************* ONLY TEST **************************************************/
 			default:

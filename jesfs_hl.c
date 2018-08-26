@@ -32,9 +32,12 @@
 
 #ifdef __WIN32__    // We need Unix-Seconds
  #include <time.h>
+ #define my_time_get() time(NULL)
 #else
  #include <ti/sysbios/hal/Seconds.h>
+ #define my_time_get() Seconds_get()
 #endif
+
 
 // Driver designed for 4k-Flash - JesFs
 #if SF_SECTOR_PH != 4096
@@ -68,11 +71,7 @@ int16_t fs_strcmp(char *s1, char *s2){ // Only required for equal(0) or !equal(!
 }
 
 uint32_t fs_get_secs(void){ // Unix-Secs
-#ifdef __WIN32__
-	return time(NULL);
-#else
-	return Seconds_get();
-#endif
+	return my_time_get();   // Macro from above
 }
 
 //------ Date-Routines (carefully tested!)---------------
@@ -222,7 +221,10 @@ int16_t fs_start(uint8_t mode){
 	uint16_t err;
 
 	res=sflash_spi_init();
-	if(res) return res;        // Error 2 User
+	if(res) {
+	    sflash_info.creation_date=0xFFFFFFFF;   // Invalidate Disk
+	    return res;        // Error 2 User
+	}
 
 	// Flash wakeup 
 	sflash_ReleaseFromDeepPowerDown();
@@ -236,6 +238,7 @@ int16_t fs_start(uint8_t mode){
 			return 0;   // Wake only
 		}
 	}
+    sflash_info.creation_date=0xFFFFFFFF;   // Assume Invalid Disk
 
 	res=sflash_interpret_id(id);
 	if(res) return res;
@@ -245,7 +248,8 @@ int16_t fs_start(uint8_t mode){
 
 	if(sflash_info.databuf.u32[0]!=HEADER_MAGIC) return -108;
 	if(sflash_info.databuf.u32[1]!=sflash_info.identification) return -109;
-	sflash_info.creation_date=sflash_info.databuf.u32[2];
+
+	sflash_info.creation_date=sflash_info.databuf.u32[2]; // Creation date must be anyting different from 0xFFFFFFFF
 
 	err=0;
 	sflash_info.available_disk_size=sflash_info.total_flash_size-SF_SECTOR_PH;
@@ -455,7 +459,8 @@ int16_t fs_rewind(FS_DESC *pdesc){
 }
 
 
-/* Open File, if flag GENERATE is set, it will be generated, if already exists, it will be deleted */
+/* Open File, if flag OPEN_CREATE is set, it will be generated, if already exists, it will be deleted
+ * Flag OPEN_RAW will  not delete existing files, even if OPEN_CREATE is set */
 int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags){
 	int16_t res;
 	uint16_t i;
@@ -464,7 +469,7 @@ int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags){
 
 	pdesc->_head_sadr=0;
 	pdesc->file_crc32=0xFFFFFFFF;
-
+	if(sflash_info.creation_date==0xFFFFFFFF) return -108;  // Disk not formatted
 	if(!*pname || fs_strlen(pname)>FNAMELEN) return -110;
 
 	for(i=0;i<sflash_info.files_used;i++){
@@ -612,7 +617,7 @@ int16_t fs_delete(FS_DESC *pdesc){
 }
 
 /* Rename a File. Can also be used to change the File's Management Flags (e.g Hidden, Sync), but not CRC LEN or DATE
-* But always a new name must be used */
+* But always a new name must be used, see docu */
 int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc){
 	uint16_t mlen;
 	uint32_t thdr[6];
