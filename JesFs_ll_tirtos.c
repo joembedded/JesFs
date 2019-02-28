@@ -11,14 +11,12 @@
 * - During SPI select active, the RED Led is on. While waiting, it is toggeling,
 *   so with a small Piezo you can 'hear' and 'see' the file system working ;-)
 *
-* (C)2018 joembedded@gmail.com - www.joembedded.de
+* (C)2019 joembedded@gmail.com - www.joembedded.de
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
 * --------------------------------------------
 *
-* It may be used for education or non-commercial use, and without any warranty!
-* For commercial use, please read the included docu and the file 'license.txt'.
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------

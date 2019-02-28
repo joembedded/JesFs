@@ -9,12 +9,11 @@
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
 * Version: 1.1 / 2.1.2019
+*
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
 * --------------------------------------------
 *
-* It may be used for education or non-commercial use, and without any warranty!
-* For commercial use, please read the included docu and the file 'license.txt'
 *******************************************************************************/
 
 #include <stdint.h>

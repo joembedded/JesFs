@@ -13,8 +13,6 @@
 * Please regard: This is Copyrighted Software!
 * --------------------------------------------
 *
-* It may be used for education or non-commercial use, and without any warranty!
-* For commercial use, please read the included docu and the file 'license.txt'
 *******************************************************************************/
 
 /* List of Errors
