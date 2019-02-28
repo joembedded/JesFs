@@ -8,7 +8,7 @@
 * So more checks are included than theoreticaly necessary.
 *
 *
-* (C)2018 joembedded@gmail.com - www.joembedded.de
+* (C)2019 joembedded@gmail.com - www.joembedded.de
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!

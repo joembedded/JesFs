@@ -6,7 +6,7 @@
 * The following parts are only relevant for
 * the (internal) medium/low level drivers
 *
-* (C)2018 joembedded@gmail.com - www.joembedded.de
+* (C)2019 joembedded@gmail.com - www.joembedded.de
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
@@ -29,10 +29,10 @@ extern "C"{
 #define MAX_DENSITY 0x18    // 0x18: 16 MB is the maximum for 3-byte addressed Flash. (But up to 2GB is possible)
 
 
-// Header eines jede Sektors
+// Header of each sector
 #define HEADER_SIZE_L   3  // alo 12 Bytes
 #define HEADER_SIZE_B   (HEADER_SIZE_L*4)
-// Header am Dateianfang
+// addition header at start of file
 #define FINFO_SIZE_B    36
 
 //------------------- Internal JesFS Functions ------------------------

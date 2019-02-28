@@ -9,7 +9,8 @@
 * So more checks are included than theoreticaly necessary.
 *
 *
-* (C)2018 joembedded@gmail.com - www.joembedded.de
+* (C)2019 joembedded@gmail.com - www.joembedded.de
+* Version: 1.1 / 2.1.2019
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
@@ -20,7 +21,7 @@
 *******************************************************************************/
 
 //#include <stdio.h>
-//#define my_printf printf
+//#define uart_printf printf
 
 /* Required Std. headers */
 #include <stdint.h>
@@ -32,14 +33,13 @@
 
 #ifdef __WIN32__    // We need Unix-Seconds
  #include <time.h>
- #define my_time_get() time(NULL)
+ #define _time_get() time(NULL)
 #else
- #include <ti/sysbios/hal/Seconds.h>
- #define my_time_get() Seconds_get()
+ extern uint32_t _time_get(); // must be declared outside (on CC1310 use either BIOS or AON_RTC
 #endif
 
 
-// Driver designed for 4k-Flash - JesFs
+// Driver designed for 4k-Flash (or larger) - JesFs
 #if SF_SECTOR_PH != 4096
  #error "Phyiscal Sector Size SPIFlash must be 4K"
 #endif
@@ -71,7 +71,7 @@ int16_t fs_strcmp(char *s1, char *s2){ // Only required for equal(0) or !equal(!
 }
 
 uint32_t fs_get_secs(void){ // Unix-Secs
-	return my_time_get();   // Macro from above
+	return _time_get();   // Macro from above
 }
 
 //------ Date-Routines (carefully tested!)---------------
@@ -125,6 +125,7 @@ void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd){
 	pd->sec=asecs;
 }
 
+/* Calculating a CRC32: Also useful for external use */
 #define POLY32  0xEDB88320    // ISO 3309
 uint32_t fs_track_crc32(uint8_t *pdata, uint32_t wlen, uint32_t crc_run){
 	uint8_t j;
@@ -138,7 +139,7 @@ uint32_t fs_track_crc32(uint8_t *pdata, uint32_t wlen, uint32_t crc_run){
 	return crc_run;
 }
 
-int16_t sflash_sadr_invalid(uint32_t sadr){
+static int16_t sflash_sadr_invalid(uint32_t sadr){
 	if(sadr==0xFFFFFFFF) return 0;  // OK
 	if(!sadr) return -1;
 	if(sadr & (SF_SECTOR_PH-1)) return -2; // FATAL
@@ -146,7 +147,7 @@ int16_t sflash_sadr_invalid(uint32_t sadr){
 	return 0; // Ok
 }
 
-int16_t flash_set2delete(uint32_t sadr){
+static int16_t flash_set2delete(uint32_t sadr){
 	int16_t res;
 	uint32_t thdr[3];
 	uint32_t max_sect;
@@ -172,8 +173,8 @@ int16_t flash_set2delete(uint32_t sadr){
 	}
 	return -121;
 }
-
-uint16_t sflash_find_mlen(uint32_t sadr,uint16_t max_sec_rd){
+// Find last used byte index in a sector (max_sec_rd<=SF_SECTOR_PH). Returns 0 is sector is totaly empty (all bytes FF)
+static uint16_t sflash_find_mlen(uint32_t sadr,uint16_t max_sec_rd){
 	uint16_t wlen;
 	uint16_t used_len=max_sec_rd;
 	sadr+=max_sec_rd;
@@ -192,7 +193,7 @@ uint16_t sflash_find_mlen(uint32_t sadr,uint16_t max_sec_rd){
 }
 
 // Copy IntraFlash and Page-Safe
-int16_t flash_intrasec_copy(uint32_t sadr, uint32_t dadr, uint16_t clen){
+static int16_t flash_intrasec_copy(uint32_t sadr, uint32_t dadr, uint16_t clen){
     int16_t res;
     uint16_t blen;
     while(clen){
@@ -229,6 +230,7 @@ int16_t fs_start(uint8_t mode){
 	// Flash wakeup 
 	sflash_ReleaseFromDeepPowerDown();
 	sflash_wait_usec(45);
+    sflash_info.state_flags&=~(STATE_DEEPSLEEP);
 
 	// ID read and get setup
 	id=sflash_QuickScanIdentification();
@@ -340,22 +342,39 @@ int16_t fs_start(uint8_t mode){
 }
 
 /* Set Flash to Ultra-Low-Power mode. Call fs_start(FS_RESTART) to continue/wake */
-void  fs_deepsleep(void){
+int16_t fs_deepsleep(void){
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -140; // Already sleeping, 2.nd command could wake FS again
+    sflash_info.state_flags|=(STATE_DEEPSLEEP);
 	sflash_DeepPowerDown();
+	return 0;
 }
 
-/* Format Filesystem. May require between 30-120 seconds (even more, see Datasheet) for a 512k-16 MB Flash) */
-int16_t fs_format(void){
+/* Format Filesystem. May require between 30-120 seconds (even more, see Datasheet) for a 512k-16 MB Flash) (changed in V1.1) */
+int16_t fs_format(uint8_t fmode){
 	uint32_t sbuf[3];
 	int16_t res;
+	uint32_t sadr;
 
-	if(sflash_WaitWriteEnabled()) return -102; // Wait enabled until OK, Fehler 1:1
-	sflash_BulkErase();
-	if(sflash_WaitBusy(120000)) return -101; // 100 msec evtl. old page, Fehler 1:1
+	if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
+    if(fmode==FS_FORMAT_SOFT){
+        for(sadr=0;sadr<sflash_info.total_flash_size;sadr+=SF_SECTOR_PH){
+            sflash_read(sadr,(uint8_t*)&sbuf,8);   // Read the 8 byte header: Magic and owner (owner for later...)
+            if(sbuf[0]==0xFFFFFFFF){  // Header says: Empty
+                res=sflash_find_mlen(sadr,SF_SECTOR_PH);
+                if(!res) continue;  // yes.
+            } // else if(sbuf[0]==SECTOR_MAGIC_DATA || sbuf[0]==SECTOR_MAGIC_HEAD_ACTIVE){... // reserved for JesFs V1.2, e.g. keep System Files
+            res=sflash_SectorErase(sadr);
+            if(res) return res;
+        }
+    }else if(fmode==FS_FORMAT_FULL){
+        if(sflash_WaitWriteEnabled()) return -102; // Wait enabled until OK, Fehler 1:1
+        sflash_BulkErase();
+        if(sflash_WaitBusy(120000)) return -101; //
+    }else return -139; // Parameter
 
 	sbuf[0]=HEADER_MAGIC;
 	sbuf[1]=sflash_info.identification;
-	sbuf[2]=fs_get_secs();  // Creation Date der Disk
+	sbuf[2]=fs_get_secs();  // Creation Date of Disk is NOW
 
 	res=sflash_SectorWrite(0, (uint8_t*)sbuf, 12);    // Header V1.0
 	if(res) return res;
@@ -364,7 +383,7 @@ int16_t fs_format(void){
 }
 
 
-uint32_t sflash_get_free_sector(void){
+static uint32_t sflash_get_free_sector(void){
 	uint32_t thdr;  
 	uint32_t max_sect;
 	// Some embedded compilers complain about the Division. In fact, it will result in a shift. So it might be ignored
@@ -392,6 +411,7 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz){
 	uint16_t max_sec_rd;
 	uint16_t uc_mlen;
 
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	if(!pdesc->_head_sadr) return -117;
 
 	while(anz){
@@ -420,7 +440,7 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz){
 				if(anz>(uint32_t)uc_mlen) anz=uc_mlen;
 			}
 
-#ifdef SF_RD_TRANSFER_LIMIT
+#ifdef SF_RD_TRANSFER_LIMIT // If defined: limit blocksize of single transfer (e.g. spi-driver buffer limits)
 			if(pdest && max_sec_rd>SF_RD_TRANSFER_LIMIT) max_sec_rd=SF_RD_TRANSFER_LIMIT;
 #endif
 
@@ -467,6 +487,7 @@ int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags){
 	uint32_t sadr=0;
 	uint32_t sfun_adr=0;
 
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	pdesc->_head_sadr=0;
 	pdesc->file_crc32=0xFFFFFFFF;
 	if(sflash_info.creation_date==0xFFFFFFFF) return -108;  // Disk not formatted
@@ -491,11 +512,11 @@ int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags){
 	if(sadr){
 		pdesc->_head_sadr=sadr;
 		pdesc->_wrk_sadr=sadr;
-		pdesc->file_len=sflash_info.databuf.u32[HEADER_SIZE_L+0];
-		if(pdesc->file_len==0xFFFFFFFF) pdesc->open_flags|=SF_XOPEN_UNCLOSED; // informative
-		pdesc->open_flags|=(sflash_info.databuf.u8[HEADER_SIZE_B+34]&(SF_OPEN_EXT_SYNC|SF_OPEN_EXT_HIDDEN));
-		pdesc->file_ctime=sflash_info.databuf.u32[HEADER_SIZE_L+2]; // get file creation time
-		if(flags & (SF_OPEN_READ | SF_OPEN_RAW)) {
+        if(flags & (SF_OPEN_READ | SF_OPEN_RAW)) {
+            pdesc->file_len=sflash_info.databuf.u32[HEADER_SIZE_L+0]; // informative data (only for existing files)
+            if(pdesc->file_len==0xFFFFFFFF) pdesc->open_flags|=SF_XOPEN_UNCLOSED;
+            pdesc->open_flags|=(sflash_info.databuf.u8[HEADER_SIZE_B+34]&(SF_OPEN_EXT_SYNC|_SF_OPEN_RES));
+            pdesc->file_ctime=sflash_info.databuf.u32[HEADER_SIZE_L+2]; // get file creation time
 			return 0;
 		}
 		res=flash_set2delete(sadr);
@@ -541,6 +562,7 @@ int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len){
 	uint32_t wlen;
 	uint32_t newsect;
 
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	if(!pdesc->_head_sadr) return -117;
 	if(pdesc->open_flags & SF_OPEN_RAW){
 		if(pdesc->file_pos!=pdesc->file_len) return -130;
@@ -585,6 +607,7 @@ int16_t fs_close(FS_DESC *pdesc){
 	uint32_t s0adr;
 	uint32_t hinfo[2];
 
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	if(!pdesc->_head_sadr) return -117;
 	if(!(pdesc->open_flags & SF_OPEN_WRITE)) return -118;
 	s0adr=pdesc->_head_sadr;
@@ -601,6 +624,8 @@ int16_t fs_close(FS_DESC *pdesc){
 
 uint32_t fs_get_crc32(FS_DESC *pdesc){
 	uint32_t rd_crc;
+
+	if(sflash_info.state_flags&STATE_DEEPSLEEP) return 0; // Be. values not possible
 	if(!pdesc->_head_sadr) return 0;
 	sflash_read(pdesc->_head_sadr+HEADER_SIZE_B+4,(uint8_t*)&rd_crc,4);
 	return rd_crc;
@@ -608,6 +633,8 @@ uint32_t fs_get_crc32(FS_DESC *pdesc){
 
 int16_t fs_delete(FS_DESC *pdesc){
 	int16_t res;
+
+	if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	if(!pdesc->_head_sadr) return -117;
 	if(pdesc->open_flags & SF_OPEN_WRITE) return -125;
 	res=flash_set2delete(pdesc->_head_sadr);
@@ -623,6 +650,7 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc){
 	uint32_t thdr[6];
 	int16_t res;
 
+    if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	if(!pd_odesc->_head_sadr || !pd_ndesc->_head_sadr) return -135;
 	if(pd_ndesc->open_flags&(SF_OPEN_READ|SF_OPEN_RAW)) return -133;
 	if(pd_ndesc->file_len) return -134;
@@ -656,8 +684,10 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc){
 int16_t fs_info(FS_STAT *pstat, uint16_t fno ){
 	uint32_t sadr,idx_adr;
 	int16_t ret;
+
+	if(sflash_info.state_flags&STATE_DEEPSLEEP) return -141;
 	idx_adr=HEADER_SIZE_B+fno*4;
-	if(idx_adr>SF_SECTOR_PH-4) return -119;
+	if(idx_adr>SF_SECTOR_PH-4) return FS_STAT_INDEX;
 	sflash_read(idx_adr,(uint8_t*)&sadr,4);
 	if(sadr==0xFFFFFFFF) return 0;
 	if(sadr>=sflash_info.total_flash_size) return -115;

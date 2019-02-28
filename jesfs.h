@@ -6,7 +6,8 @@
 *
 * Tested on Win and TI-RTOS CC131x Launchpad
 *
-* (C)2018 joembedded@gmail.com - www.joembedded.de
+* (C)2019 joembedded@gmail.com - www.joembedded.de
+* Version: 1.1 / 2.1.2019
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
@@ -31,7 +32,7 @@
 -111: Too many files, Index full! (ca. 1000 for 4k sectors)
 -112: Sector border violated (before write)
 -113: Flash full! No free sectors available or Flash not formatted
--114: Index corrupted (-> run recover)
+-114: Index corrupted (-> run recover) (or FS in deepsleep (see internal flag STATE_DEEPSLEEP))
 -115: Number out of range Index (fs_stat)
 -116: No active file at this entry (fs_stat)
 -117: Illegal descriptor or file not open
@@ -57,6 +58,9 @@
 -137: Write to Flash Failed
 -138: Verify Failed
 -138: Voltage too low for Write/Erase
+-139: Format parameter
+-140: Command Deepsleep: Filesystem already sleeping (only informative)
+-141: Other Commands: Filesystem sleeping!
  */
 
 #ifdef __cplusplus
@@ -87,8 +91,11 @@ extern "C"{
 // Startflags (fs_start())
 #define FS_START_NORMAL   0 // ca. 20 msec per MB on an empty Flash
 #define FS_START_FAST     1  // ca. 10 msec per MB on an empty Flash, but less checks
-//#define FS_START_PEDANTIC   2 // Reserved for Version >V1.x
+//#define FS_START_PEDANTIC   2 // Reserved for Version >V1.1
 #define FS_START_RESTART  128 // ca. 50 usec if Flash data is already known. Else FS_START_NORMAL
+
+#define FS_FORMAT_FULL  1  // Erases ALL (Bulk Erase) (slow)
+#define FS_FORMAT_SOFT  2  // Erase only non-empty sectors (sometimes faster)
 
 // Flags for (fs_open) files
 #define SF_OPEN_READ      1 // open for read only
@@ -97,15 +104,17 @@ extern "C"{
 #define SF_OPEN_RAW       8 // just open
 #define SF_OPEN_CRC    	  16 // if set: calculate CRC32 for file while reading/writing
 #define SF_XOPEN_UNCLOSED  32 // File is/was not closed. Set (informative) by fs_stat() (disc_flags) or fs_open (open_flags)
-
-// The following Flags are not relevant for the Filesystem, but for external cccess
-#define SF_OPEN_EXT_SYNC   64 // File should be synced to external filesystem
-#define SF_OPEN_EXT_HIDDEN 128 // File is normally NOT accessible from outside (e.g. for KeyStore-Files, etc..)
+#define SF_OPEN_EXT_SYNC   64 // File should be synced to external filesystem, this Flag is not relevant for the Filesystem, but for external access
+#define _SF_OPEN_RES 128    // Reserved for nonvolatile files (for JesFs V1.2)
 
 // Flags for File-List
 #define FS_STAT_ACTIVE 1
 #define FS_STAT_INACTIVE 2
 #define FS_STAT_UNCLOSED 4
+#define FS_STAT_INDEX   128   // Requested Index would be outside of Index (used for Diagnostic)
+
+// Flags for state_flag
+#define STATE_DEEPSLEEP 1   // if set: JesFS in in deep sleep
 
 // Filedescriptor
 typedef struct{
@@ -169,9 +178,9 @@ typedef struct{
 	 uint16_t sectors_unknown;  // Counts in 1, Should be zero... Bot really required, just for statistics
 #endif
 
-
     // Internal Buffer. Should be at least 64 Bytes. Default: 128 Bytes
     SF_BUFFER databuf;
+    uint8_t state_flags;      // Currently only STATE_DEEPSLEEP used, 8Bit (at end of struct)
 } SFLASH_INFO;
 
 extern SFLASH_INFO sflash_info; //Describes Flash
@@ -188,9 +197,9 @@ typedef struct{ // Structure for a full date (readable)
 
 //-------------------- HighLevel Functions --------------------------
 int16_t fs_start(uint8_t mode);
-void fs_deepsleep(void);
+int16_t fs_deepsleep(void);
 
-int16_t fs_format(void);
+int16_t fs_format(uint8_t fmode);
 int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz);
 int16_t fs_rewind(FS_DESC *pdesc);
 int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags);
