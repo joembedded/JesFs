@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System 
+# JesFs - Jo's Embedded Serial File System V1.1
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -20,7 +20,7 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-![JesFs on LTraX](https://github.com/joembedded/module.jpg)
+![JesFs on the LTraX IoT module](https://github.com/joembedded/JesFs/blob/master/module_kl.jpg)
 
 My daily work ist the IoT. Because I did not find any really practical solution, 
 I decided to create my own one. “Robustness”, “Security” and “Small Footprint” 
