@@ -8,9 +8,7 @@
 * especially to the overlaying driver structure.
 *
 * (C) 2019 joembedded@gmail.com
-* Please regard: This is Copyrighted Software!
-* It may be used for education or non-commercial use, but without any warranty!
-* For commercial use, please read the included docu and the file 'license.txt'
+*
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
