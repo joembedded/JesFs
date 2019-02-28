@@ -43,7 +43,7 @@ Some Basics about JesFs:
 - Designed for (almost) all situations, where NOR memories could be used (the ones where only blocks can be deleted (0->1) and only 0 written.
 - Strictly taylored to Ultra-Low-Power Embedded Systems.
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone (JesFs was originally developed on a CC1310 with TI-RTOS).
-- Sample applications for the TI-Launchpad CC13xx/26xx and others (see [JesFs_Test.pdf](https://github.com/joembedded/JesFs/blob/master/JesFs.pdf))
+- Sample applications for the TI-Launchpad CC13xx/26xx and others (see [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
