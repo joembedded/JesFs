@@ -20,8 +20,7 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-This first part covers only the Open Source part of JesFs. 
-The JesFsBoot - Secured Bootloader will follow soon.
+![JesFs on LTraX](https://github.com/joembedded/module.jpg)
 
 My daily work ist the IoT. Because I did not find any really practical solution, 
 I decided to create my own one. “Robustness”, “Security” and “Small Footprint” 
