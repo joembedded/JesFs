@@ -33,9 +33,9 @@ like the M25R-Series, used on TI’s CC1310-Launchpad , which is available up to
 
 Some Basics about JesFs:
 
-- Ultra-Small RAM and code footprint: can be used on the smallest MCUs with only 8kB program memory or less (like the famous MSP430-series, almost all kind of 32-Bit ARM cores (M0, M3, M4, ….)). Only 200 bytes of RAM are sufficient!
+- Ultra-Small RAM and code footprint: can be used on the smallest MCUs with only 8kByte program memory or less (like the famous MSP430-series, almost all kind of 32-Bit ARM cores (M0, M3, M4, ….)). Only 200 Bytes of RAM are sufficient!
 - Completely Open Source (GPL v3) and written in Standard C.
-- Works with Serial NOR-Flash from **8kB to 16MB** (opt. up to 2GB), but could also be used with CPU-internal NOR-Flash.
+- Works with Serial NOR-Flash from **8kByte to 16MByte** (opt. up to 2GByte), but could also be used with CPU-internal NOR-Flash.
 - Works hand-in-hand with the Ultra-Small JesFsBoot Secure bootloader (requires less than 8kB on standard ARM cores, including an AES-128 encryption engine for reliable Over-the-Air-Updates (“OTA”)).
 - Includes optimised Wear Leveling (for maximum life of the memory).
 - A special mode was added to allow millions of write cycles, especially for data collection, event reports and journaling aplications.
