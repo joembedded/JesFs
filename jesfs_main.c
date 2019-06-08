@@ -191,6 +191,9 @@ void *mainThread(void *arg0){
     uart_printf("Board: LTRAX\n");
 #elif defined(__WIN32__)
 	uart_printf("Board: WIN32-PC\n");
+#elif defined(CC1350_LAUNCHXL)
+    #warn "Remark: For CC1350_LaunchXL this define might be missing in 'board.h': (add manually): '#define Board_GPIO_SPI_FLASH_CS CC1350_LAUNCHXL_GPIO_SPI_FLASH_CS'"
+    uart_printf("Board: CC1350_LAUNCHXL\n");
 #else
  #error "Unknown Board"
 #endif
