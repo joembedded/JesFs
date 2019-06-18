@@ -63,8 +63,10 @@ int16_t sflash_interpret_id(uint32_t id){
 		return -104;    // Unknown Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
 
 	// List of tested/knownAsGood Flash-Manufacturer/IDs (see Header File).  Others may be added later
-	case MACRONIX_MANU_TYP: // The 1MB-Version is on the CC1310 Launchpad
-	// ...add others...
+	case MACRONIX_MANU_TYP: // The 1MB-Version is on the TI CC1310 Launchpad, 2-16 MB on LTraX, ..
+    case GIGADEV_MANU_TYP: // The 2MB-Version is inside Radiocontrolli's CC1310F
+
+	    // ...add others...
 		break;      // OK!
 	}
 

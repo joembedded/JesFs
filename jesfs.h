@@ -1,5 +1,5 @@
 /*******************************************************************************
-* JesFs.h: Header Files for JesFs and JeDi
+* JesFs.h: Header Files for JesFs
 *
 * JesFs - Jo's Embedded Serial File System
 * JeDi  - Jo's Embedded Disk Inside
@@ -7,7 +7,7 @@
 * Tested on Win and TI-RTOS CC131x Launchpad
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.1 / 2.1.2019
+* Version: 1.2 / 16.6.2019
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
@@ -81,6 +81,7 @@ extern "C"{
 
 // Sample-Flash ID MACRONIX (Ultra-Low-Power), add others
 #define MACRONIX_MANU_TYP    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
+#define GIGADEV_MANU_TYP     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density)
 
 //------------------- Area for User Settings END -------------------------------
 

@@ -10,7 +10,7 @@
 *
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.1 / 2.1.2019
+* Version: 1.2 / 17.6.2019
 *
 * --------------------------------------------
 * Please regard: This is Copyrighted Software!
