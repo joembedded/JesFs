@@ -5,4 +5,4 @@ Many technical devices work reliable for years and years and no one cares about 
 
 This is, where the JesFs ( Jo’s Embedded Serial File System) could become extremely useful.
 
-Read more: [https://github.com/joembedded/JesFs/blob/master/blackbox_demo/BlackBox_Eval.pdf]
+Read more: [BlackBox_Eval.pdf]
