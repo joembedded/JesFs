@@ -1,5 +1,5 @@
-## JesFs – BlackBox -Demo ##
-# A Flight Recorder for Home Use #
+# JesFs – BlackBox -Demo #
+## A Flight Recorder for Home Use ##
 
 Many technical devices work reliable for years and years and no one cares about them. But if they fail, there is always the question: WHAT WENT WRONG?
 
