@@ -13,7 +13,7 @@
 * Tested on CC1310/CC1350, but will run on (almlost) any other SimpleLink-CPU
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.0 / 5.8.2019
+* Version: 1.01 / 6.8.2019
 *
 *******************************************************************************/
 
@@ -37,6 +37,50 @@ static char input[MAX_INPUT+1];
 static int32_t value=0;     // Sample Value to record
 
 /*******************************************************************
+* log_blackbox(char* logtext, uint16_t len)
+*
+* This funktion logs one line to the the history
+********************************************************************/
+int16_t log_blackbox(char* logtext, uint16_t len){
+	FS_DESC fs_desc, fs_desc_sec;    // 2 JesFs file descriptors
+	int16_t res;
+
+	res=fs_start(FS_START_RESTART);
+	if(res) return res;
+
+	// Flags (see docu): Create File if not exists and open in RAW-mode,
+	// in RAW-Mode file is not truncated if existing
+	res=fs_open(&fs_desc,"Data.pri",SF_OPEN_CREATE|SF_OPEN_RAW);
+	if(res) return res;
+
+	// Place (internal) file pointer to the end of the file to allow write
+	fs_read(&fs_desc,NULL,0xFFFFFFFF); // (dummy) read as much as possible
+
+	// write the new data (ASCII) to the file
+	res=fs_write(&fs_desc,(uint8_t*)logtext,len);
+	if(res) return res;
+
+	// Show what was written
+	uart_printf("Pos:%u Log:%s",fs_desc.file_len,logtext);
+
+	// Now make a file shift if more data than HISTORY
+	if(fs_desc.file_len>= HISTORY){
+
+		uart_printf("Shift 'Data.pri' -> 'Data.sec'\n");
+
+		// Optionally delete and (create in any case) backup file
+		res=fs_open(&fs_desc_sec,"Data.sec",SF_OPEN_CREATE);
+		if(res) return res;
+
+		// rename (full) data file to secondary file
+		res=fs_rename(&fs_desc,&fs_desc_sec);
+		if(res) return res;
+	}
+	fs_deepsleep(); // Set Filesystem to UltraLowPowerMode
+	return 0;   // OK
+}
+
+/*******************************************************************
 * run_blackbox(asec)
 * Take a record each asec secs, until Data.pri is >= HISTORY,
 * then shift it to Data.sec and delete Data.pri.
@@ -44,7 +88,6 @@ static int32_t value=0;     // Sample Value to record
 * Run recoder loop *FOREVER* or until user hits key
 ********************************************************************/
 int16_t run_blackbox(uint32_t delay_secs){
-	FS_DESC fs_desc, fs_desc_sec;    // 2 JesFs file descriptors
 	uint32_t asecs;
 	uint16_t len;
 	int16_t res;
@@ -55,46 +98,19 @@ int16_t run_blackbox(uint32_t delay_secs){
 
 		// Build the data we want to save: Time + Value
 		len=sprintf((char*)sbuffer,"%u %d\n",asecs,value);
+
 		// Filesystem may be sleeping (= UltraLowPowerMode), WAKE fast
-		res=fs_start(FS_START_RESTART);
-		if(res) break;
+		res=log_blackbox((char*)sbuffer, len);
+		if(res) break;  // Error?
 
-		// Flags (see docu): Create File if not exists and open in RAW-mode,
-		// in RAW-Mode file is not truncated if existing
-		res=fs_open(&fs_desc,"Data.pri",SF_OPEN_CREATE|SF_OPEN_RAW);
-		if(res) break;
-
-		fs_read(&fs_desc,NULL,0xFFFFFFFF); // (dummy) read as much as possible
-		// Show what will be written:
-		uart_printf("Pos:%u Log:%s",fs_desc.file_len,sbuffer);
-
-		// write the new data (ASCII) to the file
-		res=fs_write(&fs_desc,sbuffer,len);
-		if(res) break;
-
-		// Now make a file shift if more data than HISTORY
-		if(fs_desc.file_len>= HISTORY){
-			uart_printf("Shift 'Data.pri' -> 'Data.sec'\n");
-			// Optionally delete and (create in any case) backup file
-			res=fs_open(&fs_desc_sec,"Data.sec",SF_OPEN_CREATE);
-			if(res) break;
-
-			// rename (full) data file to secondary file
-			res=fs_rename(&fs_desc,&fs_desc_sec);
-			if(res) break;
-
-		}
-
-		//----------- dooze --------
-		fs_deepsleep(); // Set Filesystem to UltraLowPowerMode
+		// SLEEP
 		sleep(delay_secs); // Allow UltraLowPowerMode fpr CPU (UART still on)
 
-
-		if(uart_kbhit()) break;  // Ende
+		if(uart_kbhit()) break;  // End
 	}
-	while(uart_kbhit()) uart_getc();
+	while(uart_kbhit()) uart_getc();    // Clear keys
 	uart_printf("Result: %d\n\n",res);    // 0: OK, else see 'jesfs.h'
-	fs_start(FS_START_RESTART); // Wake Filesystem, but
+	fs_start(FS_START_RESTART); // Wake Filesystem, main loop expects it is awake
 	return res; // Return last result
 }
 
