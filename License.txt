@@ -11,7 +11,7 @@ stable and reliable as possible and necessary for the designated
 applications (which normally are for the scientific or industrial market). 
 But I give no warranty for anything! Using it is at your own risk!
 
-JesFs is licensed under the GNU GENERAL PUBLIC LICENSE Version 3
+JesFs is licensed under the GNU LGPL v3.0
 
 ***
 
