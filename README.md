@@ -22,7 +22,7 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 ![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
 
-[Image: JesFs on the LTraX module]
+[Image: JesFs on the LTraX module (CC1310)]
 
 ![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/Documentation/rc1310Fk.jpg)
 
@@ -42,12 +42,13 @@ Some Basics about JesFs:
 - Works with Serial NOR-Flash from **8kByte to 16MByte** (opt. up to 2GByte), but could also be used with CPU-internal NOR-Flash.
 - Works hand-in-hand with the Ultra-Small JesFsBoot Secure bootloader (requires less than 8kB on standard ARM cores, including an AES-128 encryption engine for reliable Over-the-Air-Updates (“OTA”)).
 - Includes optimised Wear Leveling (for maximum life of the memory).
+- Very Fast Data transfer (e.g. **reading files: 3.7MB/sec** on nRF52840).
 - A special mode was added to allow millions of write cycles, especially for data collection, event reports and journaling aplications.
-- JesFs is quasi persistent: no data loss on power loss.
+- JesFs is persistent: no data loss on power loss.
 - Designed for (almost) all situations, where NOR memories could be used (the ones where only blocks can be deleted (0->1) and only 0 written.
 - Strictly taylored to Ultra-Low-Power Embedded Systems.
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone.
-- Sample applications for the nRF52840-DK, Launchpads CC13xx/26xx and others (see PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
+- Sample applications for the nRF52840-DK, Launchpads CC13xx/26xx and others (Documentation PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
@@ -79,3 +80,6 @@ Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/u
 
 ---
 
+![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/Documentation/nRF52840_DK.jpg)
+
+[Image: JesFs on the nRF52840-DK (PCA10056)]
