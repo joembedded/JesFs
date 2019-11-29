@@ -80,6 +80,4 @@ Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/u
 
 ---
 
-![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/Documentation/nRF52840_DK.jpg)
 
-[Image: JesFs on the nRF52840-DK (PCA10056)]
