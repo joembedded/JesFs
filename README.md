@@ -20,11 +20,12 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-![JesFs on LTraX](https://github.com/joembedded/JesFs/documentation/ltrax_module.jpg)
+![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
+                  
 
 [Image: JesFs on the LTraX module]
 
-![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs//documentation/rc1310Fk.jpg)
+![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/Documentation/rc1310Fk.jpg)
 
 [Image: Radiocontrolli.com offers a very compact CC1310F module with 2MB Flash]
 
@@ -47,7 +48,7 @@ Some Basics about JesFs:
 - Designed for (almost) all situations, where NOR memories could be used (the ones where only blocks can be deleted (0->1) and only 0 written.
 - Strictly taylored to Ultra-Low-Power Embedded Systems.
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone (JesFs was originally developed on a CC1310 with TI-RTOS).
-- Sample applications for the TI-Launchpad CC13xx/26xx and others (see [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/documentation/JesFs.pdf))
+- Sample applications for the TI-Launchpad CC13xx/26xx and others (see PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
@@ -75,5 +76,5 @@ Many technical devices work reliable for years and years and no one cares about 
 
 This is, where the JesFs could become extremely useful.
 
-Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/usecase_blackboxdemo/BlackBox_Eval.pdf)
+Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/usecase_BlackBox/BlackBox_Eval.pdf)
 
