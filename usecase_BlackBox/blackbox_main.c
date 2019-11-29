@@ -6,17 +6,20 @@
 * overflow. So you can use a small part of the Flash for history data e.g.
 * for post-mortem analysis
 *
-*
-* This software has been designed an tested with:
-* - the free "Embarcadero(R) C++ Builder Community Edition" (for PC)
-* - the free CCS-Studio for SimpleLink CPUs (from TI). Tested on CC1310/CC1350,
-*   but will run on (almlost) any other SimpleLink-CPU
-* - the SEGGER Embedded Studio for Arm (Nordic Edition), free for Nordic CPUs
+* The BlackBox was tested on:
+* - TI CC13xx/CC26xx Launchpad
+* - Nordic nRF52840 DK_PCA10056 (nRF52)
+* - Windows (Compilers: "Embarcadero(R) C++ Builder Community Edition" (for PC)
+*           and "Microsoft Visual Studio Community 2019")
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
 * Version: 1.5 / 25.11.2019
 *
 *******************************************************************************/
+
+#ifdef WIN32		// Visual Studio Code defines WIN32
+	#define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
+#endif
 
 #include "blackbox_helpers.h" // Some unimportant stuff for this demo
 #include "tb_tools.h"
@@ -28,8 +31,12 @@
 #include "JesFs_int.h" // JesFs-helpers like fs_get_time()
 
 #ifdef CC13XX_CC26XX    // Define this Macro in ProjectOptions - PredefinedSymbols
- #define main     mainThread  // main_start is a Task
+	#define main     mainThread  // main_start is a Task
 #endif
+#ifdef WIN32			// Visual Studio Code defines WIN32
+	#define __WIN32__	// Embarcadero defines __WIN32__
+#endif
+
 
 /*****************************************************************
 * Globals
@@ -194,7 +201,7 @@ void *main(void *arg0){
 	tb_printf("'2'           Show File 'Data.sec'\n");
 	tb_printf("'v'           Disk Directory\n");
 	tb_printf("'! [SECONDS]' Print Time or optionally set UNIX-Seconds\n");
-	tb_printf("'q'           Exit (on __WIN32__: save Disk as File 'default.disk')\n\n");
+	tb_printf("'q'           Exit (on __WIN32__/WIN32: save Disk as File 'default.disk')\n\n");
 
 	tb_printf("Init-JesFS: Res:%d\n",fs_start(FS_START_NORMAL));  // Unformated: Return -108 (see jesfs.h)
 
@@ -211,7 +218,7 @@ void *main(void *arg0){
 
 			case 'f': // Format Disk
 				par=2; // Full:1 Soft:2 (here: Soft is faster, up to 240 secs on Serial Flash)
-				tb_printf("'F' Format Serial Flash (Mode:%d) (may take up to 240 secs!)...\n",par);
+				tb_printf("'f' Format Serial Flash (Mode:%d) (may take up to 240 secs!)...\n",par);
 				tb_printf("Result: %d\n",fs_format(par));
 				break;
 

@@ -10,7 +10,7 @@ changes are easy. Same for graphics, setups, everything…
 It even allows to change the firmware on the Embedded Device from many different sources!
 
 Think of Embedded Devices, that even can get their latest firmware by themselves! E.g. over 
-WiFi, Mobile Internet, Bluetooth, Uart, Radio-Link, …  
+WiFi, Mobile Internet, Bluetooth, UART, Radio-Link, …  
 Suddenly all options are open! And if you have concerns about 
 the security: don’t worry: problem already solved, as you’ll see later..
 
@@ -21,7 +21,6 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 **“JesFs – Jo’s Embedded Serial File System“**
 
 ![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
-                  
 
 [Image: JesFs on the LTraX module]
 
@@ -33,8 +32,8 @@ My daily work ist the IoT. Because I did not find any really practical solution,
 I decided to create my own one. “Robustness”, “Security” and “Small Footprint” 
 were my design constraints.
 
-JesFs was designed for use in the “Real World”. For use with standard Serial NOR-Flash memories, 
-like the M25R-Series, used on TI’s CC1310-Launchpad , which is available up to 16 MB, or even more…
+JesFs was designed for use in the “Real World” and for use with standard Serial NOR-Flash memories, 
+like the M25R-Series, used on nRF52840-DK and the CC13xx/CC26xx Launchpads, which is available up to 16 MB, or even more…
 
 Some Basics about JesFs:
 
@@ -47,8 +46,8 @@ Some Basics about JesFs:
 - JesFs is quasi persistent: no data loss on power loss.
 - Designed for (almost) all situations, where NOR memories could be used (the ones where only blocks can be deleted (0->1) and only 0 written.
 - Strictly taylored to Ultra-Low-Power Embedded Systems.
-- Designed to use the advantage of an underlying RTOS, but can also be used standalone (JesFs was originally developed on a CC1310 with TI-RTOS).
-- Sample applications for the TI-Launchpad CC13xx/26xx and others (see PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
+- Designed to use the advantage of an underlying RTOS, but can also be used standalone.
+- Sample applications for the nRF52840-DK, Launchpads CC13xx/26xx and others (see PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
@@ -77,4 +76,6 @@ Many technical devices work reliable for years and years and no one cares about 
 This is, where the JesFs could become extremely useful.
 
 Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/usecase_BlackBox/BlackBox_Eval.pdf)
+
+---
 

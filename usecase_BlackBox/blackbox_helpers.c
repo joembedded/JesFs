@@ -1,13 +1,28 @@
 /*****************************************************************
-* blackbox_helpers.h
+* blackbox_helpers.c
 *
 * Source-File with some less important stuff for the blackbox
 *******************************************************************************/
+
+#ifdef WIN32		// Visual Studio Code defines WIN32
+#define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
+#endif
+
 
 #include "blackbox_helpers.h" // Some unimportant stuff for this demo
 #include "tb_tools.h"
 
 #include "JesFs.h"
+
+#ifdef WIN32		// Visual Studio Code defines WIN32
+	#define __WIN32__	// Embarcadero defines __WIN32__
+#endif
+#ifdef __WIN32__
+	extern int16_t ll_read_vdisk(char* fname);	// Helpers to write/read virtual Disk to fFile on PC
+	extern int16_t ll_setid_vdisk(uint32_t id);
+	extern int16_t ll_get_info_vdisk(uint32_t* pid_used, uint8_t** pmem, uint32_t* psize);
+#endif
+
 
 //************** Globals ****************
 FS_DATE fs_date; // A JesFs-Structure for dates
@@ -53,7 +68,7 @@ void helper_show_directory(void){
 		FS_STAT fs_stat;
 		FS_DESC fs_desc;
 		uint8_t dbuffer[40];   // Date buffer (Text)
-		int16_t res;
+		int16_t res=0;
 		int16_t i;
 
 		tb_printf("Disk size: %d Bytes\n",   sflash_info.total_flash_size);

@@ -5,9 +5,9 @@
 *
 * Demo how to use JesFs on
 * - TI CC13xx/CC26xx Launchpad
-*
 * - Nordic nRF52840 DK_PCA10056 (nRF52)
-* - Windows
+* - Windows (Compilers: "Embarcadero(R) C++ Builder Community Edition" (for PC)
+*           and "Microsoft Visual Studio Community 2019")
 *
 * Can be used as standalone project or,
 * in combination with secure JesFsBoot Bootloader
@@ -18,6 +18,10 @@
 * Version: 1.5 / 25.11.2019
 *
 *******************************************************************************/
+
+#ifdef WIN32		// Visual Studio Code defines WIN32
+ #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
+#endif
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -33,11 +37,16 @@
 #endif
 
 #ifdef CC13XX_CC26XX    // Define this Macro in ProjectOptions - PredefinedSymbols
- #define main     mainThread  // main_start is a Task
+	#define main     mainThread  // main_start is a Task
 #endif
 
+#ifdef WIN32		// Visual Studio Code defines WIN32
+	#define __WIN32__	// Embarcadero defines __WIN32__
+#endif
 #ifdef __WIN32__
-// Nothing
+	extern int16_t ll_read_vdisk(char* fname);	// Helpers to write/read virtual Disk to fFile on PC
+	extern int16_t ll_setid_vdisk(uint32_t id);
+	extern int16_t ll_get_info_vdisk(uint32_t * pid_used, uint8_t * *pmem, uint32_t * psize);
 #endif
 
 //======= Toolbox =======

@@ -8,9 +8,6 @@
 *
 *******************************************************************************/
 
-//#include <stdio.h>
-//#define uart_printf printf
-
 /* Required Std. headers */
 #include <stdint.h>
 #include <stddef.h>
@@ -19,13 +16,7 @@
 #include "jesfs.h"
 #include "jesfs_int.h"
 
-#ifdef __WIN32__    // We need Unix-Seconds
- #include <time.h>
- #define _time_get() time(NULL) // available on __WIN32__
-#else
- extern uint32_t _time_get(); // else must be declared outside
-#endif
-
+extern uint32_t _time_get(); // We need Unix-Seconds, must be defined outside
 
 // Driver designed for 4k-Flash (or larger) - JesFs
 #if SF_SECTOR_PH != 4096
@@ -626,7 +617,7 @@ int16_t fs_delete(FS_DESC *pdesc){
 	if(pdesc->open_flags & SF_OPEN_WRITE) return -125;
 	res=flash_set2delete(pdesc->_head_sadr);
 	if(res) return res;
-	pdesc->_head_sadr=NULL; // No Close!
+	pdesc->_head_sadr=(uint32_t)0; // No Close!
 	return 0;
 }
 

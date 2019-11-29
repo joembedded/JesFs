@@ -1,6 +1,7 @@
 /*******************************************************************************
 * JesFs_ll_pc.c: Simulation of a LowLevel-Driver with 
-* Embarcaders's "RAD Studio C++" (Free Community Version available)
+* - "Embarcadero(R) C++ Builder Community Edition" (for PC)
+* - "Microsoft Visual Studio Community 2019"
 *
 * JesFs - Jo's Embedded Serial File System
 *
@@ -12,6 +13,10 @@
 *
 *******************************************************************************/
 
+#ifdef WIN32		// Visual Studio Code defines WIN32
+  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
+#endif
+
 // ---------------- required for JesFs ----------------------------
 #include <stdint.h>
 #include <stddef.h>
@@ -20,32 +25,19 @@
 #include "jesfs.h"
 #include "jesfs_int.h"
 
+
 // ---------- local headers -------------------------------------
-#include <stdio.h> // Fuer printf
+#include <stdio.h> 
 #include <stdlib.h>
 //#include <assert.h> // Own is better
 #define assert(p)   ((p) ? (void)0 : _my_assert(#p, __FILE__, __LINE__))
 
 //#define TRACK_SPI   // If def write logfile spi_track.txt
 
-#ifndef __CONSOLE__
-#include <windows.h>
-void _my_assert(char *pc, char* pf, int ln){
-	wchar_t buf[256]; // wchar_t: size 2 char: size 1
-	// incredible size paranoia with strings sice C99
-	swprintf(buf,L"'%hs' (File '%hs' Line %d)\n\n*** Exit! ***",pc,pf,ln);
-	MessageBox(NULL,buf,L"<ASSERTION FAILED>",MB_OK|MB_ICONERROR);
-	exit(-1);
-}
-#else
 void _my_assert(char *pc, char *pf, int ln){
-	char key[10];
 	printf("<ASSERTION FAILED: '%s' Line %d (Exit: 'q'<NL>)> ",pc, ln);
-	gets(key);  // Wait for NL
-	if(*key=='q') exit(-1);     // Fast Exit
-	printf("<CONT>\n");
+	exit(-1);     // Fast Exit
 }
-#endif
 
 //------------------- LowLevel SPI START ------------------------
 /****************************************************************
@@ -167,7 +159,7 @@ void sflash_spi_read(uint8_t *buf, uint16_t len){
 		break;
 
 	default:
-		printf("<LL: ERROR State:%d - Read len:%d Bytes>");
+		printf("<LL: ERROR State:%d - Read len:%d Bytes>", sim_flash.state,len);
 		assert(0);
 	}
 }

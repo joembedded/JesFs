@@ -1,13 +1,17 @@
 /*********************************************************************
 * tb_tools_win.c - Toolbox for UART, Unix-Time, ..
 *
-* For Platform __WIN32__
-* Fesigned with the free
-* "Embarcadero(R) C++ Builder Community Edition" (for PC)
+* For Platform __WIN32__ / WIN32 
+* - "Embarcadero(R) C++ Builder Community Edition" (for PC)
+* - "Microsoft Visual Studio Community 2019"
 *
 * 2019 (C) joembedded.de
 * Version: 1.0 25.11.2019
 *********************************************************************/
+
+#ifdef WIN32		// Visual Studio Code defines WIN32
+ #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
+#endif
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -16,12 +20,18 @@
 #include <stdlib.h>
 #include <stdarg.h> // for var_args
 #include <time.h>
-#include <conio.h> // kbhit(), getc(), putc()
+#include <conio.h> // kbhit(), getc()
 #include <windows.h>
 #include <synchapi.h> // Sleep()
 
-#ifndef __WIN32__
-  #error "Toolbox for __WIN32__"
+#ifdef WIN32		// Visual Studio Code defines WIN32
+ #define __WIN32__	
+ #define getch		_getch			// VS uses POSIX names
+ #define kbhit		_kbhit
+#endif
+
+#ifndef __WIN32__	// Embarcadero defines __WIN32__
+#error "Toolbox for __WIN32__ / WIN32"
 #endif
 
 // ---- local defines --------------
@@ -87,7 +97,7 @@ void tb_delay_ms(uint32_t msec){
 
 // ---- Unix-Timer. Must be called periodically to work, but at least twice per RTC-overflow (512..xx secs) ---
 uint32_t tb_time_get(void){
-   return time(NULL);
+   return (uint32_t)time(NULL);
 }
 
 // Set time, regarding the timer
@@ -110,8 +120,6 @@ uint32_t tb_deltaticks_to_ms(uint32_t t0, uint32_t t1){
 
 // tb_printf(): printf() to toolbox uart. Wait if busy
 void tb_printf(char* fmt, ...){
-	size_t ulen;
-	size_t uavail;
 	va_list argptr;
 	va_start(argptr, fmt);
 
@@ -150,7 +158,7 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
 		if(res>0){
 			res=tb_getc();
             if(res<0) break;
-            c=res;
+            c=(char)res;
             if(c=='\n' || c=='\r') {
                 break;    // NL CR or whatever (no Echo for NL CR)
             }else if(c==8){  // Backspace
