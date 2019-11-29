@@ -20,11 +20,11 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/documentation/ltrax_module.jpg)
+![JesFs on LTraX](https://github.com/joembedded/JesFs/documentation/ltrax_module.jpg)
 
 [Image: JesFs on the LTraX module]
 
-![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/documentation/rc1310Fk.jpg)
+![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs//documentation/rc1310Fk.jpg)
 
 [Image: Radiocontrolli.com offers a very compact CC1310F module with 2MB Flash]
 
@@ -75,5 +75,5 @@ Many technical devices work reliable for years and years and no one cares about 
 
 This is, where the JesFs could become extremely useful.
 
-Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/usecase_blackboxdemo/BlackBox_Eval.pdf)
+Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/usecase_blackboxdemo/BlackBox_Eval.pdf)
 
