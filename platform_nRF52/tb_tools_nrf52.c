@@ -1,11 +1,14 @@
-/*********************************************************************
+/***************************************************************************************************************
 * tb_tools_nrf52.c - Toolbox for UART, Unix-Time, .. 
 *
 * For platform nRF52 
 *
 * 2019 (C) joembedded.de
-* Version: 1.0 25.11.2019
-*********************************************************************/
+*
+* Versions: 
+* 1.0: 25.11.2019
+* 1.1: 06.12.2019 added support for Low Power uninit, deep sleep current with RTC wakeup <= 2.7uA on nRF52840
+***************************************************************************************************************/
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -79,41 +82,76 @@ static bool tb_wdt_enabled=false;
 // --- locals timestamp ----
 static uint32_t old_rtc_secs=0;
 static uint32_t cnt_secs=0;
-static bool tb_init_flag=false;
+static bool tb_basic_init_flag=false; // Always ON, only init once
+// Higher Current peripherals, can be init/uninit
+static bool tb_highpower_peripheral_uart_init_flag=false; 
 
-// -------- init Toolbox -----------------
+/* -------- init Toolbox -----------------
+* Init consists of 2 blocks:
+* ---------------------------
+* Current consumption (tested with PCA10056 and module BT840(FANSTEL))
+*
+* --Minimum required Basic Block: Peripherals always needed (never shut down)--
+* bsp_board_init_(BSP_INIT_LEDS): 2.7uA
+* bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS): 2.7uA
+*
+* --And optional 'High-Power' Peripherals (shut down by tb_uninit()):
+* bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS) + nrf_serial_init() (Legacy)POWER_CONFIG_DEFAULT_DCDCEN=0: 890uA
+* bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS) + nrf_serial_init() (Legacy)POWER_CONFIG_DEFAULT_DCDCEN=1: 550uA
+*/
 void tb_init(void){
     ret_code_t ret;
 
-    if(tb_init_flag==true) return;  // Already init
-
+    if(tb_basic_init_flag==false){  // init ony once
+      /* Minimum Required Basic Block ---START--- */
 #ifdef USE_BSP
-    // Initialize Board Support Package (LEDs (and buttons)).
-    bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
+      // Initialize Board Support Package (LEDs (and buttons)).
+      bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
 #endif
+      ret = nrf_drv_clock_init();
+      APP_ERROR_CHECK(ret);
+      ret = nrf_drv_power_init(NULL);
+      APP_ERROR_CHECK(ret);
+      nrf_drv_clock_lfclk_request(NULL);
+      ret = app_timer_init(); // Baut sich eine Event-FIFO, Timer wird APP_TIMER_CONFIG auf 32k..1kHz gesetzt
+      APP_ERROR_CHECK(ret);
+      tb_basic_init_flag=true;
+      /* Minimum Required Basic Block ---END--- */
+    }
 
-    ret = nrf_drv_clock_init();
-    APP_ERROR_CHECK(ret);
-    ret = nrf_drv_power_init(NULL);
-    APP_ERROR_CHECK(ret);
-
-    nrf_drv_clock_lfclk_request(NULL);
-    ret = app_timer_init(); // Baut sich eine Event-FIFO, Timer wird APP_TIMER_CONFIG auf 32k..1kHz gesetzt
-    APP_ERROR_CHECK(ret);
-
-    ret = nrf_serial_init(&tb_uart, &m_tbuart_drv_config, &tb_uart_config);
-    APP_ERROR_CHECK(ret);
-    tb_init_flag=true;
+    if(tb_highpower_peripheral_uart_init_flag==false){  // Higher Power Peripherals, can be powered off by uninit
+      ret = nrf_serial_init(&tb_uart, &m_tbuart_drv_config, &tb_uart_config);
+      APP_ERROR_CHECK(ret);
+      tb_highpower_peripheral_uart_init_flag=true;
+    }
 
 }
-
-// ------ uninit all --------------------
+// ------ uninit all higher power peripherals  --------------------
 void tb_uninit(void){
+    ret_code_t ret;
+    
+    // Never uninit basic blocks 
 
-    // ToDo...
-    APP_ERROR_CHECK(!NRF_SUCCESS);
+    // uninit higher power blocks
+    if(tb_highpower_peripheral_uart_init_flag==true){    
+      nrf_drv_uart_rx_abort(&tb_uart.instance);
+      ret=nrf_serial_flush(&tb_uart, NRF_SERIAL_MAX_TIMEOUT); 
+      APP_ERROR_CHECK(ret);
+      ret = nrf_serial_uninit(&tb_uart);
+      APP_ERROR_CHECK(ret);
 
-    tb_init_flag=false;
+      // Strange Error, UART needs Power-Cycle for DeepSleep (nrf52840)
+      // ( https://devzone.nordicsemi.com/f/nordic-q-a/54696/increased-current-consumption-after-nrf_serial_uninit )
+#if TB_UART_NO==0
+      #define TB_UART_BASE NRF_UARTE0_BASE  // 0x40002000
+#elif TB_UART_NO==1
+      #define TB_UART_BASE  NRF_UARTE1_BASE  // 0x40028000
+#endif
+     *(volatile uint32_t *)(TB_UART_BASE + 0xFFC) = 0;
+     *(volatile uint32_t *)(TB_UART_BASE + 0xFFC);
+     *(volatile uint32_t *)(TB_UART_BASE + 0xFFC) = 1;
+      tb_highpower_peripheral_uart_init_flag=false;
+    }
 }
 
 // ------ board support pakage -----
@@ -182,9 +220,9 @@ void tb_delay_ms(uint32_t msec){
       tb_expired_flag=false;
       app_timer_start(tb_delaytimer, ticks, NULL);
       while(!tb_expired_flag){
-        __WFE();
-        __SEV();
-        __WFE();
+        __SEV();  // SetEvent
+        __WFE();  // Clea at least last Event set by SEV
+        __WFE();  // Sleep safe
       }
 }
  
@@ -224,6 +262,8 @@ void tb_printf(char* fmt, ...){
     va_list argptr;
     va_start(argptr, fmt);
 
+    if(tb_highpower_peripheral_uart_init_flag==false) return; // Not init...
+
     ulen=vsnprintf((char*)tb_uart_line_out, TB_SIZE_LINE_OUT, fmt, argptr);  // vsn: limit!
     va_end(argptr);
     // vsnprintf() limits output to given size, but might return more.
@@ -248,6 +288,9 @@ void tb_putc(char c){
 // ---- Input functions 0: Nothing available (tb_kbhit is faster than tb_getc) ---------
 int16_t tb_kbhit(void){
     int16_t res;
+
+    if(tb_highpower_peripheral_uart_init_flag==false) return 0; // Not init...
+
     res=!nrf_queue_is_empty(&tb_uart_queues_rxq);
     return res;
 }
@@ -256,6 +299,9 @@ int16_t tb_kbhit(void){
 int16_t tb_getc(void){
     ret_code_t ret;
     uint8_t c;
+
+    if(tb_highpower_peripheral_uart_init_flag==false) return -1; // Not init...
+
     ret=nrf_queue_generic_pop(&tb_uart_queues_rxq,&c,false);
     if(ret!=NRF_SUCCESS) return -1;
     return (int16_t)c;  
@@ -267,6 +313,9 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
     int16_t res;
     char c;
     max_uart_in--;  // Reserve 1 Byte for End-0
+
+    if(tb_highpower_peripheral_uart_init_flag==false) return 0; // Not init...
+
     for(;;){
         res=tb_kbhit();
         if(res>0){

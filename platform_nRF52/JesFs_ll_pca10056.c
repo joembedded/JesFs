@@ -18,8 +18,9 @@
 *   so with a small Piezo you can 'hear' and 'see' the file system working ;-)
 *
 * (C) 2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
-*
+* Version: 
+* 1.5 / 25.11.2019
+* 1.51 / 7.12.2019 (LED polarity PCA10056)
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
@@ -98,13 +99,13 @@ void sflash_wait_usec(uint32_t usec){
 
 void sflash_select(void){
 #ifdef FPIN_LED
-        nrf_gpio_pin_clear(FPIN_LED);  // Hear Me Working! Led ON
+        nrf_gpio_pin_clear(FPIN_LED);  // Hear Me Working! Led ON (0 on PCA10056)
 #endif
         nrf_gpio_pin_clear(FPIN_SS_PIN); // Select Peripheral
 }
 void sflash_deselect(void){
 #ifdef FPIN_LED
-        nrf_gpio_pin_clear(FPIN_LED);  // Hear Me Working! Led Off
+        nrf_gpio_pin_set(FPIN_LED);  // Hear Me Working! Led Off (1 on PCA10056)
 #endif
         nrf_gpio_pin_set(FPIN_SS_PIN); // De-Select Peripheral
 }

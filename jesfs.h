@@ -106,7 +106,7 @@ extern "C"{
 #define SF_OPEN_CRC    	  16 // if set: calculate CRC32 for file while reading/writing
 #define SF_XOPEN_UNCLOSED  32 // File is/was not closed. Set (informative) by fs_stat() (disc_flags) or fs_open (open_flags)
 #define SF_OPEN_EXT_SYNC   64 // File should be synced to external filesystem, this Flag is not relevant for the Filesystem, but for external access
-#define _SF_OPEN_RES 128    // Reserved for nonvolatile files (for JesFs V1.2)
+#define _SF_OPEN_RES 128    // Reserved for nonvolatile files (for JesFs V2.x)
 
 // Flags for File-List
 #define FS_STAT_ACTIVE 1
@@ -142,7 +142,8 @@ typedef struct{
 
 // Standard sizes for this implementation, see docu
 #define SF_SECTOR_PH 4096   // SFlash-Physical Sector in Bytes
-#define SF_BUFFER_SIZE_B   128 // 32 LONGS
+#define SF_BUFFER_SIZE_B   128 // 32 LONGS.
+
 // Working Buf Flash
 typedef union{
 	uint8_t u8[SF_BUFFER_SIZE_B];

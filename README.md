@@ -44,11 +44,11 @@ Some Basics about JesFs:
 - Includes optimised Wear Leveling (for maximum life of the memory).
 - Very Fast Data transfer (e.g. **reading files: 3.7MB/sec** on nRF52840).
 - A special mode was added to allow millions of write cycles, especially for data collection, event reports and journaling aplications.
-- JesFs is persistent: no data loss on power loss.
+- JesFs is persistent: no data loss on Power Loss or Reset.
 - Designed for (almost) all situations, where NOR memories could be used (the ones where only blocks can be deleted (0->1) and only 0 written.
-- Strictly taylored to Ultra-Low-Power Embedded Systems.
+- Strictly taylored to Ultra-Low-Power Embedded Systems
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone.
-- Sample applications for the nRF52840-DK, Launchpads CC13xx/26xx and others (Documentation PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
+- Sample applications for the nRF52840-DK, Launchpads CC13xx/26xx, Windows-PC and others (Documentation PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
@@ -68,6 +68,11 @@ Some Basics about JesFs:
   int16_t fs_info(FS_STAT *pstat, uint16_t fno);
   void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 ```
+---
+## Cangelog ##
+- V1.0  CC13XX/CC26xx and Windows
+- V1.5  nRF52840 port
+- V1.51 nRF52840 support Deep Sleep/Wakeup (Deep Sleep with RTC active and Full RAM retention <3uA)
 
 ---
 

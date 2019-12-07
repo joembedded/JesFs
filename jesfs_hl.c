@@ -325,6 +325,7 @@ int16_t fs_deepsleep(void){
     if(sflash_info.state_flags&STATE_DEEPSLEEP) return -140; // Already sleeping, 2.nd command could wake FS again
     sflash_info.state_flags|=(STATE_DEEPSLEEP);
 	sflash_DeepPowerDown();
+        sflash_spi_close();   // Added V1.51
 	return 0;
 }
 

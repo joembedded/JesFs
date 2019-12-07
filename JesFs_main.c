@@ -15,9 +15,13 @@
 * Docu in 'JesFs.pdf'
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* Version: 
+* 1.5 / 25.11.2019 
+* 1.51 / 07.12.2019	added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
 *
 *******************************************************************************/
+
+#define VERSION "1.51 / 07.12.2019"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -103,7 +107,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
     tb_init(); // Init the Toolbox (without Watchdog)
     tb_watchdog_init(); // Watchdog separate init
 
-    tb_printf("\n*** JesFs *Demo* V1.5 "__TIME__ " " __DATE__ " ***\n\n");
+    tb_printf("\n*** JesFs *Demo* " VERSION " ***\n\n");
     tb_printf("(C)2019 joembedded@gmail.com - www.joembedded.de\n\n");
 
     res=fs_start(FS_START_NORMAL);
@@ -128,17 +132,19 @@ int main(void) { // renamed to mainThread() on CCxxyy
             t0=tb_get_ticks();
             switch(input[0]) {
 
-            case 's':
+            case 's':	// V1.51: With deep sleep, onn nRF52840: <3uA
                 anz=atoi(pc);
-                tb_printf("'s' Flash DeepSleep and CPU sleep %d secs (Wake Sflash with 'i'/'I')...\n",anz);
+                tb_printf("'s' Flash DeepSleep and CPU sleep %d secs...\n",anz);
                 res=fs_start(FS_START_RESTART);   // Restart Flash to be sure it is awake, else it can not be sent to sleep..
                 if(res) tb_printf("(FS_start(FS_RESTART) return ERROR: Res:%d)\n",res);
-                fs_deepsleep(); // ...because if Flash is already sleeping, this will wake it up!
+                fs_deepsleep(); // ...because if Flash is already sleeping, this will wake it up!, now SPI closed, Flash in Deep-Sleep
+                tb_uninit();	//  Disable toolbox-HighPower peripherals (e.g. UART)
                 tb_delay_ms(anz*1000);
-            // no 'break', wake Filesystem fall-through
+                tb_init();      //  Re-Enable again
+                // no 'break', wake Filesystem fall-through
 
             case 'i':
-                res=fs_start(FS_START_FAST);
+                res=fs_start(FS_START_FAST);  // Wake (an enable Flash)
                 tb_printf("'i' Filesystem Init Fast: Res:%d\n",res);
                 if(!res) break; // All OK
 
