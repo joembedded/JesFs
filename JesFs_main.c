@@ -18,10 +18,11 @@
 * Version: 
 * 1.5 / 25.11.2019 
 * 1.51 / 07.12.2019	added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
+* 1.6 / 22.12.2019  added fs_check_disk() for detailed checks
 *
 *******************************************************************************/
 
-#define VERSION "1.51 / 07.12.2019"
+#define VERSION "1.6 / 22.12.2019"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -133,13 +134,12 @@ int main(void) { // renamed to mainThread() on CCxxyy
             switch(input[0]) {
 
             case 's':	// V1.51: With deep sleep, onn nRF52840: <3uA
-                anz=atoi(pc);
-                tb_printf("'s' Flash DeepSleep and CPU sleep %d secs...\n",anz);
+                tb_printf("'s' Flash DeepSleep and CPU sleep %d secs...\n",uval);
                 res=fs_start(FS_START_RESTART);   // Restart Flash to be sure it is awake, else it can not be sent to sleep..
                 if(res) tb_printf("(FS_start(FS_RESTART) return ERROR: Res:%d)\n",res);
                 fs_deepsleep(); // ...because if Flash is already sleeping, this will wake it up!, now SPI closed, Flash in Deep-Sleep
                 tb_uninit();	//  Disable toolbox-HighPower peripherals (e.g. UART)
-                tb_delay_ms(anz*1000);
+                tb_delay_ms(uval*1000);
                 tb_init();      //  Re-Enable again
                 // no 'break', wake Filesystem fall-through
 
@@ -154,9 +154,8 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 break;
 
             case 'S':
-                anz=atoi(pc);
-                tb_printf("'S' Only and CPU sleep %d secs (Wake Sflash with 'i'/'I')...\n",anz);
-                tb_delay_ms(anz*1000);
+                tb_printf("'S' Only and CPU sleep %d secs (Wake Sflash with 'i'/'I')...\n",uval);
+                tb_delay_ms(uval*1000);
                 break;
 
             case 'F':
@@ -235,21 +234,26 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 tb_printf("Disk Nr. of files active: %d\n",sflash_info.files_active);
                 tb_printf("Disk Nr. of files used: %d\n",sflash_info.files_used);
 #ifdef JSTAT
-                if(sflash_info.sectors_unknown) tb_printf("WARNING - Disk Error: Nr. of unknown sectors: %d\n",sflash_info.sectors_unknown);
+                if(sflash_info.sectors_unknown) tb_printf("WARNING - Found %d Unknown Sectors\n",sflash_info.sectors_unknown);
 #endif
                 tb_printf("Res:%d\n",res);
                 break;
+
+            case 'V': // Run Careful Disk Check with opt. Output, requires a temp. buffer
+                fs_check_disk(tb_printf,sbuffer,SBUF_SIZE);
+                break;
+
 
             case 'W':
                 // Write a number of BULK Data...
                 // The theoretical maximum speed of the Mx25R6435F is typically 80kB/sec (due to page programming)
                 // My measures (nRF52) show ca. 60-70kB/sec on an empty Flash (including computed CRC32), so writing speed is quite OK for JesFs
                 // If old sectors must be erased before writing, speed goes down to ca. 30-40kB/sec
-                anz=atoi(pc);
-                tb_printf("'W' BULK Write %d Bytes to file in Junks of %d\n",anz,SBUF_SIZE);
+                tb_printf("'W' BULK Write %d Bytes to file in Junks of %d\n",uval,SBUF_SIZE);
                 for(i=0; i<SBUF_SIZE; i++) {
                     sbuffer[i]=' '+i%93;
                 }
+                anz=uval;
                 while(anz>0) {
                     uval=anz;
                     if(uval>SBUF_SIZE) uval=SBUF_SIZE;
@@ -267,8 +271,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 break;
 
             case 'r':
-                anz=atoi(pc);
-                tb_printf("'r' Read (max.) %d Bytes from File:\n",anz);
+                tb_printf("'r' Read (max.) %d Bytes from File:\n",uval);
 
                 // Read the complete sbuffer, but show only max. first 60 bytes
                 if(anz<(int)sizeof(sbuffer)) {
@@ -299,9 +302,9 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 // Reading Files with computed CRC32 is about 550-600 kB/sec (nRF52) and
                 // without computed CRC ca. 3.75MB/sec what is very close to the 
                 // theoretical absolute maximum limit of 4MB/sec
-                anz=atoi(pc);
-                tb_printf("'R' BULK Read %d Bytes from file in Junks of %d\n",anz,SBUF_SIZE);
+                tb_printf("'R' BULK Read %d Bytes from file in Junks of %d\n",uval,SBUF_SIZE);
                 h=0;
+                anz=uval;
                 while(anz>0) {
                     uval=anz;
                     if(uval>SBUF_SIZE) uval=SBUF_SIZE;
@@ -352,7 +355,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 tb_system_reset();
 
             case '!':   // Time Management - Set the embedded Timer (in unix-Seconds)
-                asecs=strtoul(pc,NULL,0);
+                asecs=uval;
                 if(asecs) tb_time_set(asecs);
                 asecs=tb_time_get();    // TI-RTOS
                 conv_secs_to_date_sbuffer(asecs);
@@ -360,13 +363,13 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 break;
 
             /****************** TESTFUNCTION Development only********************************/
-            case 'm':   // mADR Examine Mem Adr. in HEX
+            case 'm':   // mADR Examine Mem Adr. in Hex!
                 // Read 1 page of the serial flash (internal function)
-            {
+                {
                 extern void sflash_read(uint32_t sadr, uint8_t* sbuf, uint16_t len);
                 int adr,j;
-                adr=strtoul(pc,0,16);
-
+                adr=strtol(pc,0,16);  // Hex
+                tb_printf("Disk Adr. 0x04%x:\n",adr);
                 sflash_read(adr,sbuffer,256); // Read 1 page of the flash
                 for(i=0; i<16; i++) {
                     tb_printf("%04X: ",adr+i*16);

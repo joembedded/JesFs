@@ -9,14 +9,16 @@
 * - nRF52840 on PCA10056 DK Board
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* Version: 
+* 1.5 / 25.11.2019
+* 1.6 / 22.12.2019 added fs_disk_check()
 *
 *******************************************************************************/
 
 /* List of Errors
 -100: SPI Init (Hardware)
 -101: Flash Timeout WaitBusy
--102:  SPI Can not set WriteEnableBit (Flash locked?)
+-102: SPI Can not set WriteEnableBit (Flash locked?)
 -103: ID:Unknown/illegal Flash Density (described the size)
 -104: ID:Unknown Flash ID (eg. 0xC228 for Macronix M25xx, see docu)
 -105: Illegal flash addr
@@ -213,6 +215,9 @@ uint32_t fs_get_crc32(FS_DESC *pdesc);
 
 int16_t fs_info(FS_STAT *pstat, uint16_t fno);
 void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
+
+int16_t fs_check_disk(void cb_printf(char* fmt, ...), uint8_t *pline, uint32_t line_size);
+
 
 #ifdef __cplusplus
 }

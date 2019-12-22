@@ -4,7 +4,9 @@
 * JesFs - Jo's Embedded Serial File System
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* Version:
+* 1.5 / 25.11.2019
+* 1.6 / 22.12.2019 added fs_disk_check()
 *
 *******************************************************************************/
 
@@ -148,7 +150,7 @@ static int16_t flash_set2delete(uint32_t sadr){
 		res= sflash_SectorWrite(sadr,(uint8_t*)thdr, 4);
 		if(res) return res;
 		sadr=thdr[2];
-		if(sadr==0xFFFFFFFF) return 0; 
+		if(sadr==0xFFFFFFFF) return 0;
 	}
 	return -121;
 }
@@ -206,7 +208,7 @@ int16_t fs_start(uint8_t mode){
 	    return res;        // Error 2 User
 	}
 
-	// Flash wakeup 
+	// Flash wakeup
 	sflash_ReleaseFromDeepPowerDown();
 	sflash_wait_usec(45);
         sflash_info.state_flags&=~(STATE_DEEPSLEEP);
@@ -303,8 +305,8 @@ int16_t fs_start(uint8_t mode){
 	sadr=HEADER_SIZE_B;
 	id=0;
 	while(sadr!= SF_SECTOR_PH){
-		sflash_read(sadr,(uint8_t*)&idx_adr,4); 
-		if(idx_adr==0xFFFFFFFF) break; 
+		sflash_read(sadr,(uint8_t*)&idx_adr,4);
+		if(idx_adr==0xFFFFFFFF) break;
 		else{
 			if(sflash_sadr_invalid(idx_adr) ) err++;
 			else{
@@ -364,7 +366,7 @@ int16_t fs_format(uint8_t fmode){
 
 
 static uint32_t sflash_get_free_sector(void){
-	uint32_t thdr;  
+	uint32_t thdr;
 	uint32_t max_sect;
 	// Some embedded compilers complain about the Division. In fact, it will result in a shift. So it might be ignored
 	max_sect=(sflash_info.total_flash_size/SF_SECTOR_PH);
@@ -374,13 +376,13 @@ static uint32_t sflash_get_free_sector(void){
 		sflash_read(sflash_info.lusect_adr,(uint8_t*)&thdr,4);
 
 		if(thdr==SECTOR_MAGIC_TODELETE || thdr==0xFFFFFFFF){
-			if(thdr==SECTOR_MAGIC_TODELETE){ 
-				if(sflash_SectorErase(sflash_info.lusect_adr)) return 0; 
+			if(thdr==SECTOR_MAGIC_TODELETE){
+				if(sflash_SectorErase(sflash_info.lusect_adr)) return 0;
 			}
 			return sflash_info.lusect_adr;
 		}
 	}
-	return 0;   
+	return 0;
 }
 
 // --- fs_read() ---
@@ -695,6 +697,99 @@ int16_t fs_info(FS_STAT *pstat, uint16_t fno ){
 	}
 	pstat->file_len = sadr;
 	return ret;
+}
+
+/* Careful Disk Check
+* Returns:  0: No error <0: Critical Error, See JesFS  >0: Non-Criical Errors
+* If cb_printf() <> NULL: Output Diagnostics, pline[line_size) is a temp bffer */
+int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t line_size) {
+    int16_t res;
+    uint16_t i;
+    int32_t lres;
+    uint32_t aval;
+    int16_t err;
+
+	// Might consume some stack space:
+	FS_STAT lfs_stat;
+	FS_DESC lfs_desc;
+
+	if(cb_printf) cb_printf("Check Disk\n");
+
+	err=fs_start(FS_START_NORMAL);
+	if(err){
+		if(cb_printf) cb_printf("ERROR: No Disk or not formated:%d\n",err);
+    }else{
+#ifdef JSTAT
+		if(sflash_info.sectors_unknown){
+			if(cb_printf) cb_printf("ERROR: Unknown Sectors: %d\n",sflash_info.sectors_unknown);
+			err++;
+		}
+#endif
+        for(i=0;;i++){
+            res=fs_info(&lfs_stat,i);
+            if(i>=sflash_info.files_used){
+                if(res==FS_STAT_INDEX) break;
+                if(!res) continue;
+            }
+
+            if(res<0 || (res & ~(FS_STAT_ACTIVE | FS_STAT_INACTIVE | FS_STAT_UNCLOSED))) {
+                if(cb_printf) cb_printf("ERROR Index(%u):%d\n",i,res);
+                err++;
+            }
+
+            if(res&FS_STAT_ACTIVE) {
+                if(res&FS_STAT_UNCLOSED) {
+                    res=fs_open(&lfs_desc,lfs_stat.fname,SF_OPEN_READ|SF_OPEN_RAW);
+                    if(res<0){
+                      if(cb_printf) cb_printf("ERROR Open '%s':%d\n",lfs_stat.fname,res);
+                      err++;
+                    }else{
+                      if(lfs_stat.disk_flags & SF_OPEN_CRC){
+                          // does not make sense
+                          if(cb_printf) cb_printf("ERROR Unclosed File with CRC '%s'\n",lfs_stat.fname);
+                          err++;
+                      }
+                      lres=fs_read(&lfs_desc, NULL , 0xFFFFFFFF);
+                      if(lres<0){
+                          if(cb_printf) cb_printf("ERROR Unclosed Read '%s':%d\n",lfs_stat.fname,lres);
+                          err++;
+                      }
+                    }
+                }else if(lfs_stat.disk_flags & SF_OPEN_CRC) {
+                    res=fs_open(&lfs_desc,lfs_stat.fname,SF_OPEN_READ | SF_OPEN_CRC);
+                    if(res<0){
+                      if(cb_printf) cb_printf("ERROR Open '%s':%d\n",lfs_stat.fname,res);
+                      err++;
+                    }else{
+                      aval=lfs_stat.file_len;
+                      if(aval>sflash_info.total_flash_size){
+                        if(cb_printf) cb_printf("ERROR Illegal File Size '%s':%u Bytes\n",lfs_stat.fname,aval);
+                        err++;
+                      }else {
+                        while(aval){
+                            res=fs_read(&lfs_desc,pline,line_size);
+                            if(res<0 || res>line_size || res>aval){
+                                if(cb_printf) cb_printf("ERROR Read Data '%s':%d\n",lfs_stat.fname,res);
+                                err++;
+                                break;
+                            }
+                            aval-=res;
+                        }
+                        if(lfs_stat.file_crc32!=lfs_desc.file_crc32){
+                            if(cb_printf) cb_printf("ERROR CRC false '%s'\n",lfs_stat.fname);
+                            err++;
+                        }
+                      }
+                    }
+                }
+            }
+        }
+    }
+    if(cb_printf){
+		if(err) cb_printf("ERROR(s): %d\n",err);
+		else cb_printf("Disk OK\n");
+    }
+    return err;
 }
 
 //------------------- HighLevel FS OK ------------------------
