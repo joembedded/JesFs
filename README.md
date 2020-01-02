@@ -60,7 +60,8 @@ Some Basics about JesFs:
   int16_t fs_rewind(FS_DESC *pdesc);
   int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc);
   uint32_t fs_get_crc32(FS_DESC *pdesc);
-
+  int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t line_size);
+  
   int16_t fs_format(uint32_t f_id);
   int16_t fs_start(uint8_t mode);
   void fs_deepsleep(void);
