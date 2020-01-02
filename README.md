@@ -69,11 +69,11 @@ Some Basics about JesFs:
   void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 ```
 ---
-## Cangelog ##
+## Changelog ##
 - V1.0  CC13XX/CC26xx and Windows
 - V1.5  nRF52840 port
 - V1.51 nRF52840 support Deep Sleep/Wakeup (Deep Sleep with RTC active and Full RAM retention <3uA)
-
+- V1.6 added 'fs_disk_check()': careful Disk Check
 ---
 
 # Using JesFs – BlackBox-Demo #
