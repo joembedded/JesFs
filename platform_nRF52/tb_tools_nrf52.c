@@ -8,6 +8,10 @@
 * Versions: 
 * 1.0: 25.11.2019
 * 1.1: 06.12.2019 added support for Low Power uninit, deep sleep current with RTC wakeup <= 2.7uA on nRF52840
+* 1.1b: 09.12.2019 return empty string on timeout
+* 1.2: 09.12.2019 changed init to presence of softdevice
+* 1.3: 23.12.2019 USE_TBIO for LED
+* 1.4: 05.01.2020 tb_isxxx_init()
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -24,7 +28,7 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 #include "nrf_drv_power.h"
-#include "nrf_serial.h"
+#include "nrf_serial.h" // components/libraries/serial
 #include "app_timer.h" // uses RTC1
 
 #include "nrf_drv_wdt.h"
@@ -40,7 +44,14 @@
 #endif
 
 // ---- local defines --------------
-#define USE_BSP // if defined: Bord support package is init too
+// Define only one USE_cxx:
+//#define USE_BSP // if defined: Bord support package is init too (LEDs 0..x)
+#define USE_TBIO  // if defined Own Handler (1 LED + ...)
+
+#ifdef USE_TBIO
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Actice LOW
+#endif
+
 
 // ---------- locals uart --------------------
 #define TB_UART_NO  1 // use UARTE(1)
@@ -78,7 +89,6 @@ static char tb_uart_line_out[TB_SIZE_LINE_OUT];
 static nrf_drv_wdt_channel_id tb_wd_m_channel_id;
 static bool tb_wdt_enabled=false;
 
-
 // --- locals timestamp ----
 static uint32_t old_rtc_secs=0;
 static uint32_t cnt_secs=0;
@@ -104,15 +114,25 @@ void tb_init(void){
 
     if(tb_basic_init_flag==false){  // init ony once
       /* Minimum Required Basic Block ---START--- */
+
 #ifdef USE_BSP
       // Initialize Board Support Package (LEDs (and buttons)).
       bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
 #endif
+#ifdef USE_TBIO
+    nrf_gpio_cfg_output(TB_LED0);  // We use Software CS - Uses PIN Decode
+    nrf_gpio_pin_set(TB_LED0);    // LED OFF Active LOW
+#endif
+
+#ifndef SOFTDEVICE_PRESENT
+      // Not required for Soft-Device
       ret = nrf_drv_clock_init();
       APP_ERROR_CHECK(ret);
       ret = nrf_drv_power_init(NULL);
       APP_ERROR_CHECK(ret);
       nrf_drv_clock_lfclk_request(NULL);
+#endif
+
       ret = app_timer_init(); // Baut sich eine Event-FIFO, Timer wird APP_TIMER_CONFIG auf 32k..1kHz gesetzt
       APP_ERROR_CHECK(ret);
       tb_basic_init_flag=true;
@@ -153,21 +173,34 @@ void tb_uninit(void){
       tb_highpower_peripheral_uart_init_flag=false;
     }
 }
+// ------ is HighPower Peripheral part init? ----------------------
+inline bool tb_is_hpp_init(void){
+    return tb_highpower_peripheral_uart_init_flag;
+}
 
-// ------ board support pakage -----
-void tb_board_led_on(uint8_t idx){
+// ------ board support pakage or direct I/O -----
+inline void tb_board_led_on(uint8_t idx){
 #ifdef USE_BSP
   bsp_board_led_on(idx);
 #endif
+#ifdef USE_TBIO
+    nrf_gpio_pin_clear(TB_LED0);    // LED OFF Active LOW
+#endif
 }
-void tb_board_led_off(uint8_t idx){
+inline void tb_board_led_off(uint8_t idx){
 #ifdef USE_BSP
   bsp_board_led_off(idx);
 #endif
+#ifdef USE_TBIO
+    nrf_gpio_pin_set(TB_LED0);    // LED OFF Active LOW
+#endif
 }
-void tb_board_led_invert(uint8_t idx){
+inline void tb_board_led_invert(uint8_t idx){
 #ifdef USE_BSP
   bsp_board_led_invert(idx);
+#endif
+#ifdef USE_TBIO
+    nrf_gpio_pin_toggle(TB_LED0);    // LED OFF Active LOW
 #endif
 }
 
@@ -196,6 +229,12 @@ void tb_watchdog_init(void){
     nrf_drv_wdt_enable();
     tb_wdt_enabled=true;
 }
+
+// ------ is Watchdog init? ----------------------
+inline bool tb_is_wd_init(void){
+    return tb_wdt_enabled;
+}
+
 
 // ---- Feed the watchdog, No function if WD not initialised ------------
 // feed_ticks currently ignored, but >0
@@ -339,7 +378,10 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
             }
         }else{
             if(max_wait_ms){
-                if(!--max_wait_ms) break;
+                if(!--max_wait_ms){
+                  idx=0;  // Return empty String
+                  break;
+                }
             }
             tb_delay_ms(1);
         }

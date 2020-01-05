@@ -21,6 +21,7 @@
 * Version: 
 * 1.5 / 25.11.2019
 * 1.51 / 7.12.2019 (LED polarity PCA10056)
+* 1.6 / 5.1.2020 Seems 32MHz is too fast with Softdevice in parallel, with 16 Mhz OK
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
@@ -61,8 +62,9 @@ static nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG;
 int16_t sflash_spi_init(void){
     if(spi_init_flag==true) return 0;  // Already init
 
-    //spi_config.frequency      = NRF_SPIM_FREQ_1M; // for tests
-    spi_config.frequency      = NRF_SPIM_FREQ_32M; // Default: 4M
+    //spi_config.frequency      = NRF_SPIM_FREQ_1M; // for tests, Default: 4M
+    spi_config.frequency      = NRF_SPIM_FREQ_16M; 
+     //spi_config.frequency      = NRF_SPIM_FREQ_32M; // Maybe too fast with Softdevice in || (V1.6) 
 
     spi_config.miso_pin       = FPIN_MISO_PIN;
     spi_config.mosi_pin       = FPIN_MOSI_PIN;
