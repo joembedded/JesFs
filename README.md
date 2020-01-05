@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V1.6
+# JesFs - Jo's Embedded Serial File System V1.61
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -70,11 +70,13 @@ Some Basics about JesFs:
   void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 ```
 ---
+
 ## Changelog ##
 - V1.0  CC13XX/CC26xx and Windows
 - V1.5  nRF52840 port
 - V1.51 nRF52840 support Deep Sleep/Wakeup (Deep Sleep with RTC active and Full RAM retention <3uA)
 - V1.6 added 'fs_disk_check()': careful Disk Check
+- V1.61 source cosmetics and reduced default SPIM Clock to 16MHz on nRF52840 (32MHz recommended only without Softdevice)
 ---
 
 # Using JesFs – BlackBox-Demo #
@@ -87,5 +89,4 @@ This is, where the JesFs could become extremely useful.
 Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/usecase_BlackBox/BlackBox_Eval.pdf)
 
 ---
-
 

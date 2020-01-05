@@ -2,11 +2,12 @@
 * tb_tool.h - Toolbox for UART, Unix-Time, .. 
 *
 * 2019 (C) joembedded.de
-* Version: 1.0 25.11.2019
+*
 *********************************************************************/
 
 void tb_init(void);
 void tb_uninit(void);
+bool tb_is_hpp_init(void);
 
 void tb_board_led_on(uint8_t idx); // LED mapper
 void tb_board_led_off(uint8_t idx);
@@ -16,6 +17,7 @@ void tb_system_reset(void); // system reset
 
 void tb_watchdog_init(void);  // Init Watchdog
 void tb_watchdog_feed(uint32_t feed_ticks); // feed_ticks: currently no function, but >0
+bool tb_is_wd_init(void);
 
 void tb_delay_ms(uint32_t msec); // --- Lower power delay than nrf_delay
 
