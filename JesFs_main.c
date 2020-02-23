@@ -17,12 +17,13 @@
 * (C)2019 joembedded@gmail.com - www.joembedded.de
 * Version: 
 * 1.5 / 25.11.2019 
-* 1.51 / 07.12.2019	added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
+* 1.51 / 07.12.2019 added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
 * 1.6 / 22.12.2019  added fs_check_disk() for detailed checks
-*
+* 1.61 / 05.01.2020 source cosmetics and SPIM 16MHz for nRF52 as default
+* 1.62 / 19.01.2020 Changed WD behavior in tb_tools
 *******************************************************************************/
 
-#define VERSION "1.6 / 22.12.2019"
+#define VERSION "1.62 / 19.01.2020"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -39,6 +40,9 @@
 //======== Platform headers ==========
 #ifdef PLATFORM_NRF52    // Define this Macro in ProjectOptions - PredefinedSymbols
   #include "boards.h"    // Settings div.
+
+  #define GID 1   // Guard-ID
+
 #endif
 
 #ifdef CC13XX_CC26XX    // Define this Macro in ProjectOptions - PredefinedSymbols
@@ -81,12 +85,6 @@ uint32_t _time_get(void) {
 	return tb_time_get();
 }
 
-#ifdef PLATFORM_NRF52
-#if NRFX_WDT_CONFIG_RELOAD_VALUE < 250000
-#warning "Watchdog Interval < 250 seconds"
-#endif
-#endif
-
 //=== common helpers ===
 // Helper Function for readable timestamps
 void conv_secs_to_date_sbuffer(uint32_t secs) {
@@ -105,11 +103,25 @@ int main(void) { // renamed to mainThread() on CCxxyy
     uint32_t asecs;
     uint8_t open_flag;
 
-    tb_init(); // Init the Toolbox (without Watchdog)
-    tb_watchdog_init(); // Watchdog separate init
+#ifdef PLATFORM_NRF52    // Find out why restared
+    uval = (NRF_POWER->RESETREAS);
+    (NRF_POWER->RESETREAS)=0xFFFFFFFF;  // Clear with '1'
+#endif
 
-    tb_printf("\n*** JesFs *Demo* " VERSION " ***\n\n");
-    tb_printf("(C)2019 joembedded@gmail.com - www.joembedded.de\n\n");
+    tb_init(); // Init the Toolbox (without Watchdog)
+    tb_printf("\n*** JesFs *Demo* " VERSION " (C)2020 JoEmbedded.de\n\n");
+
+#ifdef PLATFORM_NRF52    // Find out why restared
+    tb_printf("Reset-Reason: 0x%X ",uval);
+    if(uval&1) tb_printf("(Pin-Reset)");  // The low Nibble Reasons
+    if(uval&2) tb_printf("(Watchdog)");
+    if(uval&4) tb_printf("(Soft-Reset)");
+    if(uval&8) tb_printf("(CPU Lockup)");
+    tb_printf(" Bootcode: 0x%x\n",tb_get_bootcode());
+    GUARD(GID); // GUARD: Save THIS line as last visited line in Module GID
+#endif
+
+    tb_watchdog_init();   // Watchdog separate init
 
     res=fs_start(FS_START_NORMAL);
     tb_printf("Filesystem Init:%d\n",res);
@@ -124,6 +136,10 @@ int main(void) { // renamed to mainThread() on CCxxyy
         tb_putc('\n');
         tb_watchdog_feed(1);  // Now 250 secs time
         tb_board_led_off(0);
+
+#ifdef PLATFORM_NRF52   // Save Software Position
+    GUARD(GID); 
+#endif
 
         if(res>0) { // ignore empty lines
             pc=&input[1];             // point to 1.st argument
@@ -353,6 +369,19 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 // TI-RTOS Up to (TI-RTOS+Debugger) what happens: Reset, Stall, Nirvana, .. See TI docu.
                 // nRF52: Reset
                 tb_system_reset();
+
+            case 'X': // Watchdog Test
+              tb_printf("Counting %d secs, Watchdog Test...\n");
+#ifdef PLATFORM_NRF52   // Save Software Position
+    GUARD(GID); 
+#endif
+              for(i=0;i<uval;i++){
+                tb_printf("(%u)",i);
+                tb_delay_ms(1000);
+              }
+              break;
+
+
 
             case '!':   // Time Management - Set the embedded Timer (in unix-Seconds)
                 asecs=uval;

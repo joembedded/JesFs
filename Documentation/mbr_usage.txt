@@ -1,0 +1,115 @@
+Quelle: https://os.mbed.com/questions/79603/Nordic-nRF-IRQ-Handlers-and-Bootloader/
+
+
+based on the NRF52_DK and put compiler directives around it as shown below:
+
+mbed-os/platform/mbed_application.c, starting at line 61 or so
+static void powerdown_scb(uint32_t vtor)
+{
+    int i;
+ 
+    // SCB->CPUID   - Read only CPU ID register
+    SCB->ICSR = SCB_ICSR_PENDSVCLR_Msk | SCB_ICSR_PENDSTCLR_Msk;
+ 
+    /***** MODIFICATION ******/
+    // Prevent the vector table from being relocated
+   // This line needs to be commented out/not compiled for nRF52 targets
+    #if !defined(TARGET_CUSTOM)
+    SCB->VTOR = vtor;
+    #endif
+    SCB->AIRCR = 0x05FA | 0x0000;
+    SCB->SCR = 0x00000000;
+// SCB->CCR     - Implementation defined value
+
+........
+ 
+Once this is done, recompile your mbed-os libraries.
+
+As far as the sample bootloader application goes, here's a stripped down version of mine that does exactly what you're doing:
+
+Sample Bootloader - note: untested
+/** Library includes */
+#include "mbed.h"
+ 
+extern "C" 
+{
+    #include "nrf_mbr.h"
+    #include "nrf_sdm.h"
+}
+ 
+ 
+/** Application level includes */
+#include "mbed_config.h"
+ 
+// Branches execution to the main application in device flash
+// Should not return
+int loadMainApp(void)
+{
+    // Forward interrupts to the soft device
+    sd_mbr_command_t l_Command = { .command = SD_MBR_COMMAND_INIT_SD};
+    sd_mbr_command(&l_Command);
+ 
+    // Disable SD (main application may re-enable SD)
+    sd_softdevice_disable();
+ 
+    uint32_t l_AppStartAddress = 0x1C000; // Your main application start address goes here
+ 
+    // Configure SD to forward interrupts to application
+    // TODO - Use configurable APP_CODE_BASE
+    sd_softdevice_vector_table_base_set(l_AppStartAddress);
+ 
+    // Branch to main application
+    mbed_start_application(l_AppStartAddress);
+ 
+    return 0; // Should never be reached
+}
+ 
+int main(void)
+{
+    loadMainApp();
+}
+Remember to set the UICR->BOOTLOADERADDR to point to your bootloader's start (10001014 -> 0x78000)
+
+..............
+----------------------------------------------
+
+Gefunden im netz:
+// Allow the jump to a foreign application as if it were a reset (load SP and PC)
+//
+// Aufruf einer externen App:
+extern void start_application(unsigned long app_link_location){    
+	asm(" ldr sp, [r0,#0]");    
+	asm(" ldr pc, [r0,#4]");
+}
+Dann z.B:
+
+start_application(0x00001000);
+----------------------------------------------
+
+Andere Loesung:
+----------------------------------------------
+/*
+ * BOOT_jump
+ * this function sets the new program counter and stack pointer
+ * and jumps to it
+ *
+ */
+#pragma GCC optimize ("O0")
+void __attribute ((noinline)) BOOT_jump(uint32_t sp, uint32_t pc)
+{
+	(void) sp;
+	(void) pc;
+
+	__asm("msr msp, r0");
+	__asm("msr psp, r0");     // <-- Anm. Juergen: PSP auf nrf52840 anscheinend nicht verwendet???
+
+	__asm("mov pc, r1");
+}
+
+----------------------------------------------
+
+Bzw. in NRF: **NORDIC**
+
+nrf_bootloader_app_start.c -> app_start()...
+
+----------------------------------------------

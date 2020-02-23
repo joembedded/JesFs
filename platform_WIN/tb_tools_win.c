@@ -6,7 +6,9 @@
 * - "Microsoft Visual Studio Community 2019"
 *
 * 2019 (C) joembedded.de
-* Version: 1.0 25.11.2019
+* Version: 
+* 1.0  / 25.11.2019
+* 1.02 / 09.12.2019 return empty string on timeout
 *********************************************************************/
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
@@ -176,7 +178,10 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
             }
         }else{
             if(max_wait_ms){
-                if(!--max_wait_ms) break;
+                if(!--max_wait_ms){
+					idx=0;  // Return empty String
+					break;
+				}
             }
             tb_delay_ms(1);
         }

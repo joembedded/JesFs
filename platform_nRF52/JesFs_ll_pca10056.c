@@ -20,8 +20,9 @@
 * (C) 2019 joembedded@gmail.com - www.joembedded.de
 * Version: 
 * 1.5 / 25.11.2019
-* 1.51 / 7.12.2019 (LED polarity PCA10056)
-* 1.6 / 5.1.2020 Seems 32MHz is too fast with Softdevice in parallel, with 16 Mhz OK
+* 1.51 / 07.12.2019 (LED polarity PCA10056)
+* 1.6 / 05.01.2020 Seems 32MHz is too fast with Softdevice in parallel, with 16 Mhz OK
+* 1.7 / 06.01.2020 added Defines for 52840/etc
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
@@ -40,6 +41,7 @@
 #include "boards.h"
 #include "app_error.h"
 
+#ifdef NRF52840_XXAA    // 52840: SPI-Flash on Board
 
 /* Driver Defines und Locals */
 // Use DK PC10056 on board FLASH
@@ -48,11 +50,28 @@
 #define FPIN_MOSI_PIN BSP_QSPI_IO0_PIN // 20 SI/DIO0
 #define FPIN_MISO_PIN BSP_QSPI_IO1_PIN //21 SI/DIO1
 #define FPIN_SS_PIN   BSP_QSPI_CSN_PIN //17 Select, (extern)
-
 #define FPIN_LED      BSP_LED_0   //  13 (optional, used if defined)
 
+#else
 
-#define SPI_INSTANCE  3     // M                                  /**< SPI instance index. */
+// Other Board: #define!
+#warning "SPI Pins correct?"
+#define FPIN_SCK_PIN  6   //  Clock
+#define FPIN_MOSI_PIN 7   //  SI/DIO0
+#define FPIN_MISO_PIN 8   //  SI/DIO1
+#define FPIN_SS_PIN   9   //  Select, (extern)
+#define FPIN_LED      31   //  (optional, used if defined)
+
+#endif
+
+
+
+#ifdef BOARD_PCA10056
+  #define SPI_INSTANCE  3     // M                                  /**< SPI instance index. */
+#else
+  #define SPI_INSTANCE  2     // Assign highes available SPIM instabce for Driver..
+#endif
+
 static const nrfx_spim_t spi = NRFX_SPIM_INSTANCE(SPI_INSTANCE);  /**< SPI instance. */
 static bool spi_init_flag=false;
 static nrfx_spim_config_t spi_config = NRFX_SPIM_DEFAULT_CONFIG;
@@ -63,8 +82,12 @@ int16_t sflash_spi_init(void){
     if(spi_init_flag==true) return 0;  // Already init
 
     //spi_config.frequency      = NRF_SPIM_FREQ_1M; // for tests, Default: 4M
+#ifdef NRF52840_XXAA    // 52840: max. 32MHz
     spi_config.frequency      = NRF_SPIM_FREQ_16M; 
      //spi_config.frequency      = NRF_SPIM_FREQ_32M; // Maybe too fast with Softdevice in || (V1.6) 
+#else // older: max 8MHz
+    spi_config.frequency      = NRF_SPIM_FREQ_8M; // for tests, Default: 4M
+#endif
 
     spi_config.miso_pin       = FPIN_MISO_PIN;
     spi_config.mosi_pin       = FPIN_MOSI_PIN;
@@ -100,6 +123,7 @@ void sflash_wait_usec(uint32_t usec){
 }
 
 void sflash_select(void){
+        // nrf_delay_us(1);  // (?) from Community: SPI may need a small delay to recover (?)
 #ifdef FPIN_LED
         nrf_gpio_pin_clear(FPIN_LED);  // Hear Me Working! Led ON (0 on PCA10056)
 #endif

@@ -4,7 +4,10 @@
 * For platform CC13XX / CC26XX
 *
 * 2019 (C) joembedded.de
-* Version: 1.0 25.11.2019
+* Version: 
+* 1.0 / 25.11.2019
+* 1.01 / 07.12.2019 power optim. for tb_uninit() ToDo
+* 1.02 / 09.12.2019 return empty string on timeout
 *********************************************************************/
 
 // TI-RTOS requires Bunch of Header Files
@@ -170,29 +173,29 @@ void uart_close(void){
 
 
 // -------- init Toolbox -----------------
-// Init UART, SPI and optionally Watchdog
+// Init UART, SPI and optionally Watchdog - Power opt. missing
 void tb_init(void){
-    /* Init what we need */
-    GPIO_init(); // LEDs (and JesFs too)
-    /* Configure the LED pin */
-    GPIO_setConfig(Board_GPIO_RLED, GPIO_CFG_OUT_STD | GPIO_CFG_OUT_LOW); // RED
+    if(tb_init_flag==false){
+		/* Init what we need */
+		GPIO_init(); // LEDs (and JesFs too)
+		/* Configure the LED pin */
+		GPIO_setConfig(Board_GPIO_RLED, GPIO_CFG_OUT_STD | GPIO_CFG_OUT_LOW); // RED
 
-    UART_init(); // required for HW uart
-    //I2C_init();
-    SPI_init();  // normally required required (several instances available)
+		UART_init(); // required for HW uart
+		//I2C_init();
+		SPI_init();  // normally required required (several instances available)
 
-    uart_open();
+		uart_open();
 
-    tb_init_flag=true;
-
+		tb_init_flag=true;
+	}
 }
 
 // ------ uninit all --------------------
 void tb_uninit(void){
     if(tb_init_flag){
-        uart_close();
-
-        // Rest: ToDo...
+        // LowPower ToDo...
+        // uart_close(); etc..
         tb_init_flag=false;
     }
 }
@@ -363,7 +366,10 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
             }
         }else{
             if(max_wait_ms){
-                if(!--max_wait_ms) break;
+                if(!--max_wait_ms){
+                  idx=0;  // Return empty String
+				  break;
+				}
             }
             tb_delay_ms(1);
         }
