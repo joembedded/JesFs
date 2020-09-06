@@ -14,16 +14,19 @@
 *
 * Docu in 'JesFs.pdf'
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
+* (C) joembedded@gmail.com - www.joembedded.de
 * Version: 
-* 1.5 / 25.11.2019 
-* 1.51 / 07.12.2019 added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
-* 1.6 / 22.12.2019  added fs_check_disk() for detailed checks
-* 1.61 / 05.01.2020 source cosmetics and SPIM 16MHz for nRF52 as default
-* 1.62 / 19.01.2020 Changed WD behavior in tb_tools
+* 1.5: 25.11.2019 
+* 1.51: 07.12.2019 added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
+* 1.6: 22.12.2019  added fs_check_disk() for detailed checks
+* 1.61: 05.01.2020 source cosmetics and SPIM 16MHz for nRF52 as default
+* 1.62: 19.01.2020 Changed WD behavior in tb_tools
+* 1.7: 25.02.2020 Added Defines for u-Blox NINA-B3 
+* 1.8: 20.03.2020 Added Time set with '!' and UART-RX-Error
+* 2.0: 06.09.2020 Changed UART Driver to APP_UART  for Multi-Use in tb_tools
 *******************************************************************************/
 
-#define VERSION "1.62 / 19.01.2020"
+#define VERSION "2.0 / 06.09.2020"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -91,6 +94,21 @@ void conv_secs_to_date_sbuffer(uint32_t secs) {
     fs_sec1970_to_date(secs,&fs_date);
     sprintf((char*)sbuffer,"%02u.%02u.%04u %02u:%02u:%02u",fs_date.d,fs_date.m,fs_date.a,fs_date.h,fs_date.min,fs_date.sec);
 }
+// Convert a String "day.month.year4 hr:min[.sec]" to unix-seconds  // Return 0 on error
+uint32_t conv_tstr_to_secs(char* pc){
+  memset(&fs_date,0,sizeof(fs_date));
+  fs_date.d=(uint8_t)strtoul(pc,&pc,0);
+  if(*pc++!='.') return 0;
+  fs_date.m=(uint8_t)strtoul(pc,&pc,0);
+  if(*pc++!='.') return 0;
+  fs_date.a=(uint16_t)strtoul(pc,&pc,0);
+  if(*pc++!=' ') return 0;
+  fs_date.h=(uint8_t)strtoul(pc,&pc,0);
+  if(*pc++!=':') return 0;
+  fs_date.min=(uint8_t)strtoul(pc,&pc,0);
+  if(*pc++==':') fs_date.sec=(uint8_t)strtoul(pc,0,0);  // Seconds optional
+  return fs_date2sec1970(&fs_date);
+}
 
 //========= MAIN ====================
 int main(void) { // renamed to mainThread() on CCxxyy
@@ -117,7 +135,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
     if(uval&2) tb_printf("(Watchdog)");
     if(uval&4) tb_printf("(Soft-Reset)");
     if(uval&8) tb_printf("(CPU Lockup)");
-    tb_printf(" Bootcode: 0x%x\n",tb_get_bootcode());
+    tb_printf(" Bootcode: 0x%x\n",tb_get_bootcode(true));
     GUARD(GID); // GUARD: Save THIS line as last visited line in Module GID
 #endif
 
@@ -140,8 +158,12 @@ int main(void) { // renamed to mainThread() on CCxxyy
 #ifdef PLATFORM_NRF52   // Save Software Position
     GUARD(GID); 
 #endif
-
-        if(res>0) { // ignore empty lines
+        if(res<0){
+          tb_printf("ERROR: UART-RX\n");   // Show prompt
+          tb_uninit();
+          tb_delay_ms(1000);
+          tb_init();
+        }else if(res>0) { // ignore empty lines
             pc=&input[1];             // point to 1.st argument
             while(*pc==' ') pc++;     // Remove Whitspaces from Input
             uval=strtoul(pc,NULL,0);  // Or 0
@@ -154,6 +176,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 res=fs_start(FS_START_RESTART);   // Restart Flash to be sure it is awake, else it can not be sent to sleep..
                 if(res) tb_printf("(FS_start(FS_RESTART) return ERROR: Res:%d)\n",res);
                 fs_deepsleep(); // ...because if Flash is already sleeping, this will wake it up!, now SPI closed, Flash in Deep-Sleep
+                tb_delay_ms(10);  // Wait for Text Out
                 tb_uninit();	//  Disable toolbox-HighPower peripherals (e.g. UART)
                 tb_delay_ms(uval*1000);
                 tb_init();      //  Re-Enable again
@@ -381,12 +404,13 @@ int main(void) { // renamed to mainThread() on CCxxyy
               }
               break;
 
-
-
-            case '!':   // Time Management - Set the embedded Timer (in unix-Seconds)
+            case '!':   // Time Management - Set the embedded Timer (in unix-Seconds or dd.mm.yyyy hh:MM:ss )
                 asecs=uval;
-                if(asecs) tb_time_set(asecs);
-                asecs=tb_time_get();    // TI-RTOS
+                if(asecs) {
+                  if(asecs<32) asecs=conv_tstr_to_secs(pc); // might return 0
+                  if(asecs) tb_time_set(asecs);
+                }
+                asecs=tb_time_get();  
                 conv_secs_to_date_sbuffer(asecs);
                 tb_printf("'!': Time: [%s] (%u secs)\n",sbuffer,asecs);
                 break;

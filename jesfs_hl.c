@@ -7,6 +7,7 @@
 * Version:
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
+* 1.7 / 12.03.2020 added fs_date2sec1970()
 *
 *******************************************************************************/
 
@@ -59,56 +60,85 @@ uint32_t fs_get_secs(void) { // Unix-Secs
 }
 
 //------ Date-Routines (carefully tested!)---------------
-#define SEC_DAY 86400L // Length of day in seconds for lap year
-static const uint32_t daylen[12] = {
-    31 * SEC_DAY,  /* Jan */
-    59 * SEC_DAY,  /* Feb */
-    90 * SEC_DAY,  /* Mar */
-    120 * SEC_DAY, /* Apr */
-    151 * SEC_DAY, /* Mai */
-    181 * SEC_DAY, /* June */
-    212 * SEC_DAY, /* Juli */
-    243 * SEC_DAY, /* Aug. */
-    273 * SEC_DAY, /* Sept */
-    304 * SEC_DAY, /* Oct */
-    334 * SEC_DAY, /* Nov. */
-    365 * SEC_DAY, /* Dec. */
+#define SEC_DAY	86400L	// Length of day in seconds for leap year
+static const uint32_t daylen[12]={
+	31*SEC_DAY,	/* Jan */
+	59*SEC_DAY,	/* Feb */
+	90*SEC_DAY,	/* Mar */
+	120*SEC_DAY, /* Apr */
+	151*SEC_DAY, /* Mai */
+	181*SEC_DAY, /* June */
+	212*SEC_DAY, /* Juli */
+	243*SEC_DAY, /* Aug. */
+	273*SEC_DAY, /* Sept */
+	304*SEC_DAY, /* Oct */
+	334*SEC_DAY, /* Nov. */
+	365*SEC_DAY, /* Dec. */
 };
+/* Convert seconds to date-struct (1.1.1970 00:00:00 = 0secs ) */
+void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd){
+	uint32_t divs;
+	uint8_t dlap=0;
+	divs=asecs/(1461*SEC_DAY);
+	pd->a=1970+divs*4;
+	asecs-=(divs*(1461*SEC_DAY)); // 3 normal + 1 leap year
+	if(asecs>=(789*SEC_DAY)){
+		asecs-=SEC_DAY;
+		dlap=1;
+	}
+	divs=asecs/(365*SEC_DAY);
+	pd->a+=divs;
+	asecs-=divs*(365*SEC_DAY);
+	if(dlap && asecs<59*SEC_DAY && divs==2) {
+		divs=1;
+		asecs+=SEC_DAY;
+	}else{
+		for(divs=0;asecs>=daylen[divs];divs++);
+	}
+	pd->m=1+divs;
+	if(divs) asecs-=daylen[divs-1];
+	divs=asecs/SEC_DAY;
+	pd->d=1+divs;
+	asecs-=SEC_DAY*divs;
+	divs=asecs/3600L;
+	pd->h=divs;
+	asecs-=divs*3600L;
+	divs=asecs/60L;
+	pd->min=divs;
+	asecs-=divs*60L;
+	pd->sec=asecs;
+}
 
-/* Convert seconds to date-struct */
-void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd) {
-    uint32_t divs;
-    uint8_t dlap = 0;
-    divs = asecs / (1461 * SEC_DAY);
-    pd->a = 1970 + divs * 4;
-    asecs -= (divs * (1461 * SEC_DAY)); // 3 normal + 1 leap year
-    if (asecs >= (789 * SEC_DAY)) {
-        asecs -= SEC_DAY;
-        dlap = 1;
-    }
-    divs = asecs / (365 * SEC_DAY);
-    pd->a += divs;
-    asecs -= divs * (365 * SEC_DAY);
-    if (dlap && asecs < 59 * SEC_DAY && divs == 2) {
-        divs = 1;
-        asecs += SEC_DAY;
-    } else {
-        for (divs = 0; asecs >= daylen[divs]; divs++)
-            ;
-    }
-    pd->m = 1 + divs;
-    if (divs)
-        asecs -= daylen[divs - 1];
-    divs = asecs / SEC_DAY;
-    pd->d = 1 + divs;
-    asecs -= SEC_DAY * divs;
-    divs = asecs / 3600L;
-    pd->h = divs;
-    asecs -= divs * 3600L;
-    divs = asecs / 60L;
-    pd->min = divs;
-    asecs -= divs * 60L;
-    pd->sec = asecs;
+static const uint8_t days_per_month[12]={31,28,31,30,31,30,31,31,30,31,30,31};  // Days per Month Normal
+static const uint16_t days_summed[12]={0,31,59,90,120,151,181,212,243,273,304,334}; // Days summed
+
+// Convert date to unix seconds - Return 0 (== 1.1.1970 00:00:00) on Failure
+uint32_t fs_date2sec1970(FS_DATE *pd){
+	uint32_t nsec;
+	uint16_t year_base;
+	uint8_t year_idx;
+
+	year_base=pd->a-1970;
+	year_idx=year_base%4;   // 0,1,2:Schaltjahr,3
+	if(year_base>129) return 0; // OK von 1970-2099 (2100 is NO leap year)
+	if(pd->m<1 || pd->m>12) return 0;    // Monat
+	if(pd->d<1 || pd->d>days_per_month[pd->m-1]){ // Check Day ok for this month?
+		if(year_idx!=2 || pd->m!=2 || pd->d!=29){   // Only Exception
+			return 0;
+		}
+	}
+	if(pd->h>23 || pd->m>59 || pd->sec>59) return 0;
+
+	nsec=  ((uint32_t)year_base/4)*( 1461 * SEC_DAY); // Complete 4-years
+	nsec+= ((uint32_t)year_idx) * ( 365 * SEC_DAY);    //
+	nsec+= ((uint32_t)days_summed[pd->m-1]+(pd->d-1))*SEC_DAY; // Und soviele Tage
+	if(year_idx==3 || (year_idx=2 && pd->m>2)) nsec+=SEC_DAY;   // Schalttage addieren
+
+	nsec+=(pd->h*3600);
+	nsec+=(pd->min*60);
+	nsec+=pd->sec;
+
+	return nsec;
 }
 
 /* Calculating a CRC32: Also useful for external use */

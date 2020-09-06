@@ -7,7 +7,6 @@
 
 void tb_init(void);
 void tb_uninit(void);
-bool tb_is_hpp_init(void);
 
 void tb_board_led_on(uint8_t idx); // LED mapper
 void tb_board_led_off(uint8_t idx);
@@ -31,19 +30,25 @@ uint32_t tb_deltaticks_to_ms(uint32_t t0, uint32_t t1);
 uint32_t tb_time_get(void); // ---- Unix-Timer. Must be called periodically to work, but at least twice per RTC-overflow ---
 void tb_time_set(uint32_t new_secs); // Set time, regarding the timer
 
+// --UART--
 void tb_printf(char* fmt, ...); // tb_printf(): printf() to toolbox uart. Wait if busy
-void tb_putc(char c); // tb_putc(): Wait if not ready
-int16_t tb_kbhit(void); // ---- Input functions 0: Nothing available (tb_kbhit is faster than tb_getc) ---------
+uint32_t tb_putc(char c); // tb_putc(): Wait if not ready, may return NRF_ERROR_TIMOUT
+// -Removed- int16_t tb_kbhit(void); // ---- Input functions 0: Nothing available (tb_kbhit is faster than tb_getc) ---------
 int16_t tb_getc(void); // ---- get 1 char (0..255) (or -1 if nothing available)
 // Get String with Timout (if >0) in msec of infinite (Timout 0), No echo (max_uart_in without trailing \0!)
 int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t echo);
+bool tb_is_uart_init(void);
+// pcomm_params: (const app_uart_comm_params_t*):
+uint32_t tb_uart_init(void *pcomm_params, uint8_t *prx_buf, uint16_t rx_buf_size, uint8_t *ptx_buf, uint16_t tx_buf_size, uint32_t timout_ms);
+uint32_t tb_uart_uninit(void);
+
 
 #ifdef PLATFORM_NRF52
 // Debug-Fkt to show Pin Config
 void tb_dbg_pinview(uint32_t pin_number);
 // Novo contains 4 uint32 to keep time and track software for post-mortem
 // GUARD: Each Sourcefile gets an uniqe ID (0..255), Guard write ID and LINE to bootcode
-extern uint32_t _tb_novo[4]; //  __attribute__ ((section(".non_init")));
+extern uint32_t _tb_novo[8]; //  __attribute__ ((section(".non_init")));
 
 uint32_t tb_get_bootcode(bool ok);
 

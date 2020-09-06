@@ -12,6 +12,7 @@
 * Version: 
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
+* 1.7 / 12.03.2020 added fs_date2sec1970()
 *
 *******************************************************************************/
 
@@ -196,7 +197,7 @@ typedef struct{ // Structure for a full date (readable)
 	uint8_t h;
 	uint8_t d;
 	uint8_t m;
-	uint16_t a; // 1970 - 2100+
+	uint16_t a; // 1970 - 2099 (2100 is no leap year)
 } FS_DATE;
 
 //-------------------- HighLevel Functions --------------------------
@@ -215,6 +216,7 @@ uint32_t fs_get_crc32(FS_DESC *pdesc);
 
 int16_t fs_info(FS_STAT *pstat, uint16_t fno);
 void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
+uint32_t fs_date2sec1970(FS_DATE *pd);
 
 int16_t fs_check_disk(void cb_printf(char* fmt, ...), uint8_t *pline, uint32_t line_size);
 

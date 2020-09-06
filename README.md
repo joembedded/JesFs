@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V1.61 #
+# JesFs - Jo's Embedded Serial File System V2.0 #
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -75,8 +75,12 @@ Some Basics about JesFs:
 - V1.0  CC13XX/CC26xx and Windows
 - V1.5  nRF52840 port
 - V1.51 nRF52840 support Deep Sleep/Wakeup (Deep Sleep with RTC active and Full RAM retention <3uA)
-- V1.6 added 'fs_disk_check()': careful Disk Check
+- V1.6  Added 'fs_disk_check()': careful Disk Check
 - V1.61 source cosmetics and reduced default SPIM Clock to 16MHz on nRF52840 (32MHz recommended only without Softdevice)
+- V1.7  Added Defines for u-Blox NINA-B3 
+- V1.8  Added Time set with '!' and UART-RX-Error
+- V2.0  Changed UART Driver to APP_UART for Multi-Use in tb_tools **Running OK and stable with SDK16, PROBLEM with SDK17**
+
 ---
 
 # Using JesFs – BlackBox-Demo #
