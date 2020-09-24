@@ -1048,7 +1048,7 @@
 // <0=> 0 
 
 #ifndef APP_UART_DRIVER_INSTANCE
-#define APP_UART_DRIVER_INSTANCE 1 // 0 JW
+#define APP_UART_DRIVER_INSTANCE 0
 #endif
 
 //==========================================================

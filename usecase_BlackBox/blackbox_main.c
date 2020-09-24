@@ -12,8 +12,11 @@
 * - Windows (Compilers: "Embarcadero(R) C++ Builder Community Edition" (for PC)
 *           and "Microsoft Visual Studio Community 2019")
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* (C)2020 joembedded@gmail.com - www.joembedded.de
+* Versions: 
+* 1.5 / 25.11.2019
+* 2.0 / 24.09.2020 (nRF52) SDK 17.0.2 and SES 5.10b on NORDIC PCA10056-Evalboard
+* 
 *
 *******************************************************************************/
 

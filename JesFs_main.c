@@ -17,16 +17,18 @@
 * (C) joembedded@gmail.com - www.joembedded.de
 * Version: 
 * 1.5: 25.11.2019 
-* 1.51: 07.12.2019 added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
+* 1.51: 07.12.2019 (nRF52) added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
 * 1.6: 22.12.2019  added fs_check_disk() for detailed checks
-* 1.61: 05.01.2020 source cosmetics and SPIM 16MHz for nRF52 as default
+* 1.61: 05.01.2020 source cosmetics and (nRF52) SPIM 16MHz as default
 * 1.62: 19.01.2020 Changed WD behavior in tb_tools
-* 1.7: 25.02.2020 Added Defines for u-Blox NINA-B3 
+* 1.7: 25.02.2020 (nRF52) Added Defines for u-Blox NINA-B3 
 * 1.8: 20.03.2020 Added Time set with '!' and UART-RX-Error
-* 2.0: 06.09.2020 Changed UART Driver to APP_UART  for Multi-Use in tb_tools
+* 2.0: 06.09.2020 (nRF52) Changed UART Driver to APP_UART  for Multi-Use in tb_tools
+* 2.01: 08.09.2020 (nRF52) Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
+* 2.02: 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
 *******************************************************************************/
 
-#define VERSION "2.0 / 06.09.2020"
+#define VERSION "2.02 / 23.09.2020"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -127,6 +129,8 @@ int main(void) { // renamed to mainThread() on CCxxyy
 #endif
 
     tb_init(); // Init the Toolbox (without Watchdog)
+    tb_watchdog_init();   // Watchdog separate init
+
     tb_printf("\n*** JesFs *Demo* " VERSION " (C)2020 JoEmbedded.de\n\n");
 
 #ifdef PLATFORM_NRF52    // Find out why restared
@@ -138,8 +142,6 @@ int main(void) { // renamed to mainThread() on CCxxyy
     tb_printf(" Bootcode: 0x%x\n",tb_get_bootcode(true));
     GUARD(GID); // GUARD: Save THIS line as last visited line in Module GID
 #endif
-
-    tb_watchdog_init();   // Watchdog separate init
 
     res=fs_start(FS_START_NORMAL);
     tb_printf("Filesystem Init:%d\n",res);

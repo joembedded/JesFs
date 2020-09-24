@@ -23,6 +23,8 @@
 * 1.6: 19.01.2020 WDT optimised and GUARD-functions and Framing Errors
 * 1.7: 25.02.2020 Added Defines for u-Blox NINA-B3 
 * 2.0: 06.09.2020 Changed UART Driver to APP_UART for Multi-Use
+* 2.01: 08.09.2020 Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
+* 2.02: 23.09.2020 Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -120,12 +122,8 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,14) // Button and GREEN Led ..
 #endif
 
-//------------> SDK16_17-Problem; SDK16: OK, SDK17: APP_TIMER not working?
-//------------> SDK17: Function: tb_delay_ms(xxx) (using APP_TIMER) not working?
-//------------> Tested on PCA10056
-
 // ---------- locals uart --------------------
-#define UART_TX_BUF_SIZE 8 // 256      /* Also as default buffers for UART */
+#define UART_TX_BUF_SIZE 256      /* Also as default buffers for UART */
 #define UART_RX_BUF_SIZE 256    /* Also as default buffers for UART */
 
 static uint8_t  _tb_app_uart_def_rx_buf[UART_RX_BUF_SIZE];     
@@ -136,8 +134,8 @@ static const app_uart_comm_params_t _tb_app_uart_def_comm_params = {
           TX_PIN_NUMBER,
           UART_PIN_DISCONNECTED  /*RTS_PIN_NUMBER*/,   
           UART_PIN_DISCONNECTED  /*CTS_PIN_NUMBER*/,
-          APP_UART_FLOW_CONTROL_ENABLED /*APP_UART_FLOW_CONTROL_DISABLED*/,
-          false,      // Use Parity
+          /*APP_UART_FLOW_CONTROL_ENABLED */ APP_UART_FLOW_CONTROL_DISABLED,
+          false,      // Not Use Parity
 #if defined (UARTE_PRESENT)
           NRF_UARTE_BAUDRATE_115200
 #else
@@ -145,9 +143,10 @@ static const app_uart_comm_params_t _tb_app_uart_def_comm_params = {
 #endif
 };
 static app_uart_buffers_t _tb_app_uart_buffers;
-static uint32_t _tb_app_timout_ms=0;
+static int32_t _tb_app_timout_ms;
 
 static uint8_t _tb_app_uart_errorcode; // 1 res. for data, 16: Fifo OVF, ...
+static int16_t _tb_app_uart_peekchar; // -1: nothing or 0..255
 static bool _tb_uart_init_flag=false; 
 
 #define TB_SIZE_LINE_OUT  120  // 1 terminal line working buffer (opt. long filenames to print)
@@ -183,26 +182,40 @@ static void _tb_app_uart_error_handle(app_uart_evt_t * p_event){
 }
 
 // tb_putc(): Wait if not ready. With Timout from init
-uint32_t tb_putc(char c){
-    uint32_t h=_tb_app_timout_ms;
-    if(_tb_uart_init_flag==false) return NRF_ERROR_NO_MEM; // Not init...
+int16_t tb_putc(char c){
+    int32_t h=_tb_app_timout_ms;
+    if(_tb_uart_init_flag==false) return -1; // Not init...
 
     for(;;){
-        if(app_uart_put(c) != NRF_ERROR_NO_MEM) return NRF_SUCCESS; // NRF_ERROR_NO_MEM (4) -> No ERROR, just wait.
-        if(!(h--)) return NRF_ERROR_TIMEOUT; 
+        if(app_uart_put(c) != NRF_ERROR_NO_MEM) return 0; // NRF_ERROR_NO_MEM (4) -> No ERROR, just wait.
+        if(!(h--)) return -2; 
         tb_delay_ms(1);  
     }
 }
 
+int16_t tb_kbhit(void){
+  uint8_t cr;
+  if(_tb_uart_init_flag==false) return 0; // Not init = nothing
+  if(_tb_app_uart_errorcode) return -1; // Error
+  if(app_uart_get(&cr) == NRF_SUCCESS){ // nothing: NRF_ERROR_NOT_FOUND
+    _tb_app_uart_peekchar=(int16_t)cr;
+    return 1; // Ready
+  }
+  return 0; // nothing
+}
 // ---- get 1 char (0..255) (or -1 if nothing available)
 int16_t tb_getc(void){
   uint8_t cr;
+  int16_t ret;
   if(_tb_uart_init_flag==false) return -1; // Not init...
-
   if(_tb_app_uart_errorcode){
     cr=_tb_app_uart_errorcode;   // Error: Report one time
     _tb_app_uart_errorcode=0;
     return -(int16_t)cr;  // -2..
+  }else if(_tb_app_uart_peekchar>=0){
+    ret = _tb_app_uart_peekchar;
+    _tb_app_uart_peekchar=-1;
+    return ret;
   }else if(app_uart_get(&cr) == NRF_SUCCESS){ // nothing: NRF_ERROR_NOT_FOUND
       return (int16_t) cr;
   }else return -1;  // Probably NOT_FOUND or sth. else
@@ -224,7 +237,7 @@ void tb_printf(char* fmt, ...){
     if(ulen>TB_SIZE_LINE_OUT-1) ulen=TB_SIZE_LINE_OUT-1;
     pl=_tb_app_uart_line_out;
     while(ulen--){
-      tb_putc(*pl++);
+      if(tb_putc(*pl++)) break; 
     }
 }
 
@@ -239,7 +252,7 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
 
     for(;;){
         res=tb_getc();
-        if(res>0){
+        if(res>=0){ 
             c=res;
             if(c=='\n' || c=='\r') {
                 break;    // NL CR or whatever (no Echo for NL CR)
@@ -255,7 +268,7 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
             }else if(c>=' ' && c<128 && idx<max_uart_in){
                 input[idx++]=c;
                 if(echo) tb_putc(c);
-            }
+            } // else ignore
         }else if(res==-1){  // No Data
             if(max_wait_ms){
                 if(!--max_wait_ms){
@@ -272,16 +285,18 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
 
 /* if pcomm_params == NULL: Use default UART
 * if prx/tx_buf== NULL: use default Buffers
+* timeout: -1: ca. 50 days...
 */
-uint32_t tb_uart_init(void *pcomm_params, 
+int16_t tb_uart_init(void *pcomm_params, 
         uint8_t *prx_buf, uint16_t rx_buf_size,
         uint8_t *ptx_buf, uint16_t tx_buf_size,
-        uint32_t timeout_ms){
+        int32_t timeout_ms){
 
-    if(_tb_uart_init_flag==true) return NRF_ERROR_NO_MEM; // Already in USE
+    if(_tb_uart_init_flag==true) return -1; // Already in USE
 
     uint32_t err_code;
     _tb_app_uart_errorcode=0;
+    _tb_app_uart_peekchar=-1;
                                                     
     // Check for Defaults
     if(pcomm_params==NULL) pcomm_params=(void*)&_tb_app_uart_def_comm_params;
@@ -299,20 +314,24 @@ uint32_t tb_uart_init(void *pcomm_params,
     _tb_app_uart_buffers.tx_buf      = ptx_buf;      
     _tb_app_uart_buffers.tx_buf_size = tx_buf_size; 
     
-    _tb_app_timout_ms = (timeout_ms-1); // 0: Wait "quasi forever"
+    _tb_app_timout_ms = timeout_ms; // 0: Wait "quasi forever"
 
     _tb_uart_init_flag=true;
 
     err_code = app_uart_init((const app_uart_comm_params_t*)pcomm_params, &_tb_app_uart_buffers, _tb_app_uart_error_handle, APP_IRQ_PRIORITY_LOWEST); 
-    return err_code;
+    if(err_code == NRF_SUCCESS) return 0;
+    else return -2;
 }
 
-uint32_t tb_uart_uninit(void){
-     if(_tb_uart_init_flag == true){
-       _tb_uart_init_flag = false;
-       return app_uart_close();
-     }
+int16_t tb_uart_uninit(void){
+     uint32_t err_code;
+     if(_tb_uart_init_flag == false) return -1; // Not init
+     _tb_uart_init_flag = false;
+     err_code = app_uart_close();
+     if(err_code == NRF_SUCCESS) return 0;
+     else return -2;
 }
+
 bool tb_is_uart_init(void){
   return _tb_uart_init_flag;
 }
@@ -388,12 +407,13 @@ void tb_init(void){
     //Normalerweise RX-Port OFF
     nrf_gpio_cfg_input(RX_PIN_NUMBER,GPIO_PIN_CNF_PULL_Pulldown); 
 
-
 #ifndef SOFTDEVICE_PRESENT
       // Not required for Soft-Device
       ret = nrf_drv_power_init(NULL);
       APP_ERROR_CHECK(ret);
-
+/* SDK17: ERROR in in "nrf_drv_clock.c -> nrf_drv_clock_init()": 
+*  Remove:   "if (nrf_wdt_started()) m_clock_cb.lfclk_on = true;" 
+*/
       ret = nrf_drv_clock_init();
       APP_ERROR_CHECK(ret);
       nrf_drv_clock_lfclk_request(NULL);
@@ -405,7 +425,7 @@ void tb_init(void){
       /* Minimum Required Basic Block ---END--- */
     }
 
-    ret = tb_uart_init(NULL, NULL, 0, NULL, 0, 0);  // Use default UART
+    ret = tb_uart_init(NULL, NULL, 0, NULL, 0, -1);  // Use default UART
     APP_ERROR_CHECK(ret);
 }
 // ------ uninit all higher power peripherals, currently only UART  --------------------
