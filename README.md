@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V3.00 #
+# JesFs - Jo's Embedded Serial File System V3.01 #
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -19,6 +19,7 @@ everybody knows “FAT”, “NTFS”, … but have you ever thought of a file s
 Or even inside of a CPU? No problem, with the right Software. This is why I wrote 
 
 **“JesFs – Jo’s Embedded Serial File System“**
+The JesFs-Bootloader is used for File Transfer and Firmware Updates via Bluetooth here: https://github.com/joembedded/JesFs_Bootloader
 
 ![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
 
