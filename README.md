@@ -20,7 +20,7 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-The JesFs-Bootloader is used for File Transfer and Firmware Updates via Bluetooth here:  
+The JesFs-Bootloader is used for __File Transfer__ and __Firmware Updates__ via __Bluetooth (BLE)__ here:  
 https://github.com/joembedded/JesFs_Bootloader
 
 ![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
