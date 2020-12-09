@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V2.02 #
+# JesFs - Jo's Embedded Serial File System V3.00 #
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -33,7 +33,7 @@ I decided to create my own one. “Robustness”, “Security” and “Small Fo
 were my design constraints.
 
 JesFs was designed for use in the “Real World” and for use with standard Serial NOR-Flash memories, 
-like the M25R-Series, used on nRF52840-DK and the CC13xx/CC26xx Launchpads, which is available up to 16 MB, or even more…
+like the M25R-Series, used on nRF52840-DK, nRF52832 and the CC13xx/CC26xx Launchpads, which is available up to 16 MB, or even more…
 
 Some Basics about JesFs:
 
@@ -82,6 +82,7 @@ Some Basics about JesFs:
 - V2.0  (nRf52) Changed UART Driver to APP_UART for Multi-Use in tb_tools
 - V2.01 (nRf52) Changed toSDK17 (problem with nrf_clock() in SDK17, see docu)
 - V2.02 (nRf52) Changed toSDK17.0.2 and SES 5,10b (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
+- V3.00 (nRF52) Added Support for nRF52832 
 
 ---
 

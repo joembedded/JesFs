@@ -13,6 +13,7 @@
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
 * 1.7 / 12.03.2020 added fs_date2sec1970()
+* 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
 *
 *******************************************************************************/
 
@@ -217,6 +218,8 @@ uint32_t fs_get_crc32(FS_DESC *pdesc);
 int16_t fs_info(FS_STAT *pstat, uint16_t fno);
 void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 uint32_t fs_date2sec1970(FS_DATE *pd);
+void fs_set_static_secs(uint32_t newsecs);
+
 
 int16_t fs_check_disk(void cb_printf(char* fmt, ...), uint8_t *pline, uint32_t line_size);
 

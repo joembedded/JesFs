@@ -26,9 +26,10 @@
 * 2.0: 06.09.2020 (nRF52) Changed UART Driver to APP_UART  for Multi-Use in tb_tools
 * 2.01: 08.09.2020 (nRF52) Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
 * 2.02: 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
+* 2.03: 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
 *******************************************************************************/
 
-#define VERSION "2.02 / 23.09.2020"
+#define VERSION "2.03 / 22.11.2020"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -313,7 +314,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
 
             case 'r':
                 tb_printf("'r' Read (max.) %d Bytes from File:\n",uval);
-
+				anz = uval;	
                 // Read the complete sbuffer, but show only max. first 60 bytes
                 if(anz<(int)sizeof(sbuffer)) {
                     res=fs_read(&fs_desc, sbuffer , anz);

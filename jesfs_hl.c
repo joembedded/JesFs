@@ -3,11 +3,12 @@
 *
 * JesFs - Jo's Embedded Serial File System
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
+* (C)2020 joembedded@gmail.com - www.joembedded.de
 * Version:
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
 * 1.7 / 12.03.2020 added fs_date2sec1970()
+* 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
 *
 *******************************************************************************/
 
@@ -20,6 +21,7 @@
 #include "jesfs_int.h"
 
 extern uint32_t _time_get(); // We need Unix-Seconds, must be defined outside
+static uint32_t _static_time = 0; // If <>0: time used for fs_open() with Create or fs_format()
 
 // Driver designed for 4k-Flash (or larger) - JesFs
 #if SF_SECTOR_PH != 4096
@@ -55,8 +57,14 @@ int16_t fs_strcmp(char *s1, char *s2) { // Only required for equal(0) or !equal(
     }
 }
 
+// Set a static time / 0 for JesFs
+void fs_set_static_secs(uint32_t newsecs) {
+  _static_time = newsecs;
+}
+
 uint32_t fs_get_secs(void) { // Unix-Secs
-    return _time_get();      // Macro from above
+    if(_static_time) return _static_time;
+    else return _time_get();      // Macro from above
 }
 
 //------ Date-Routines (carefully tested!)---------------
