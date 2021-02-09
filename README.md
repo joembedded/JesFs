@@ -20,13 +20,10 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
+![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltx_jesfs.jpg)
 
-[Image: JesFs on the LTraX module (CC1310)]
+[Image: 4MB JesFs on 2x3 mm]
 
-![JesFs on RC-CC1310F](https://github.com/joembedded/JesFs/blob/master/Documentation/rc1310Fk.jpg)
-
-[Image: Radiocontrolli.com offers a very compact CC1310F module with 2MB Flash]
 
 My daily work ist the IoT. Because I did not find any really practical solution, 
 I decided to create my own one. “Robustness”, “Security” and “Small Footprint” 
