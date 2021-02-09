@@ -1,6 +1,6 @@
 <!DOCTYPE CrossStudio_Project_File>
-<solution Name="BlackBox_pca10056" target="8" version="2">
-  <project Name="BlackBox_pca10056">
+<solution Name="JesFsDemo_pca10056" target="8" version="2">
+  <project Name="JesFsDemo_pca10056">
     <configuration
       Name="Common"
       arm_architecture="v7EM"
@@ -15,8 +15,8 @@
       arm_simulator_memory_simulation_parameter="RWX 00000000,00100000,FFFFFFFF;RWX 20000000,00010000,CDCDCDCD"
       arm_target_device_name="nRF52840_xxAA"
       arm_target_interface_type="SWD"
-      c_preprocessor_definitions="APP_TIMER_V2;APP_TIMER_V2_RTC1_ENABLED;BOARD_PCA10056;CONFIG_GPIO_AS_PINRESET;DEBUG;DEBUG_NRF;FLOAT_ABI_HARD;INITIALIZE_USER_SECTIONS;NO_VTOR_CONFIG;NRF52840_XXAA;PLATFORM_NRF52;STANDARD_IO"
-      c_user_include_directories="../../../config;../../../../../../components;../../../../../../components/boards;../../../../../../components/drivers_nrf/nrf_soc_nosd;../../../../../../components/libraries/atomic;../../../../../../components/libraries/atomic_fifo;../../../../../../components/libraries/balloc;../../../../../../components/libraries/bsp;../../../../../../components/libraries/button;../../../../../../components/libraries/delay;../../../../../../components/libraries/experimental_section_vars;../../../../../../components/libraries/hardfault;../../../../../../components/libraries/hardfault/nrf52;../../../../../../components/libraries/log;../../../../../../components/libraries/log/src;../../../../../../components/libraries/memobj;../../../../../../components/libraries/mutex;../../../../../../components/libraries/queue;../../../../../../components/libraries/ringbuf;../../../../../../components/libraries/scheduler;../../../../../../components/libraries/uart;../../../../../../components/libraries/fifo;../../../../../../components/libraries/sortlist;../../../../../../components/libraries/strerror;../../../../../../components/libraries/timer;../../../../../../components/libraries/util;../../../../../../components/toolchain/cmsis/include;../../..;../../../../../../external/fprintf;../../../../../../integration/nrfx;../../../../../../integration/nrfx/legacy;../../../../../../modules/nrfx;../../../../../../modules/nrfx/drivers/include;../../../../../../modules/nrfx/hal;../../../../../../modules/nrfx/mdk;../config;./"
+      c_preprocessor_definitions="APP_TIMER_V2;APP_TIMER_V2_RTC1_ENABLED;BOARD_PCA10056;CONFIG_GPIO_AS_PINRESET;DEBUG;DEBUG_NRF;FLOAT_ABI_HARD;INITIALIZE_USER_SECTIONS;NO_VTOR_CONFIG;NRF52840_XXAA;PLATFORM_NRF52;STANDARD_IO;_NINA_B3_EVK;_NINA_B3_LTX"
+      c_user_include_directories="../../../config;../../../../../../components;../../../../../../components/boards;../../../../../../components/drivers_nrf/nrf_soc_nosd;../../../../../../components/libraries/atomic;../../../../../../components/libraries/atomic_fifo;../../../../../../components/libraries/balloc;../../../../../../components/libraries/bsp;../../../../../../components/libraries/button;../../../../../../components/libraries/delay;../../../../../../components/libraries/experimental_section_vars;../../../../../../components/libraries/hardfault;../../../../../../components/libraries/hardfault/nrf52;../../../../../../components/libraries/log;../../../../../../components/libraries/log/src;../../../../../../components/libraries/memobj;../../../../../../components/libraries/mutex;../../../../../../components/libraries/queue;../../../../../../components/libraries/ringbuf;../../../../../../components/libraries/scheduler;../../../../../../components/libraries/serial;../../../../../../components/libraries/sortlist;../../../../../../components/libraries/strerror;../../../../../../components/libraries/timer;../../../../../../components/libraries/util;../../../../../../components/libraries/uart;../../../../../../components/libraries/fifo;../../../../../../components/toolchain/cmsis/include;../../..;../../../../../../external/fprintf;../../../../../../integration/nrfx;../../../../../../integration/nrfx/legacy;../../../../../../modules/nrfx;../../../../../../modules/nrfx/drivers/include;../../../../../../modules/nrfx/hal;../../../../../../modules/nrfx/mdk;../config;./"
       debug_register_definition_file="../../../../../../modules/nrfx/mdk/nrf52840.svd"
       debug_start_from_entry_point_symbol="No"
       debug_target_connection="J-Link"
@@ -95,8 +95,7 @@
       <file file_name="../../../jesfs_ml.c" />
       <file file_name="../../../platform_nrf52/tb_tools_nrf52.c" />
       <file file_name="../../../platform_nrf52/JesFs_ll_pca100xx.c" />
-      <file file_name="../../blackbox_helpers.c" />
-      <file file_name="../../blackbox_main.c" />
+      <file file_name="../../../JesFs_main.c" />
     </folder>
     <folder Name="None">
       <file file_name="../../../../../../modules/nrfx/mdk/ses_startup_nrf52840.s" />

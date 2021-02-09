@@ -3,12 +3,13 @@
 *
 * JesFs - Jo's Embedded Serial File System
 *
-* (C)2020 joembedded@gmail.com - www.joembedded.de
+* (C) joembedded@gmail.com - www.joembedded.de
 * Version:
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
 * 1.7 / 12.03.2020 added fs_date2sec1970()
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
+* 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
 *
 *******************************************************************************/
 
@@ -130,7 +131,7 @@ uint32_t fs_date2sec1970(FS_DATE *pd){
 	year_idx=year_base%4;   // 0,1,2:Schaltjahr,3
 	if(year_base>129) return 0; // OK von 1970-2099 (2100 is NO leap year)
 	if(pd->m<1 || pd->m>12) return 0;    // Monat
-	if(pd->d<1 || pd->d>days_per_month[pd->m-1]){ // Check Day ok for this month?
+	if(pd->d > days_per_month[pd->m-1]){ // Check Day ok for this month?
 		if(year_idx!=2 || pd->m!=2 || pd->d!=29){   // Only Exception
 			return 0;
 		}

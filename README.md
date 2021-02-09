@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V3.01 #
+# JesFs - Jo's Embedded Serial File System V3.10 #
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -20,9 +20,6 @@ Or even inside of a CPU? No problem, with the right Software. This is why I wrot
 
 **“JesFs – Jo’s Embedded Serial File System“**
 
-The JesFs-Bootloader is used for __File Transfer__ and __Firmware Updates__ via __Bluetooth (BLE)__ here:  
-https://github.com/joembedded/JesFs_Bootloader
-
 ![JesFs on LTraX](https://github.com/joembedded/JesFs/blob/master/Documentation/ltrax_module.jpg)
 
 [Image: JesFs on the LTraX module (CC1310)]
@@ -31,7 +28,7 @@ https://github.com/joembedded/JesFs_Bootloader
 
 [Image: Radiocontrolli.com offers a very compact CC1310F module with 2MB Flash]
 
-My daily work is the IoT. Because I did not find any really practical solution, 
+My daily work ist the IoT. Because I did not find any really practical solution, 
 I decided to create my own one. “Robustness”, “Security” and “Small Footprint” 
 were my design constraints.
 
@@ -86,6 +83,7 @@ Some Basics about JesFs:
 - V2.01 (nRf52) Changed toSDK17 (problem with nrf_clock() in SDK17, see docu)
 - V2.02 (nRf52) Changed toSDK17.0.2 and SES 5,10b (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
 - V3.00 (nRF52) Added Support for nRF52832 
+- V3.10 (nRF52) Added Sample for nRF52832 (I/O Configuration for u-Blox ANNA-B112-module)
 
 ---
 

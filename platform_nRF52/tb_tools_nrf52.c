@@ -92,7 +92,7 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
 * MACROS are defined in the project */
 
 // Check I/O Defs
-#if !defined(STANDARD_IO) && !defined(NINA_B3_EVK) && !defined(NINA_B3_LTX) && !defined(NINA_B3_EPA)
+#if !defined(STANDARD_IO) && !defined(NINA_B3_EVK) && !defined(NINA_B3_LTX) && !defined(NINA_B3_EPA) && !defined(ANNA_B112_EVK)
   #warning "Define I/O setup in project options!"
 #endif
 
@@ -121,6 +121,22 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
   #undef TX_PIN_NUMBER
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,14) // Button and GREEN Led ..
 #endif
+
+#ifdef ANNA_B112_EVK
+  //#warning "INFO: TB_TOOLS for NINA_B112_EVK"  // Just as Info
+  // LED is OK
+  #undef TB_BUT0
+  #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // Button and GREEN Led ..
+  #undef TB_LED0
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,27) // Active LOW
+
+  #undef RX_PIN_NUMBER
+  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
+  #undef TX_PIN_NUMBER
+  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
+#endif
+
+
 
 // ---------- locals uart --------------------
 #define UART_TX_BUF_SIZE 256      /* Also as default buffers for UART */
@@ -170,7 +186,7 @@ static bool tb_basic_init_flag=false; // Always ON, only init once
 
 //----------- UART helpers ------------
 static void _tb_app_uart_error_handle(app_uart_evt_t * p_event){
-/* Required, but Dummy is OK too */
+/* Required, but Dummy is OK too, BREAK gibt 8+4, also ERR 28.d -> 0001 1100 */
     if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR){
         // ref. NRF52840 Datasheeet: Bits: OVERRUN:1 PARITY:2 FRAMING:4: BREAK:8
         // APP_ERROR_HANDLER(p_event->data.error_communication);
