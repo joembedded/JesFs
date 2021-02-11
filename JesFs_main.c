@@ -27,9 +27,10 @@
 * 2.01: 08.09.2020 (nRF52) Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
 * 2.02: 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
 * 2.03: 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
+* 2.04: 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
 *******************************************************************************/
 
-#define VERSION "2.03 / 22.11.2020"
+#define VERSION "2.04 / 11.02.2021"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -397,7 +398,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 tb_system_reset();
 
             case 'X': // Watchdog Test
-              tb_printf("Counting %d secs, Watchdog Test...\n");
+              tb_printf("Counting %d secs, Watchdog Test...\n",uval);
 #ifdef PLATFORM_NRF52   // Save Software Position
     GUARD(GID); 
 #endif
