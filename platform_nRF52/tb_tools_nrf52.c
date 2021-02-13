@@ -506,6 +506,7 @@ void tb_system_reset(void){
 }
 
 // ShowPin - Debug-Function!: pin_number=NRF_GPIO_PIN_MAP(port, pin) // == ((pin_0_31)+port_0_1*32)
+// Will raise FATAL, if pin not existing...
 void tb_dbg_pinview(uint32_t pin_number){
     nrf_gpio_pin_dir_t   dir;
     nrf_gpio_pin_input_t input;
