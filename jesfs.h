@@ -8,12 +8,13 @@
 * - TI-RTOS CC13xx/CC26xx Launchpad 
 * - nRF52840 on PCA10056 DK Board
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
+* (C) joembedded@gmail.com - www.joembedded.de
 * Version: 
 * 1.5 / 25.11.2019
 * 1.6 / 22.12.2019 added fs_disk_check()
 * 1.7 / 12.03.2020 added fs_date2sec1970()
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
+* 1.9 / 22.02.2021 added/edited Devicelist, added new 1MB Flash GD25WD80C(EIGR) 
 *
 *******************************************************************************/
 
@@ -81,12 +82,13 @@ extern "C"{
 //#define SF_RD_TRANSFER_LIMIT 64
 //#define SF_TX_TRANSFER_LIMIT 64
 
-// Define this macro for additioinal statistics
+// Define this macro for additional statistics
 #define JSTAT 
 
 // Sample-Flash ID MACRONIX (Ultra-Low-Power), add others
 #define MACRONIX_MANU_TYP    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
-#define GIGADEV_MANU_TYP     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density)
+//#define GIGADEV_MANU_TYP     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density), Warning: Requires 3V3
+#define GIGADEV_MANU_TYP     0xC864  // GigaDevices (same as MX25R, e.g. 
 
 //------------------- Area for User Settings END -------------------------------
 
