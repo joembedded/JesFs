@@ -92,7 +92,7 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
 * MACROS are defined in the project */
 
 // Check I/O Defs
-#if !defined(STANDARD_IO) && !defined(NINA_B3_EVK) && !defined(NINA_B3_LTX) && !defined(NINA_B3_EPA) && !defined(ANNA_B112_EVK)
+#if !defined(STANDARD_IO) && !defined(NINA_B3_EVK) && !defined(NINA_B3_LTX) && !defined(NINA_B3_EPA) && !defined(ANNA_B112_EVK) && !defined(YJ_NRF52832)
   #warning "Define I/O setup in project options!"
 #endif
 
@@ -136,7 +136,19 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
 #endif
 
+#ifdef YJ_NRF52832  // YJ_16048 from HolyIot (NO CE/FCC uncertified Low-Cost module)
+  //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
+  // LED is OK
+  #undef TB_BUT0
+  //#define TB_BUT0   NRF_GPIO_PIN_MAP(0,xx) // NO Button until now ..
+  #undef TB_LED0
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,19) // Active LOW
 
+  #undef RX_PIN_NUMBER
+  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
+  #undef TX_PIN_NUMBER
+  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
+#endif
 
 // ---------- locals uart --------------------
 #define UART_TX_BUF_SIZE 256      /* Also as default buffers for UART */
