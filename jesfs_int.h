@@ -6,8 +6,8 @@
 * The following parts are only relevant for
 * the (internal) medium/low level drivers
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* (C) joembedded@gmail.com - www.joembedded.de
+* Version: see Header Files
 *
 *******************************************************************************/
 

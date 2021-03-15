@@ -6,6 +6,7 @@
 * Demo how to use JesFs on
 * - TI CC13xx/CC26xx Launchpad
 * - Nordic nRF52840 DK_PCA10056 (nRF52)
+* - Nordic nRF52832 DK_PCA10040 (nRF52)
 * - Windows (Compilers: "Embarcadero(R) C++ Builder Community Edition" (for PC)
 *           and "Microsoft Visual Studio Community 2019")
 *
@@ -28,9 +29,10 @@
 * 2.02: 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
 * 2.03: 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
 * 2.04: 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
+* 2.05: 12.03.2021 Added print of Flash ID for analysis 
 *******************************************************************************/
 
-#define VERSION "2.04 / 11.02.2021"
+#define VERSION "2.05 / 12.03.2021"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -148,6 +150,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
     res=fs_start(FS_START_NORMAL);
     tb_printf("Filesystem Init:%d\n",res);
     tb_printf("Disk size: %d Bytes\n",  sflash_info.total_flash_size);
+	tb_printf("Flash ID: %x\n",sflash_info.identification); // For Analysis, see 'jesfs.h' for definitions
 
     for(;;) {
         tb_board_led_on(0);

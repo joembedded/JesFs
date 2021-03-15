@@ -4,7 +4,7 @@
 * JesFs - Jo's Embedded Serial File System
 *
 * (C)2019 joembedded@gmail.com - www.joembedded.de
-* Version: 1.5 / 25.11.2019
+* Version: see Header Files
 *
 *******************************************************************************/
 
@@ -48,6 +48,8 @@ uint32_t sflash_QuickScanIdentification(void){
 int16_t sflash_interpret_id(uint32_t id){
 	uint8_t h;
 	sflash_info.total_flash_size=0;
+
+        // Keep Flash-ID for optional Analysis
 	sflash_info.identification=id;
 
 	switch(id>>8){   // Check Without Density
@@ -55,8 +57,9 @@ int16_t sflash_interpret_id(uint32_t id){
 		return -104;    // Unknown Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
 
 	// List of tested/knownAsGood Flash-Manufacturer/IDs (see Header File).  Others may be added later
-	case MACRONIX_MANU_TYP: // The 1MB-Version is on the TI CC1310 Launchpad, 2-16 MB on LTraX, ..
-        case GIGADEV_MANU_TYP: // The 2MB-Version is inside Radiocontrolli's CC1310F
+	case MACRONIX_MANU_TYP_RX: // Macronix - The 1MB-Version is on the TI CC1310 Launchpad, 2-16 MB on LTraX, ..
+        case GIGADEV_MANU_TYP_WD: // GigaDevice up to 8Mbit
+        case GIGADEV_MANU_TYP_WQ: // GigaDevice >= 2Mbit
 
 	    // ...add others...
 		break;      // OK!

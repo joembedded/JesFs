@@ -14,7 +14,8 @@
 * 1.6 / 22.12.2019 added fs_disk_check()
 * 1.7 / 12.03.2020 added fs_date2sec1970()
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
-* 1.9 / 22.02.2021 added/edited Devicelist, added new 1MB Flash GD25WD80C(EIGR) 
+* 1.9 / 22.02.2021 added/edited Devicelist, added new Flash Family GD25WD
+* 1.10 / 28.02.2021 added/edited Devicelist, added new Flash Family GD25WQ
 *
 *******************************************************************************/
 
@@ -86,9 +87,10 @@ extern "C"{
 #define JSTAT 
 
 // Sample-Flash ID MACRONIX (Ultra-Low-Power), add others
-#define MACRONIX_MANU_TYP    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
-//#define GIGADEV_MANU_TYP     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density), Warning: Requires 3V3
-#define GIGADEV_MANU_TYP     0xC864  // GigaDevices (same as MX25R, e.g. 
+#define MACRONIX_MANU_TYP_RX    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
+//#define GIGADEV_MANU_TYP_RC     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density), WARNING: Will not work <3V!!!
+#define GIGADEV_MANU_TYP_WD     0xC864  // GigaDevices (same as MX25R, e.g. GD25WD80C)
+#define GIGADEV_MANU_TYP_WQ     0xC865  // GigaDevices (same as MX25R,e.g. GD25WQ64E)
 
 //------------------- Area for User Settings END -------------------------------
 
