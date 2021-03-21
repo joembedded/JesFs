@@ -30,9 +30,10 @@
 * 2.03: 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
 * 2.04: 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
 * 2.05: 12.03.2021 Added print of Flash ID for analysis 
+* 2.06: 21.03.2021 Added hint about 'Bulk Erase'/Soft format (see case 'F'))
 *******************************************************************************/
 
-#define VERSION "2.05 / 12.03.2021"
+#define VERSION "2.06 / 21.03.2021"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -205,7 +206,10 @@ int main(void) { // renamed to mainThread() on CCxxyy
                 break;
 
             case 'F':
-                i=atoi(pc); // Full:1 (Hardware Chip Erase) Soft Erase :2 (faster if not full)
+                // Warning: F1 ('Bulk Erase') might need VERY long on some (larger) Chips (> 240 secs, 
+                // which is Default Timeout). Better to use F2 (which erases only non-empty 4k sectors).
+                // F1: Hardware Chip Erase ('Bulk Erase') F2: Soft Erase :2 (faster if not full)
+                i=atoi(pc); 
                 pc="???";
                 if(i==1) pc="Chip Erase";
                 else if(i==2) pc="Soft Erase";
