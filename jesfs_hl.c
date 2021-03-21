@@ -10,6 +10,7 @@
 * 1.7 / 12.03.2020 added fs_date2sec1970()
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
 * 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
+* 1.82 / 21.03.2021 added comment fs_format() Timeouts
 *
 *******************************************************************************/
 
@@ -405,7 +406,9 @@ int16_t fs_deepsleep(void) {
     return 0;
 }
 
-/* Format Filesystem. May require between 30-240 seconds (even more, see Datasheet) for a 512k-16 MB Flash) (changed in V1.1) */
+/* Format Filesystem. May require between 30-240 seconds (even more, see Datasheet) for a 512k-16 MB Flash) (changed in V1.1) 
+* Warning: fmode=FS_FORMAT_FULL ('Bulk Erase') might need VERY long on some (larger) Chips (> 240 secs,  which is Default Timeout). 
+* Better to use fmode=FS_FORMAT_SOFT (which erases only non-empty 4k sectors). */
 int16_t fs_format(uint8_t fmode) {
     uint32_t sbuf[3];
     int16_t res;
@@ -429,7 +432,7 @@ int16_t fs_format(uint8_t fmode) {
         if (sflash_WaitWriteEnabled())
             return -102; // Wait enabled until OK, Fehler 1:1
         sflash_BulkErase();
-        if (sflash_WaitBusy(240000))
+        if (sflash_WaitBusy(240000)) 
             return -101; //
     } else
         return -139; // Parameter
