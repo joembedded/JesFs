@@ -43,7 +43,7 @@ int16_t tb_uart_init(void *pcomm_params, uint8_t *prx_buf, uint16_t rx_buf_size,
 int16_t tb_uart_uninit(void);
 
 
-#ifdef PLATFORM_NRF52
+#if defined(NRF52) || defined(PLATFORM_NRF52)
 // Debug-Fkt to show Pin Config
 void tb_dbg_pinview(uint32_t pin_number);
 // Novo contains 4 uint32 to keep time and track software for post-mortem

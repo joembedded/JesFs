@@ -30,6 +30,7 @@
 * 1.71 / 12.11.2020 LED only on EVAL-board
 * 2.00 / 23.11.2020 nRF52832 (limited SPI DMA-Size <256)
 * 2.10 / 13.02.2021 nRF52832 SPI Pins mapped to optimal position for ANNA-B112 module
+* 2.11 / 16.05.2021 removed 'board.h'
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
@@ -45,7 +46,7 @@
 #include "app_util_platform.h"
 #include "nrf_gpio.h"
 #include "nrf_delay.h"
-#include "boards.h"
+// #include "boards.h" // Pin names
 #include "app_error.h"
 
 #ifdef NRF52840_XXAA    // 52840: SPI-Flash on Board
@@ -53,13 +54,13 @@
 /* Driver Defines und Locals */
 // Use DK PC10056 on board FLASH - Pins are fixed
 // Unused PINS: BSP_QSPI_IO2_PIN  (22) and BSP_QSPI_IO3_PIN (23)
-#define FPIN_SCK_PIN  BSP_QSPI_SCK_PIN // 19 Clock
-#define FPIN_MOSI_PIN BSP_QSPI_IO0_PIN // 20 SI/DIO0
-#define FPIN_MISO_PIN BSP_QSPI_IO1_PIN //21 SO/DIO1
-#define FPIN_SS_PIN   BSP_QSPI_CSN_PIN //17 Select, (extern)
+#define FPIN_SCK_PIN  NRF_GPIO_PIN_MAP(0,19) // 19 Clock (BSP_QSPI_SCK_PIN)
+#define FPIN_MOSI_PIN NRF_GPIO_PIN_MAP(0,20) // 20 SI/DIO0 (BSP_QSPI_IO0_PIN)
+#define FPIN_MISO_PIN NRF_GPIO_PIN_MAP(0,21) //21 SO/DIO1 (BSP_QSPI_IO1_PIN)
+#define FPIN_SS_PIN   NRF_GPIO_PIN_MAP(0,17) //17 Select, (extern, BSP_QSPI_CSN_PIN)
 // Enable or define in Project: #define FPIN_LED      BSP_LED_0   //  13 (optional, used if defined)
 
-#else // 52832 - I/Os flexible
+#else // 52832 - I/Os flexible, but this makes sense
 // Pins mapped to optimal positions for ANNA-B112 module.
 #define SPI_CHUNKS         128 // If defined: SPI in smaller Chunks (nRF52832 requires <=255 Bytes)
 #define FPIN_SCK_PIN  NRF_GPIO_PIN_MAP(0,15)   //  Clock

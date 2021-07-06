@@ -2,12 +2,6 @@
 * tb_tools_nrf52.c - Toolbox for UART, Unix-Time, .. 
 *
 * For platform nRF52 
-* written on nRF52840-pca10056 and nRF52832-ACONNO(ADC52832) with nRF5_SDK_16.0.0 and SES 4.20a
-* There are 3 Defines in the Project (Preprocessor). Select one to define the I/O configuration
-*   STANDARD_IO  // this is the standard - for Nordic EVK PCA10056
-*   NINA_B3_EVK  // for NINA_B3_EVK
-*   NINA_B3_LTX  // my custom platform
-*
 *
 * (C) joembedded.de
 *
@@ -16,7 +10,7 @@
 * 1.1: 06.12.2019 added support for Low Power uninit, deep sleep current with RTC wakeup <= 2.7uA on nRF52840
 * 1.1b: 09.12.2019 return empty string on timeout
 * 1.2: 09.12.2019 changed init to presence of softdevice
-* 1.3: 23.12.2019 USE_TBIO for LED
+* 1.3: 23.12.2019 USE_TBIO for LED (removed in 2.50)
 * 1.4: 05.01.2020 tb_isxxx_init()
 * 1.5: 06.01.2020 Button added
 * 1.5b: 09.01.2020 tb_watchdog_init return type 
@@ -25,6 +19,8 @@
 * 2.0: 06.09.2020 Changed UART Driver to APP_UART for Multi-Use
 * 2.01: 08.09.2020 Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
 * 2.02: 23.09.2020 Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
+* 2.11: 16.05.2021 removed 'board.h', small changes in PIN-Names
+* 2.50: 02.07.2021 changed Platform PIN Setup
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -46,11 +42,9 @@
 
 #include "nrf_drv_wdt.h"
 
-#include "app_uart.h"
+#include "app_uart.h" // uses Driver Instanz from sdk_config.h (1 on 52840, 0 on 52832)
 #include "app_error.h"
 #include "app_util.h"
-
-#include "boards.h"
 
 #include "tb_tools.h"
 
@@ -59,10 +53,6 @@
 #endif
 #if defined (UARTE_PRESENT)
 #include "nrf_uarte.h"
-#endif
-
-#ifndef PLATFORM_NRF52
-  #error "Define the Platform (PLATFORM_NRF52)" // in Project-Options on SES
 #endif
 
 
@@ -77,76 +67,53 @@ uint32_t _tb_novo[8] __attribute__ ((section(".non_init")));
 uint32_t _tb_bootcode_backup; // Holds initial Bootcode
 
 // ---- local defines --------------
-// Define only one USE_cxx:
-//#define USE_BSP // if defined: Bord support package is init too (LEDs 0..x)
-#define USE_TBIO  // if defined Own Handler (1 LED P0.13 + 1 BUTTON P0.11)
-
-#ifdef USE_TBIO
-  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Actice LOW
-  #define TB_BUT0   NRF_GPIO_PIN_MAP(0,11) // Button
-#endif
 
 // ------ Custom IO Setup ------------
-/* I have a custom board with NINA-B3-Modules from UBLOX and the UBLOX EVK
-* uses others Ports for RX,RX an optionial Button (not present on my board) 
-* MACROS are defined in the project */
 
-// Check I/O Defs
-#if !defined(STANDARD_IO) && !defined(NINA_B3_EVK) && !defined(NINA_B3_LTX) && !defined(NINA_B3_EPA) && !defined(ANNA_B112_EVK) && !defined(YJ_NRF52832)
-  #warning "Define I/O setup in project options!"
-#endif
-
-#ifdef STANDARD_IO
-  //#warning "INFO: TB_TOOLS for STANDARD_EVK"  // Just as Info
-#endif
-
+//-------- NRF52840-CPUS -------------
 #ifdef NINA_B3_EVK
-  //#warning "INFO: TB_TOOLS for NINA_B3_EVK"  // Just as Info
-  // LED is OK
-  #undef TB_BUT0
+  //#warning "INFO: TB_TOOLS for NINA_B3_EVK" // Just as Info
+  #ifndef NRF52840_XXAA
+    #error "WRONG CPU"
+  #endif
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Active LOW
   #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // Button and GREEN Led ..
-  #undef RX_PIN_NUMBER
   #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,29) // Button and GREEN Led ..
-  #undef TX_PIN_NUMBER
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(1,13) // Button and GREEN Led ..
+  #define 
 #endif
 
 #if defined(NINA_B3_LTX) || defined(NINA_B3_EPA)
   //#warning "INFO: TB_TOOLS for NINA_B3_LTX/_EPA" // Just as Info
-  // LED is OK
-  #undef TB_BUT0    
-  //#define TB_BUT0  --  // No Button
-  #undef RX_PIN_NUMBER
+  #ifndef NRF52840_XXAA
+    #error "WRONG CPU"
+  #endif
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Actice LOW
+  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
   #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,15) // Button and GREEN Led ..
-  #undef TX_PIN_NUMBER
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,14) // Button and GREEN Led ..
 #endif
 
+//-------- NRF52832-CPUS -------------
 #ifdef ANNA_B112_EVK
   //#warning "INFO: TB_TOOLS for NINA_B112_EVK"  // Just as Info
-  // LED is OK
-  #undef TB_BUT0
+  #ifndef NRF52832_XXAA
+    #error "WRONG CPU"
+  #endif
   #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // Button and GREEN Led ..
-  #undef TB_LED0
   #define TB_LED0   NRF_GPIO_PIN_MAP(0,27) // Active LOW
-
-  #undef RX_PIN_NUMBER
   #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
-  #undef TX_PIN_NUMBER
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
 #endif
 
 #ifdef YJ_NRF52832  // YJ_16048 from HolyIot (NO CE/FCC uncertified Low-Cost module)
   //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
-  // LED is OK
-  #undef TB_BUT0
-  //#define TB_BUT0   NRF_GPIO_PIN_MAP(0,xx) // NO Button until now ..
-  #undef TB_LED0
+  #ifndef NRF52832_XXAA
+    #error "WRONG CPU"
+  #endif
   #define TB_LED0   NRF_GPIO_PIN_MAP(0,19) // Active LOW
-
-  #undef RX_PIN_NUMBER
+  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
   #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
-  #undef TX_PIN_NUMBER
   #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
 #endif
 
@@ -421,16 +388,10 @@ void tb_init(void){
     }
     _tb_bootcode = 0;                     // Bootcode frei fuer neues
 
-#ifdef USE_BSP
-      // Initialize Board Support Package (LEDs (and buttons)).
-      bsp_board_init(BSP_INIT_LEDS | BSP_INIT_BUTTONS);
-#endif
-#ifdef USE_TBIO
     nrf_gpio_cfg_output(TB_LED0);  // We use Software CS - Uses PIN Decode
     nrf_gpio_pin_set(TB_LED0);    // LED OFF Active LOW
 #ifdef TB_BUT0
     nrf_gpio_cfg_input(TB_BUT0,GPIO_PIN_CNF_PULL_Pullup); // Std. Button on all Boards
-#endif
 #endif
     //Normalerweise RX-Port OFF
     nrf_gpio_cfg_input(RX_PIN_NUMBER,GPIO_PIN_CNF_PULL_Pulldown); 
@@ -474,39 +435,19 @@ inline uint32_t tb_get_bootcode(bool ok){
 
 // ------ board support pakage or direct I/O -----
 inline void tb_board_led_on(uint8_t idx){
-#ifdef USE_BSP
-  bsp_board_led_on(idx);
-#endif
-#ifdef USE_TBIO
     nrf_gpio_pin_clear(TB_LED0);    // LED OFF Active LOW
-#endif
 
 }
 inline void tb_board_led_off(uint8_t idx){
-#ifdef USE_BSP
-  bsp_board_led_off(idx);
-#endif
-#ifdef USE_TBIO
     nrf_gpio_pin_set(TB_LED0);    // LED OFF Active LOW
-#endif
 }
 inline void tb_board_led_invert(uint8_t idx){
-#ifdef USE_BSP
-  bsp_board_led_invert(idx);
-#endif
-#ifdef USE_TBIO
     nrf_gpio_pin_toggle(TB_LED0);    // LED OFF Active LOW
-#endif
 }
-// Get the Button State
+// Get the Button State (optionally present)
 inline bool tb_board_button_state(uint8_t idx){
 #ifdef TB_BUT0
-#ifdef USE_BSP
-    return bsp_board_button_state_get(idx);
-#endif
-#ifdef USE_TBIO
     return nrf_gpio_pin_read(TB_BUT0);
-#endif
 #else
     return 1; // Assume NOT PRESSED if not pressent
 #endif

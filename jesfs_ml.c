@@ -3,7 +3,7 @@
 *
 * JesFs - Jo's Embedded Serial File System
 *
-* (C)2019 joembedded@gmail.com - www.joembedded.de
+* (C)joembedded@gmail.com - www.joembedded.de
 * Version: see Header Files
 *
 *******************************************************************************/
