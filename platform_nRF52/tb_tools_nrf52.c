@@ -21,6 +21,7 @@
 * 2.02: 23.09.2020 Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
 * 2.11: 16.05.2021 removed 'board.h', small changes in PIN-Names
 * 2.50: 02.07.2021 changed Platform PIN Setup
+* 2.51: 10.07.2021 added 'tb_pins_nrf52.h'
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -55,6 +56,8 @@
 #include "nrf_uarte.h"
 #endif
 
+// ------ Custom IO Setup - Pin Definitions ------------
+#include "tb_pins_nrf52.h"
 
 /******* SES has a default section for Non-Volatile RAM ***********/
 /* _tb_novo is valid if _tb_novo[0]==RAM_MAGIC and _tb_novo[1] = ~_tb_novo[2];  
@@ -68,55 +71,6 @@ uint32_t _tb_bootcode_backup; // Holds initial Bootcode
 
 // ---- local defines --------------
 
-// ------ Custom IO Setup ------------
-
-//-------- NRF52840-CPUS -------------
-#ifdef NINA_B3_EVK
-  //#warning "INFO: TB_TOOLS for NINA_B3_EVK" // Just as Info
-  #ifndef NRF52840_XXAA
-    #error "WRONG CPU"
-  #endif
-  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Active LOW
-  #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // Button and GREEN Led ..
-  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,29) // Button and GREEN Led ..
-  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(1,13) // Button and GREEN Led ..
-  #define 
-#endif
-
-#if defined(NINA_B3_LTX) || defined(NINA_B3_EPA)
-  //#warning "INFO: TB_TOOLS for NINA_B3_LTX/_EPA" // Just as Info
-  #ifndef NRF52840_XXAA
-    #error "WRONG CPU"
-  #endif
-  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Actice LOW
-  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
-  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,15) // Button and GREEN Led ..
-  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,14) // Button and GREEN Led ..
-#endif
-
-//-------- NRF52832-CPUS -------------
-#ifdef ANNA_B112_EVK
-  //#warning "INFO: TB_TOOLS for NINA_B112_EVK"  // Just as Info
-  #ifndef NRF52832_XXAA
-    #error "WRONG CPU"
-  #endif
-  #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // Button and GREEN Led ..
-  #define TB_LED0   NRF_GPIO_PIN_MAP(0,27) // Active LOW
-  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
-  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
-#endif
-
-#ifdef YJ_NRF52832  // YJ_16048 from HolyIot (NO CE/FCC uncertified Low-Cost module)
-  //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
-  #ifndef NRF52832_XXAA
-    #error "WRONG CPU"
-  #endif
-  #define TB_LED0   NRF_GPIO_PIN_MAP(0,19) // Active LOW
-  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
-  #define RX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,2) // Button and GREEN Led ..
-  #define TX_PIN_NUMBER NRF_GPIO_PIN_MAP(0,3) // Button and GREEN Led ..
-#endif
-
 // ---------- locals uart --------------------
 #define UART_TX_BUF_SIZE 256      /* Also as default buffers for UART */
 #define UART_RX_BUF_SIZE 256    /* Also as default buffers for UART */
@@ -125,8 +79,8 @@ static uint8_t  _tb_app_uart_def_rx_buf[UART_RX_BUF_SIZE];
 static uint8_t  _tb_app_uart_def_tx_buf[UART_TX_BUF_SIZE];     
 
 static const app_uart_comm_params_t _tb_app_uart_def_comm_params = {
-          RX_PIN_NUMBER,
-          TX_PIN_NUMBER,
+          TB_RX_PIN,
+          TB_TX_PIN,
           UART_PIN_DISCONNECTED  /*RTS_PIN_NUMBER*/,   
           UART_PIN_DISCONNECTED  /*CTS_PIN_NUMBER*/,
           /*APP_UART_FLOW_CONTROL_ENABLED */ APP_UART_FLOW_CONTROL_DISABLED,
@@ -394,7 +348,7 @@ void tb_init(void){
     nrf_gpio_cfg_input(TB_BUT0,GPIO_PIN_CNF_PULL_Pullup); // Std. Button on all Boards
 #endif
     //Normalerweise RX-Port OFF
-    nrf_gpio_cfg_input(RX_PIN_NUMBER,GPIO_PIN_CNF_PULL_Pulldown); 
+    nrf_gpio_cfg_input(TB_RX_PIN,GPIO_PIN_CNF_PULL_Pulldown); 
 
 #ifndef SOFTDEVICE_PRESENT
       // Not required for Soft-Device
@@ -421,7 +375,7 @@ void tb_init(void){
 void tb_uninit(void){
     tb_uart_uninit();
     //Special: Default UART to LOW if OFF
-    nrf_gpio_cfg_input(RX_PIN_NUMBER,GPIO_PIN_CNF_PULL_Pulldown); 
+    nrf_gpio_cfg_input(TB_RX_PIN,GPIO_PIN_CNF_PULL_Pulldown); 
 }
 
 

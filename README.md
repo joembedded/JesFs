@@ -1,4 +1,4 @@
-# JesFs - Jo's Embedded Serial File System V3.11 #
+# JesFs - Jo's Embedded Serial File System JesFs:1.82 / JesFs_main.c:V3.11 #
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
@@ -69,7 +69,7 @@ Some Basics about JesFs:
 ```
 ---
 
-## Changelog ##
+## Changelog (JesFs_main.c) ##
 - V1.0  CC13XX/CC26xx and Windows
 - V1.5  (nRf52) nRF52840 port
 - V1.51 (nRf52) nRF52840 support Deep Sleep/Wakeup (Deep Sleep with RTC active and Full RAM retention <3uA)

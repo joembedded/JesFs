@@ -11,6 +11,7 @@
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
 * 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
 * 1.82 / 21.03.2021 added comment fs_format() Timeouts
+* 1.83 / 11.07.2021 added Pin Definitions for NRF52
 *
 *******************************************************************************/
 
