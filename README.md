@@ -1,4 +1,5 @@
-# JesFs - Jo's Embedded Serial File System JesFs:1.82 / JesFs_main.c:V3.11 #
+# JesFs - Jo's Embedded Serial File System #
+* Versions: JesFs:1.82 / JesFs_main.c:V3.11 *
 **for Standard (Serial) NOR-Flash**
 
 Just think of very simple things like language data: on a “very small” 
