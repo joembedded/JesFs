@@ -1,5 +1,5 @@
 /***************************************************************************************************************
-* tb_pinss_nrf52.c - Pin definitins for my used HW platforms
+* tb_pins_nrf52.c - Pin definitins for my used HW platforms
 *
 * For platform nRF52 
 *
@@ -43,6 +43,17 @@
 #endif
 
 #ifdef YJ_NRF52832  // YJ_16048 from HolyIot (NO CE/FCC uncertified Low-Cost module)
+  //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
+  #ifndef NRF52832_XXAA
+    #error "WRONG CPU"
+  #endif
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,19) // Active LOW
+  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
+  #define TB_RX_PIN NRF_GPIO_PIN_MAP(0,2) 
+  #define TB_TX_PIN NRF_GPIO_PIN_MAP(0,3) 
+#endif
+
+#ifdef ANNA_SDI12  // ANNA-SDI12 Sensor platform with ANNA-B112
   //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
   #ifndef NRF52832_XXAA
     #error "WRONG CPU"
