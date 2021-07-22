@@ -94,5 +94,20 @@ This is, where the JesFs could become extremely useful.
 
 Read more: [BlackBox_Eval.pdf](https://github.com/joembedded/JesFs/blob/master/usecase_BlackBox/BlackBox_Eval.pdf)
 
+# Installation
+- Built with SES (V5.xx) and SDK 17.0.2
+
+Use this Directory Structure:
+```
+C:\nordic\nRF5_SDK_17.0.2
++---components            // SDK
++---external              // SDK
++---integration           // SDK
++---open_projects
+|   \---jesfs_demo        // *HERE*
+|       \---JesFs_Home
+
+```
+
 ---
 
