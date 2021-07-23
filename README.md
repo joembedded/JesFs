@@ -100,12 +100,12 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 - Macronix MX25R-Series (MX25Rxx)
 - GigaDevices GD25W-Series (GD25WD80C, GD25WQ64E, ...)
 
-## Use with NRF52-CPUs ##
+## Use with NRF52-CPUs: ##
 ![nRF52840](https://github.com/joembedded/JesFs/blob/master/Documentation/nrf52840.jpg)
 ![nRF52832](https://github.com/joembedded/JesFs/blob/master/Documentation/nrf52832.jpg)
 
-## Use with CC13xx/26xx-CPUs ##
-![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/cc13xx26xx.jpg)
+## Use with CC13xx/26xx-CPUs: ##
+![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/CC13xx26xx.jpg)
 
 # Installation
 - Built with SES (V5.xx) and SDK 17.0.2
