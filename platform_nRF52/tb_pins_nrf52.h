@@ -19,8 +19,8 @@
   #define TB_TX_PIN NRF_GPIO_PIN_MAP(1,13) 
 #endif
 
-#if defined(NINA_B3_LTX) || defined(NINA_B3_EPA)
-  //#warning "INFO: TB_TOOLS for NINA_B3_LTX/_EPA" // Just as Info
+#if defined(NINA_B3_LTX) || defined(NINA_B3_EPA) || defined(BT840_BB)
+  //#warning "INFO: TB_TOOLS for NINA_B3_LTX/_EPA/BT840_BB" // Just as Info
   #ifndef NRF52840_XXAA
     #error "WRONG CPU"
   #endif
