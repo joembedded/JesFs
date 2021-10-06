@@ -31,9 +31,11 @@
 * 2.04: 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
 * 2.05: 12.03.2021 Added print of Flash ID for analysis 
 * 2.06: 21.03.2021 Added hint about 'Bulk Erase'/Soft format (see case 'F'))
+* 2.54: 06.10.2021 added 'tb_get_runtime()' for NRF52
+* 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
 *******************************************************************************/
 
-#define VERSION "2.06 / 21.03.2021"
+#define VERSION "2.55 / 06.10.2021"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -136,7 +138,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
     tb_init(); // Init the Toolbox (without Watchdog)
     tb_watchdog_init();   // Watchdog separate init
 
-    tb_printf("\n*** JesFs *Demo* " VERSION " (C)2020 JoEmbedded.de\n\n");
+    tb_printf("\n*** JesFs *Demo* " VERSION " (C)JoEmbedded.de\n\n");
 
 #ifdef PLATFORM_NRF52    // Find out why restared
     tb_printf("Reset-Reason: 0x%X ",uval);
@@ -415,15 +417,18 @@ int main(void) { // renamed to mainThread() on CCxxyy
               }
               break;
 
-            case '!':   // Time Management - Set the embedded Timer (in unix-Seconds or dd.mm.yyyy hh:MM:ss )
+            case 'T':   // Time Management - Set the embedded Timer (in unix-Seconds or dd.mm.yyyy hh:MM:ss )
                 asecs=uval;
-                if(asecs) {
-                  if(asecs<32) asecs=conv_tstr_to_secs(pc); // might return 0
+                if(asecs) { 
+                  if(asecs<32) asecs=conv_tstr_to_secs(pc); // Plain Date String - might return 0
                   if(asecs) tb_time_set(asecs);
                 }
                 asecs=tb_time_get();  
                 conv_secs_to_date_sbuffer(asecs);
-                tb_printf("'!': Time: [%s] (%u secs)\n",sbuffer,asecs);
+                tb_printf("'T': Time: [%s] (%u secs)\n",sbuffer,asecs);
+#ifdef PLATFORM_NRF52  
+                tb_printf("Runtime: %u sec\n",tb_get_runtime());
+#endif  
                 break;
 
             /****************** TESTFUNCTION Development only********************************/

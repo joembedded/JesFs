@@ -78,11 +78,13 @@ Some Basics about JesFs:
 - V1.7  (nRf52) Added Defines for u-Blox NINA-B3 
 - V1.8  Added Time set with '!' and UART-RX-Error
 - V2.0  (nRf52) Changed UART Driver to APP_UART for Multi-Use in tb_tools
-- V2.01 (nRf52) Changed toSDK17 (problem with nrf_clock() in SDK17, see docu)
-- V2.02 (nRf52) Changed toSDK17.0.2 and SES 5,10b (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
-- V3.00 (nRF52) Added Support for nRF52832 
-- V3.10 (nRF52) Added Sample for nRF52832 (I/O Configuration for u-Blox ANNA-B112-module)
-- V3.11 Added print of Flash ID for analysis in JesFs_main.c 
+- V2.01 (nRf52) Changed to SDK17 (problem with nrf_clock() in SDK17, see docu)
+- V2.02 (nRf52) Changed to SDK17.0.2 and SES 5.10b (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
+- V2.10 (nRF52) Added Support for nRF52832 
+- V2.20 (nRF52) Added Sample for nRF52832 (I/O Configuration for u-Blox ANNA-B112-module)
+- V2.30 Added print of Flash ID for analysis in JesFs_main.c 
+- V2.54 (nRF52) Added 'tb_get_runtime()' in tb_tools.c
+- V2.55 (nRF52) Changed to SDK17.1.0 and SES 5.42ab (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
 ---
 
 # Using JesFs – BlackBox-Demo #
@@ -108,11 +110,11 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 ![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/CC13xx26xx.jpg)
 
 # Installation
-- Built with SES (V5.xx) and SDK 17.0.2
+- Built with SES (V5.xx) and SDK 17.1.0
 
 Use this Directory Structure:
 ```
-C:\nordic\nRF5_SDK_17.0.2
+C:\nordic\nRF5_SDK_17.1.0
 +---components            // SDK
 +---external              // SDK
 +---integration           // SDK

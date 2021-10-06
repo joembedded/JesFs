@@ -12,6 +12,7 @@
 * 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
 * 1.82 / 21.03.2021 added comment fs_format() Timeouts
 * 1.83 / 11.07.2021 added Pin Definitions for NRF52
+* 1.84 / 15.08.2021 check in fs_date2sec1970
 *
 *******************************************************************************/
 
@@ -132,8 +133,8 @@ uint32_t fs_date2sec1970(FS_DATE *pd){
 	year_base=pd->a-1970;
 	year_idx=year_base%4;   // 0,1,2:Schaltjahr,3
 	if(year_base>129) return 0; // OK von 1970-2099 (2100 is NO leap year)
-	if(pd->m<1 || pd->m>12) return 0;    // Monat
-	if(pd->d > days_per_month[pd->m-1]){ // Check Day ok for this month?
+	if(pd->m<1 || pd->m>12 || pd->d<1) return 0;    // Month: 1..12 Day: 1..x, 
+	if(pd->d > days_per_month[pd->m-1]){ // Check Day x ok for this month?
 		if(year_idx!=2 || pd->m!=2 || pd->d!=29){   // Only Exception
 			return 0;
 		}
