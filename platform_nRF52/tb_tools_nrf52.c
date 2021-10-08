@@ -22,7 +22,7 @@
 * 2.11: 16.05.2021 removed 'board.h', small changes in PIN-Names
 * 2.50: 02.07.2021 changed Platform PIN Setup
 * 2.51: 10.07.2021 added 'tb_pins_nrf52.h'
-* 2.54: 06.10.2021 added 'tb_get_runtime()'
+* 2.54: 06.10.2021 added 'tb_get_runtime()' and 'tb_runtime2time()'
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
 ***************************************************************************************************************/
 
@@ -145,6 +145,7 @@ int16_t tb_putc(char c){
     }
 }
 
+// ---- Test: return 0:Nothing available, -1: ERROR, 1: Char available
 int16_t tb_kbhit(void){
   uint8_t cr;
   if(_tb_uart_init_flag==false) return 0; // Not init = nothing
@@ -155,7 +156,8 @@ int16_t tb_kbhit(void){
   }
   return 0; // nothing
 }
-// ---- get 1 char (0..255) (or -1 if nothing available)
+// ---- get 1 char (0..255) (or -1 if nothing available, or < -1 on Framing Errors)
+// Framing Errors (-2...-xx) see _tb_app_uart_error_handle()
 int16_t tb_getc(void){
   uint8_t cr;
   int16_t ret;
@@ -358,6 +360,7 @@ void tb_init(void){
       ret = nrf_drv_power_init(NULL);
       APP_ERROR_CHECK(ret);
 /* SDK17: ERROR in in "nrf_drv_clock.c -> nrf_drv_clock_init()": 
+*  Reported to NORDIC as 'Case ID: 277657'
 *  Remove:   "if (nrf_wdt_started()) m_clock_cb.lfclk_on = true;" 
    
    Remove or disable THIS part: nrf_drv_clock.c (arround line 196-202 in SDK17):
@@ -548,6 +551,7 @@ return;
  
 // ---- Unix-Timer. Must be called periodically to work, but at least twice per RTC-overflow (512..xx secs) ---
 // New in V2.5: 2 Systemtimers: RUNTIME(sec) and UNIX(secs)
+// Idea: runtime always starts at 0 and altime increases, whereas UNIX time could be set by user.
 uint32_t tb_get_runtime(void){  // This timer ALWAYS increments an is only set on Reset to 0
    uint32_t rtc_secs, run_secs;
    // RTC will overflow after 512..xx secs - Scale Ticks to seconds
@@ -556,6 +560,12 @@ uint32_t tb_get_runtime(void){  // This timer ALWAYS increments an is only set o
    old_rtc_secs=rtc_secs; // Save last seen rtc_secs
    run_secs=cnt_secs+rtc_secs;
    return run_secs;
+}
+// Runtime seconds Timestamp to Unix Timestamp
+uint32_t tb_runtime2time(uint32_t run_secs){
+   uint32_t ux_secs;
+   ux_secs = run_secs + ux_run_delta;
+   return ux_secs;
 }
 
 uint32_t tb_time_get(void){ // Last Unix Timestamp is saved in NV memory
