@@ -24,6 +24,7 @@
 * 2.51: 10.07.2021 added 'tb_pins_nrf52.h'
 * 2.54: 06.10.2021 added 'tb_get_runtime()' and 'tb_runtime2time()'
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
+* 2.56: 14.11.2021 added 'tb_putsl(char* pc)'
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -173,6 +174,14 @@ int16_t tb_getc(void){
   }else if(app_uart_get(&cr) == NRF_SUCCESS){ // nothing: NRF_ERROR_NOT_FOUND
       return (int16_t) cr;
   }else return -1;  // Probably NOT_FOUND or sth. else
+}
+
+// tb_putsl - as puts, but without CR/NL
+void tb_putsl(char* pc){
+    if(_tb_uart_init_flag==false) return; // Not init...
+    while(*pc){
+      if(tb_putc(*pc++)) break; 
+    }
 }
 
 // tb_printf(): printf() to toolbox uart. Wait if busy

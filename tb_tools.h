@@ -34,6 +34,7 @@ void tb_time_set(uint32_t new_secs); // Set time, regarding the timer
 
 // --UART--
 void tb_printf(char* fmt, ...); // tb_printf(): printf() to toolbox uart. Wait if busy
+void tb_putsl(char* pc); // // tb_putsl - as puts, but without CR/NL
 int16_t tb_putc(char c); // tb_putc(): Wait if not ready, may return -2
 int16_t tb_kbhit(void); // ---- Input functions 0: Nothing available
 int16_t tb_getc(void); // ---- get 1 char (0..255) (or -1 if nothing available)
