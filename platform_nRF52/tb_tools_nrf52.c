@@ -146,10 +146,13 @@ int16_t tb_putc(char c){
     }
 }
 
-// ---- Test: return 0:Nothing available, -1: ERROR, 1: Char available
+// ---- Test: return 0:Nothing available, -2:UART OK, but not INIT, -1:ERROR, 1:Char available
 int16_t tb_kbhit(void){
   uint8_t cr;
-  if(_tb_uart_init_flag==false) return 0; // Not init = nothing
+  if(_tb_uart_init_flag==false) {
+    if(nrf_gpio_pin_read(TB_RX_PIN)) return -2; // UART RX Level OK, but not init
+    else return 0; // Not init = nothing
+  }
   if(_tb_app_uart_errorcode) return -1; // Error
   if(app_uart_get(&cr) == NRF_SUCCESS){ // nothing: NRF_ERROR_NOT_FOUND
     _tb_app_uart_peekchar=(int16_t)cr;
