@@ -85,6 +85,7 @@ Some Basics about JesFs:
 - V2.30 Added print of Flash ID for analysis in JesFs_main.c 
 - V2.54 (nRF52) Added 'tb_get_runtime()' in tb_tools.c
 - V2.55 (nRF52) Changed to SDK17.1.0 and SES 5.42ab (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
+- V2.60 (nRF52) Use global Macro $SDK_ROOT
 ---
 
 # Using JesFs – BlackBox-Demo #
@@ -109,20 +110,12 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 ## Use with CC13xx/26xx-CPUs: ##
 ![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/CC13xx26xx.jpg)
 
-# Installation
+# Installation (NRF52):
 - Built with SES (V5.xx) and SDK 17.1.0
-
-Use this Directory Structure:
-```
-C:\nordic\nRF5_SDK_17.1.0
-+---components            // SDK
-+---external              // SDK
-+---integration           // SDK
-+---open_projects
-|   \---jesfs_demo        // *HERE*
-|       \---JesFs_Home
-
-```
+- Set Macro $SDK_ROOT where to find the SDK in SES -> Tools -> Options -> Building:
+  e.g.: "Global Macros": "SDK_ROOT=C:\nordic\nRF5_SDK_17.1.0_ddde560"
+- Set Platform Macro with I/O-Pins (see tb_tools
+- Optionally fix Problem with nrf_clock() (see docu tb_tools_nrf52.c/h)
 
 ---
 

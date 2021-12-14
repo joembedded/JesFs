@@ -4,3 +4,4 @@ Output/
 *.jlink
 _firmware.sec
 _firmware.bin
+privat*

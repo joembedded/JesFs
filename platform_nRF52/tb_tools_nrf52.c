@@ -52,6 +52,11 @@
 
 #include "tb_tools.h"
 
+#if !defined(NRF52) && !defined(PLATFORM_NRF52)
+  #error "Define Platform in Project!"
+#endif
+
+
 #if defined (UART_PRESENT)
 #include "nrf_uart.h"
 #endif
