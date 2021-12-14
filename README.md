@@ -114,12 +114,11 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 - Built with SES (V5.xx) and SDK 17.1.0
 
 - Set Macro $SDK_ROOT where to find the SDK in SES -> Tools -> Options -> Building:
-
   e.g.: "Global Macros": "SDK_ROOT=C:\nordic\nRF5_SDK_17.1.0_ddde560"
 
 - Set Platform Macro with I/O-Pins (see tb_tools.h)
 
-- Optionally fix Problem with nrf_clock() (see docu tb_tools_nrf52.c/h)
+- Optionally fix Problem with nrf_clock() (see docu tb_tools_nrf52.c/.h)
 
 ---
 
