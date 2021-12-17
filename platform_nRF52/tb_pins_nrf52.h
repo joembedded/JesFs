@@ -54,7 +54,7 @@
 #endif
 
 #ifdef ANNA_SDI12  // ANNA-SDI12 Sensor platform with ANNA-B112
-  //#warning "INFO: TB_TOOLS for YJ_16048_NRF52832 (NO CE/FCC)"  // Just as Info
+  //#warning "INFO: TB_TOOLS for ANNA_B112"  // Just as Info
   #ifndef NRF52832_XXAA
     #error "WRONG CPU"
   #endif
