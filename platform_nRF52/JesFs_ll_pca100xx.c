@@ -73,7 +73,7 @@
 
 
 
-#ifdef BOARD_PCA10056
+#ifdef NRF52840_XXAA
   #define SPI_INSTANCE  3     // M                                  /**< SPI instance index. */
 #else
   #define SPI_INSTANCE  2     // Assign highest available SPIM instabce for Driver..
@@ -92,7 +92,7 @@ int16_t sflash_spi_init(void){
 #ifdef NRF52840_XXAA    // 52840: max. 32MHz
     spi_config.frequency      = NRF_SPIM_FREQ_16M; 
      //spi_config.frequency      = NRF_SPIM_FREQ_32M; // Maybe too fast with Softdevice in || (V1.6) 
-#else // older: max 8MHz
+#else // older/NRF52832: max 8MHz
     spi_config.frequency      = NRF_SPIM_FREQ_8M; // for tests, Default: 4M
 #endif
 
