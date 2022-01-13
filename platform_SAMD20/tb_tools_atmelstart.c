@@ -119,7 +119,7 @@ void tb_board_led_invert(uint8_t idx){
 
 // ------- System Reset -------------
 void tb_system_reset(void){
-    // TODO: SysCtrlSystemReset(); // Up to (TI-RTOS+Debugger) what happens: Reset, Stall, Nirvana, .. See TI docu.
+    while(1);
 }
 
 
@@ -199,7 +199,7 @@ int16_t tb_kbhit(void){
 // ---- get 1 char (0..255) (or -1 if nothing available)
 int16_t tb_getc(void){
     int16_t res = -1;
-    if(tb_kbhit()) io_read(serial_io, (uint8_t*)&res, 1);
+    io_read(serial_io, (uint8_t*)&res, 1);
     return res;
 }
 
@@ -209,11 +209,12 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
     int16_t res;
     char c;
     max_uart_in--;  // Reserve 1 Byte for End-0
+    max_wait_ms /= 1000;
+    uint32_t s_time = tb_time_get();
     for(;;){
         res=tb_kbhit();
         if(res>0){
             res=tb_getc();
-            if(res<0) break;
             c=res;
             if(c=='\n' || c=='\r') {
                 break;    // NL CR or whatever (no Echo for NL CR)
@@ -231,13 +232,8 @@ int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t 
                 if(echo) tb_putc(c);
             }
         }else{
-            if(max_wait_ms){
-                if(!--max_wait_ms){
-                  idx=0;  // Return empty String
-				  break;
-				}
-            }
-            tb_delay_ms(1);
+            uint32_t d_time = tb_time_get() - s_time;
+            if( d_time > max_wait_ms ) break;
         }
     }
     input[idx]=0;   // Terminate String
