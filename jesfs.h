@@ -45,7 +45,7 @@
 -122: sector list contains illegal file owner (-> run recover)
 -123: Illegal sector type (-> run recover)
 -124: File not found
--125: Illegal file flags (e.g. trying to delet a file opened for write)
+-125: Illegal file flags (e.g. trying to delete a file opened for write)
 -126: Illegal file system structure (-> run recover)
 -127: Closed files can not be continued (for writing)
 -128: Sector defect ('Header with owner') (-> run recover)
