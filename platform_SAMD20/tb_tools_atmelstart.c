@@ -34,6 +34,11 @@ static char tb_uart_line_out[TB_SIZE_LINE_OUT];
 #define UART_TX_TIMEOUT  10000  // Semaphoren-Timeout in Task-Ticks (100 msec enough for 256 Bytes(22 msec))
 
 struct io_descriptor *serial_io; // Handle
+volatile bool tb_uart_tx_in_progress=false;
+volatile int16_t tb_uart_rx_ndx_head=0;
+volatile int16_t tb_uart_rx_ndx_tail=0;
+uint8_t tb_uart_tx_buf[UART_TX_BUFSIZE];
+uint8_t tb_uart_rx_buf[UART_RX_BUFSIZE];
 
 // ---- locals Watcdog ----
 static bool tb_wdt_enabled=false;
@@ -45,22 +50,38 @@ static volatile unsigned int tb_rtc_overflows=0;
 static struct timer_task RTC_task1;
 
 //--------------- hardware drivers UART ----------------------
+static void tx_cb_serial(const struct usart_async_descriptor *const io_descr)
+{
+    tb_uart_tx_in_progress=false;
+}
+static void rx_cb_serial(const struct usart_async_descriptor *const io_descr)
+{
+    io_read(serial_io, &tb_uart_rx_buf[tb_uart_rx_ndx_head % UART_TX_BUFSIZE], 1);
+    tb_uart_rx_ndx_head++;
+}
+
 //---------uart_blockout---------
 static int16_t uart_blkout(uint8_t* pu, uint16_t len){
-    io_write(serial_io, pu, len);
+    while(tb_uart_tx_in_progress)
+        ;
+    tb_uart_tx_in_progress=true;
+    memcpy(tb_uart_tx_buf, pu, len);
+    io_write(serial_io, tb_uart_tx_buf, len);
     return 0;
 }
 // ----------- uart_open---------------------------
 // Manual Flow!
 int16_t uart_open(void){
-    usart_sync_get_io_descriptor(&serial, &serial_io);
-    usart_sync_enable(&serial);
+    usart_async_register_callback(&serial, USART_ASYNC_TXC_CB, tx_cb_serial);
+    usart_async_register_callback(&serial, USART_ASYNC_RXC_CB, rx_cb_serial);
+	usart_async_get_io_descriptor(&serial, &serial_io);
+	usart_async_enable(&serial);
     return 0;
 }
 
 // Kann bedenkenlos jederzeit aufgerufen werden
 void uart_close(void){
-    usart_sync_disable(&serial);
+    usart_async_disable(&serial);
 }
 // ----------- UART drivers end -------------
 
@@ -193,14 +214,14 @@ int16_t tb_putc(char c){
 
 // ---- Input functions 0: Nothing available (tb_kbhit is faster than tb_getc) ---------
 int16_t tb_kbhit(void){
-    return (int16_t)usart_sync_is_rx_not_empty(&serial);
+    return tb_uart_rx_ndx_head - tb_uart_rx_ndx_tail;
 }
 
 // ---- get 1 char (0..255) (or -1 if nothing available)
 int16_t tb_getc(void){
-    int16_t res = -1;
-    io_read(serial_io, (uint8_t*)&res, 1);
-    return res;
+    char c = (char)tb_uart_rx_buf[tb_uart_rx_ndx_tail % UART_RX_BUFSIZE];
+    tb_uart_rx_ndx_tail++;
+    return (int16_t)c;
 }
 
 // Get String with Timout (if >0) in msec of infinite (Timout 0), No echo (max_uart_in without trailing \0!)
