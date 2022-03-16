@@ -46,7 +46,7 @@ Some Basics about JesFs:
 - Tested with:  Macronix MX25Rxx, GigaDevices GD25WDxx and GD25WQxx, ...
 - Strictly taylored to Ultra-Low-Power Embedded Systems
 - Designed to use the advantage of an underlying RTOS, but can also be used standalone.
-- Sample applications for the nRF52840/nRF52832-DK, Launchpads CC13xx/26xx, Windows-PC and others (Documentation PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
+- Sample applications for the nRF52840/nRF52832-DK, Launchpads CC13xx/26xx, Atmel SAMD20, Windows-PC and others (Documentation PDF: [JesFs.pdf](https://github.com/joembedded/JesFs/blob/master/Documentation/JesFs.pdf))
 - Easy to use with an intuitive API:
 
 ```
@@ -86,6 +86,7 @@ Some Basics about JesFs:
 - V2.54 (nRF52) Added 'tb_get_runtime()' in tb_tools.c
 - V2.55 (nRF52) Changed to SDK17.1.0 and SES 5.42ab (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
 - V2.60 (nRF52) Use global Macro $SDK_ROOT
+- V2.61 (SAMD20) Atmel SAMD20 contributed *kudos*!
 ---
 
 # Using JesFs – BlackBox-Demo #
