@@ -86,7 +86,7 @@ Some Basics about JesFs:
 - V2.54 (nRF52) Added 'tb_get_runtime()' in tb_tools.c
 - V2.55 (nRF52) Changed to SDK17.1.0 and SES 5.42ab (problem with nrf_clock() in SDK17.0.2 not fixed in SDK17.0.2, see docu)
 - V2.60 (nRF52) Use global Macro $SDK_ROOT
-- V2.61 (SAMD20) Atmel SAMD20 contributed *kudos*!
+- V2.61 (SAMD20) Atmel SAMD20 contributed (*kudos*!)
 ---
 
 # Using JesFs – BlackBox-Demo #
@@ -111,7 +111,7 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 ## Use with CC13xx/26xx-CPUs: ##
 ![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/CC13xx26xx.jpg)
 
-# Installation (NRF52):
+# Installation (for NRF52 CPUs):
 - Built with SES (V5.xx) and SDK 17.1.0
 
 - Set Macro $SDK_ROOT where to find the SDK in SES -> Tools -> Options -> Building:
