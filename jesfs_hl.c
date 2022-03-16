@@ -484,6 +484,8 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
         return -141;
     if (!pdesc->_head_sadr)
         return -117;
+    if(!(pdesc->open_flags & SF_OPEN_READ))
+        return -125;
 
     while (anz) {
         sflash_read(pdesc->_wrk_sadr, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B + FINFO_SIZE_B);
