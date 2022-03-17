@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-//----------------------------------------------- JESFS-START ----------------------
+//---------------------------------------------- JESFS-START ----------------------
 #include "jesfs.h"
 #include "jesfs_int.h"
 
