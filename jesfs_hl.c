@@ -493,7 +493,7 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
     return -141;
   if (!pdesc->_head_sadr)
     return -117;
-  if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_CREATE | SF_OPEN_RAW))) // Warren mod. 16.03.2022
+  if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))) // Warren mod. 16.03.2022
     return -125;
 
   while (anz) {
