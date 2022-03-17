@@ -13,7 +13,7 @@
  * 1.82 / 21.03.2021 added comment fs_format() Timeouts
  * 1.83 / 11.07.2021 added Pin Definitions for NRF52
  * 1.84 / 15.08.2021 check in fs_date2sec1970
- * 1.85 / 16.03.2022 added check (Warren)
+ * 1.85 / 17.03.2022 added check (Warren)
  *
  *******************************************************************************/
 
@@ -493,7 +493,7 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
     return -141;
   if (!pdesc->_head_sadr)
     return -117;
-  if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))) // Warren mod. 16.03.2022
+  if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))) // Warren mod. 17.03.2022
     return -125;
 
   while (anz) {
