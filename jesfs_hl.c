@@ -14,6 +14,7 @@
  * 1.83 / 11.07.2021 added Pin Definitions for NRF52
  * 1.84 / 15.08.2021 check in fs_date2sec1970
  * 1.85 / 17.03.2022 added check (Warren)
+ * 1.86 / 18.03.2022 corrected bug in fs_date2sec1970()
  *
  *******************************************************************************/
 
@@ -151,9 +152,9 @@ uint32_t fs_date2sec1970(FS_DATE *pd) {
 
   nsec = ((uint32_t)year_base / 4) * (1461 * SEC_DAY);                // Complete 4-years
   nsec += ((uint32_t)year_idx) * (365 * SEC_DAY);                     //
-  nsec += ((uint32_t)days_summed[pd->m - 1] + (pd->d - 1)) * SEC_DAY; // Und soviele Tage
-  if (year_idx == 3 || (year_idx = 2 && pd->m > 2))
-    nsec += SEC_DAY; // Schalttage addieren
+  nsec += ((uint32_t)days_summed[pd->m - 1] + (pd->d - 1)) * SEC_DAY; // plus days for 4-years
+  if (year_idx == 3 || (year_idx == 2 && pd->m > 2))
+    nsec += SEC_DAY; // Add leap day
 
   nsec += (pd->h * 3600);
   nsec += (pd->min * 60);
