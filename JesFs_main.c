@@ -10,8 +10,7 @@
 * - Windows (Compilers: "Embarcadero(R) C++ Builder Community Edition" (for PC)
 *           and "Microsoft Visual Studio Community 2019")
 *
-* Can be used as standalone project or,
-* in combination with secure JesFsBoot Bootloader
+* Can be used as standalone project or in combination with secure JesFsBoot Bootloader
 *
 * Docu in 'JesFs.pdf'
 *
@@ -33,9 +32,10 @@
 * 2.06: 21.03.2021 Added hint about 'Bulk Erase'/Soft format (see case 'F'))
 * 2.54: 06.10.2021 added 'tb_get_runtime()' for NRF52
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
+* 2.56: 02.04.2022 improved fs_checkdisk() (nRF52840 J-TAG corrupted FlashDisk via QSPI)
 *******************************************************************************/
 
-#define VERSION "2.55 / 06.10.2021"
+#define VERSION "2.56 / 02.04.2022"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C
@@ -181,7 +181,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
             t0=tb_get_ticks();
             switch(input[0]) {
 
-            case 's':	// V1.51: With deep sleep, onn nRF52840: <3uA
+            case 's':	// V1.51: With deep sleep, on nRF52840: <3uA
                 tb_printf("'s' Flash DeepSleep and CPU sleep %d secs...\n",uval);
                 res=fs_start(FS_START_RESTART);   // Restart Flash to be sure it is awake, else it can not be sent to sleep..
                 if(res) tb_printf("(FS_start(FS_RESTART) return ERROR: Res:%d)\n",res);
@@ -431,7 +431,7 @@ int main(void) { // renamed to mainThread() on CCxxyy
 #endif  
                 break;
 
-            /****************** TESTFUNCTION Development only********************************/
+            /****************** TESTFUNCTION Development/Bugtrace only********************************/
             case 'm':   // mADR Examine Mem Adr. in Hex!
                 // Read 1 page of the serial flash (internal function)
                 {

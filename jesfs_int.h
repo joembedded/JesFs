@@ -58,7 +58,7 @@ void sflash_spi_write(const uint8_t *buf, uint16_t len); // len is 16Bit!
 
 //---------------- Little helpers for MediumLevel ------------------
 uint32_t fs_strlen(char *s);
-void fs_strcpy(char *d, char *s);
+void fs_strncpy(char *d, char *s, uint8_t maxchar);
 void fs_memset(uint8_t *p, uint8_t v, uint32_t n);
 int16_t fs_strcmp(char *s1, char *s2);
 uint32_t fs_track_crc32(uint8_t *pdata, uint32_t wlen, uint32_t crc_run);

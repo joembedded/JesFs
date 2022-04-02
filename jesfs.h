@@ -46,7 +46,7 @@
 -123: Illegal sector type (-> run recover)
 -124: File not found
 -125: Illegal file flags (e.g. trying to delete a file opened for write)
--126: Illegal file system structure (-> run recover)
+-126: Illegal file system structure (-> run recover ((possible reason: PowerLoss, , Index defect points to HEAD 0xFFFFFFFF)))
 -127: Closed files can not be continued (for writing)
 -128: Sector defect ('Header with owner') (-> run recover)
 -129: File descriptor corrupted.
@@ -63,6 +63,8 @@
 -139: Format parameter
 -140: Command Deepsleep: Filesystem already sleeping (only informative)
 -141: Other Commands: Filesystem sleeping!
+-142: Illegal file system structure (-> run recover, Index defect points to illegal HEAD)
+-143: Illegal file system structure (-> run recover, Index defect)
  */
 
 #ifdef __cplusplus
