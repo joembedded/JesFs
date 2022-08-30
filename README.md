@@ -112,7 +112,7 @@ Wide Voltage Range (1.6v-3.6V) and Ultra-Low-Power Standby:
 ![CC13xx/26xx](https://github.com/joembedded/JesFs/blob/master/Documentation/CC13xx26xx.jpg)
 
 # Installation (for NRF52 CPUs):
-- Built with SES (V5.xx) and SDK 17.1.0
+- Built with SES (V6.22a (*)) and SDK 17.1.0   (*: Later Versions of SES require changed project settings!!!)
 
 - Set Macro $SDK_ROOT where to find the SDK in SES -> Tools -> Options -> Building:
   e.g.: "Global Macros": "SDK_ROOT=C:\nordic\nRF5_SDK_17.1.0_ddde560"
