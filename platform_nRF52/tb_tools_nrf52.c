@@ -25,6 +25,7 @@
 * 2.54: 06.10.2021 added 'tb_get_runtime()' and 'tb_runtime2time()'
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
 * 2.56: 14.11.2021 added 'tb_putsl(char* pc)'
+* 2.27: 10.11.2021 'tb_runtime2time()': save time to non-init-RAM, see comment
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -578,14 +579,18 @@ uint32_t tb_get_runtime(void){  // This timer ALWAYS increments an is only set o
    run_secs=cnt_secs+rtc_secs;
    return run_secs;
 }
-// Runtime seconds Timestamp to Unix Timestamp
+// Runtime seconds Timestamp to Unix Timestamp - 
+// INFO: The generated time will be stored in non-init RAM  as "last known time", hence don't use it with "old" runtimes.
 uint32_t tb_runtime2time(uint32_t run_secs){
    uint32_t ux_secs;
    ux_secs = run_secs + ux_run_delta;
+   // Store absolute time also to non-init RAM 
+   _tb_novo[1]=ux_secs;
+   _tb_novo[2]=~ux_secs;
    return ux_secs;
 }
 
-uint32_t tb_time_get(void){ // Last Unix Timestamp is saved in NV memory
+uint32_t tb_time_get(void){ // Last Unix Timestamp is saved in non-init RAM 
    uint32_t ux_secs;
    ux_secs = tb_get_runtime() + ux_run_delta;
    // Store absolute time also to non-init RAM 
