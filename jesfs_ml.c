@@ -28,7 +28,7 @@ void sflash_bytecmd(uint8_t cmd, uint8_t more){
 }
 
 
-/* READ IDENTIFICATION
+/* READ IDENTIFICATION (3 Bytes)
  * Flash must be woen up before, else ID is 0 for (most) flash*/
 #define CMD_RDID    0x9F    // Read Identification: Manuf.8 Type.8 Density.8
 uint32_t sflash_QuickScanIdentification(void){
@@ -44,7 +44,7 @@ uint32_t sflash_QuickScanIdentification(void){
 	return id;
 }
 
-/* Analyse ID of the flash */
+/* Analyse ID (3 Bytes) of the flash */
 int16_t sflash_interpret_id(uint32_t id){
 	uint8_t h;
 	sflash_info.total_flash_size=0;
@@ -52,9 +52,12 @@ int16_t sflash_interpret_id(uint32_t id){
         // Keep Flash-ID for optional Analysis
 	sflash_info.identification=id;
 
+        if(id==0x000000) return -144; // ShortCircuit/Sleep
+        if(id==0xFFFFFF) return -145; // Unconnected
+
 	switch(id>>8){   // Check Without Density
 	default:
-		return -104;    // Unknown Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
+		return -104;    // Unknown ID/Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
 
 	// List of tested/knownAsGood Flash-Manufacturer/IDs (see Header File).  Others may be added later
 	case MACRONIX_MANU_TYP_RX: // Macronix - The 1MB-Version is on the TI CC1310 Launchpad, 2-16 MB on LTraX, ..
@@ -89,7 +92,7 @@ void sflash_DeepPowerDown(void){
 #define CMD_RELEASEDPD 0xAB
 void sflash_ReleaseFromDeepPowerDown(void){
 	sflash_bytecmd(CMD_RELEASEDPD,0);   // NoMore
-	// sflash_wait_usec(50);  // up to user to regards that!
+	// sflash_wait_usec(50);  // Delay by caller
 }
 
 /* Read Len Bytes FlashAdr(sdr) to sbuf

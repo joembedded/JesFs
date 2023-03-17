@@ -16,6 +16,7 @@
 * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
 * 1.9 / 22.02.2021 added/edited Devicelist, added new Flash Family GD25WD
 * 1.10 / 28.02.2021 added/edited Devicelist, added new Flash Family GD25WQ
+* 1.11 / 16.03.2023 added more checks (Errors -144 ff)
 *
 *******************************************************************************/
 
@@ -23,8 +24,8 @@
 -100: SPI Init (Hardware)
 -101: Flash Timeout WaitBusy
 -102: SPI Can not set WriteEnableBit (Flash locked?)
--103: ID:Unknown/illegal Flash Density (described the size)
--104: ID:Unknown Flash ID (eg. 0xC228 for Macronix M25xx, see docu)
+-103: FlashID:Unknown/illegal, readable but unknown Flash Density (describes the size)
+-104: FlashID:Unknown Flash ID, readable but unknown (eg. 0xC228 for Macronix M25xx, see docu)
 -105: Illegal flash addr
 -106: Block crosses sector border
 -107: fs_start found problems in the filesystem structure (-> run recover)
@@ -59,12 +60,16 @@
 -136: Erase Sector failed
 -137: Write to Flash Failed
 -138: Verify Failed
--138: Voltage too low for Write/Erase
 -139: Format parameter
 -140: Command Deepsleep: Filesystem already sleeping (only informative)
 -141: Other Commands: Filesystem sleeping!
 -142: Illegal file system structure (-> run recover, Index defect points to illegal HEAD)
 -143: Illegal file system structure (-> run recover, Index defect)
+-144: FlashID:ZeroSleep read as 0x000000 (Short Circuit on SPI or Flash still Sleepmode)
+-145: FlashID:UnConnected read as 0xFFFFFF (SPI unconnected or Flash corrupt)
+-146: Illegal MagicHeader: Invalid Value found (and not 0xFFFFFFFF)
+-147: Device Voltage too low 
+-148: Flash not accesible: Deepsleep or PowerFail
  */
 
 #ifdef __cplusplus
@@ -125,7 +130,9 @@ extern "C"{
 #define FS_STAT_INDEX   128   // Requested Index would be outside of Index (used for Diagnostic)
 
 // Flags for state_flag
-#define STATE_DEEPSLEEP 1   // if set: JesFS in in deep sleep
+#define STATE_DEEPSLEEP 1   // if set: JesFS in in deep sleep (Code -141)
+#define STATE_POWERFAIL 2   // if set: Not enabled due to Power Fail (Code -147)
+#define STATE_DEEPSLEEP_OR_POWERFAIL (STATE_DEEPSLEEP | STATE_POWERFAIL) // (Code -148)
 
 // Filedescriptor
 typedef struct{
@@ -147,7 +154,7 @@ typedef struct{
 	uint32_t file_len;
 	uint32_t file_crc32; // CRC32 in Flash for this file, according ISO 3309, FFFFFFFF if not used (only with SF_OPEN_CRC)
 	uint32_t _head_sadr;   // Hidden, head of file
-	uint8_t  disk_flags;    // file flags on disk´(written by fs_close) OR (opt) SF_XOPEN_UNCLOSED
+	uint8_t  disk_flags;    // file flags on disk(written by fs_close) OR (opt) SF_XOPEN_UNCLOSED
 } FS_STAT;
 
 // Standard sizes for this implementation, see docu
@@ -174,7 +181,7 @@ typedef struct{
 
     uint32_t identification;
     uint32_t total_flash_size;    // Max. available space. Here up to 2GB possible
-	uint32_t creation_date; // UNIX-Time in seconds since 1.1.1970, 0:00:00 (Time when formated) 0x0xFFFFFFFF not allowed!
+    uint32_t creation_date; // UNIX-Time in seconds since 1.1.1970, 0:00:00 (Time when formated) 0x0xFFFFFFFF not allowed!
 
     // -- jesfs Header,
     // Init-Infos

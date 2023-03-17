@@ -16,7 +16,7 @@
 * Versions: 
 * 1.5 / 25.11.2019
 * 2.0 / 24.09.2020 (nRF52) SDK 17.0.2 and SES 5.10b on NORDIC PCA10056-Evalboard
-* 
+* 2.01 / 17.03.2023 _supply_voltage_check(void)
 *
 *******************************************************************************/
 
@@ -57,6 +57,9 @@ static int32_t value=0;     // Sample Value to record
 ******************************************************************/
 uint32_t _time_get(void) {
     return tb_time_get();
+}
+int16_t _supply_voltage_check(void){
+  return 0; // Assume Power OK
 }
 
 

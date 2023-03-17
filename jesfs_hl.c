@@ -16,6 +16,7 @@
  * 1.85 / 17.03.2022 added check (Warren)
  * 1.86 / 18.03.2022 corrected bug in fs_date2sec1970()
  * 1.87 / 02.04.2022 fs_strcpy()->fsstrncpy() and some minor opts.
+ * 1.88 / 17.03.2023 added feature _supply_voltage_check()
  *
  *******************************************************************************/
 
@@ -27,8 +28,9 @@
 #include "jesfs.h"
 #include "jesfs_int.h"
 
-extern uint32_t _time_get();      // We need Unix-Seconds, must be defined outside
+extern uint32_t _time_get(void);      // We need Unix-Seconds, must be defined outside - UserProvided!
 static uint32_t _static_time = 0; // If <>0: time used for fs_open() with Create or fs_format()
+extern int16_t _supply_voltage_check(void);  // Return 0 if Power is OK, else  Error -147
 
 // Driver designed for 4k-Flash (or larger) - JesFs
 #if SF_SECTOR_PH != 4096
@@ -281,16 +283,20 @@ int16_t fs_start(uint8_t mode) {
   uint32_t dir_typ;
   uint16_t err;
 
-  res = sflash_spi_init();
-  if (res) {
+  sflash_spi_init();
+  
+  if (_supply_voltage_check()) {
     sflash_info.creation_date = 0xFFFFFFFF; // Invalidate Disk
-    return res;                             // Error 2 User
+    sflash_info.total_flash_size = 0;
+    sflash_info.identification = 0;
+    sflash_info.state_flags |= STATE_POWERFAIL;
+    return -147; // Lock Flash Access if power is too low
   }
 
   // Flash wakeup
   sflash_ReleaseFromDeepPowerDown();
   sflash_wait_usec(45);
-  sflash_info.state_flags &= ~(STATE_DEEPSLEEP);
+  sflash_info.state_flags &= ~(STATE_DEEPSLEEP_OR_POWERFAIL );
 
   // ID read and get setup
   id = sflash_QuickScanIdentification();
@@ -306,11 +312,13 @@ int16_t fs_start(uint8_t mode) {
   if (res)
     return res;
 
-  // OK, Flash is known
+  // OK, Flash is known - Read 12 Bytes (3 Longs) of the Header
   sflash_read(0, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B);
 
-  if (sflash_info.databuf.u32[0] != HEADER_MAGIC)
+  if (sflash_info.databuf.u32[0] == 0xFFFFFFFF)
     return -108;
+  if (sflash_info.databuf.u32[0] != HEADER_MAGIC)
+    return -146;
   if (sflash_info.databuf.u32[1] != sflash_info.identification)
     return -109;
 
@@ -329,6 +337,7 @@ int16_t fs_start(uint8_t mode) {
   sflash_info.files_active = 0;
 
   sflash_info.lusect_adr = 0;
+  // Scan Headers of all sectors (FAST or normal)
   // Scan  Takes on 1M-Flash 12msec, 16M-Flash: 200msec (12 MHz SPI)
   for (sadr = SF_SECTOR_PH; sadr < sflash_info.total_flash_size; sadr += SF_SECTOR_PH) {
     sflash_read(sadr, (uint8_t *)&sflash_info.databuf, (mode & FS_START_FAST) ? 4 : 12);
@@ -432,8 +441,8 @@ int16_t fs_format(uint8_t fmode) {
   int16_t res;
   uint32_t sadr;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (fmode == FS_FORMAT_SOFT) {
     for (sadr = 0; sadr < sflash_info.total_flash_size; sadr += SF_SECTOR_PH) {
       sflash_read(sadr, (uint8_t *)&sbuf, 8); // Read the 8 byte header: Magic and owner (owner for later...)
@@ -496,8 +505,8 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
   uint16_t max_sec_rd;
   uint16_t uc_mlen;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (!pdesc->_head_sadr)
     return -117;
   if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))) // Warren mod. 17.03.2022
@@ -587,8 +596,8 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
   uint32_t sadr = 0;
   uint32_t sfun_adr = 0;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   pdesc->_head_sadr = 0;
   pdesc->file_crc32 = 0xFFFFFFFF;
   if (sflash_info.creation_date == 0xFFFFFFFF)
@@ -674,8 +683,8 @@ int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len) {
   uint32_t wlen;
   uint32_t newsect;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (!pdesc->_head_sadr)
     return -117;
   if (pdesc->open_flags & SF_OPEN_RAW) {
@@ -731,8 +740,8 @@ int16_t fs_close(FS_DESC *pdesc) {
   uint32_t s0adr;
   uint32_t hinfo[2];
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (!pdesc->_head_sadr)
     return -117;
   s0adr = pdesc->_head_sadr;
@@ -752,7 +761,7 @@ int16_t fs_close(FS_DESC *pdesc) {
 uint32_t fs_get_crc32(FS_DESC *pdesc) {
   uint32_t rd_crc;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
     return 0; // Be. values not possible
   if (!pdesc->_head_sadr)
     return 0;
@@ -763,8 +772,8 @@ uint32_t fs_get_crc32(FS_DESC *pdesc) {
 int16_t fs_delete(FS_DESC *pdesc) {
   int16_t res;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (!pdesc->_head_sadr)
     return -117;
   if (pdesc->open_flags & SF_OPEN_WRITE)
@@ -783,8 +792,8 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc) {
   uint32_t thdr[6];
   int16_t res;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   if (!pd_odesc->_head_sadr || !pd_ndesc->_head_sadr)
     return -135;
   if (pd_ndesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))
@@ -830,8 +839,8 @@ int16_t fs_info(FS_STAT *pstat, uint16_t fno) {
   uint32_t sadr, idx_adr;
   int16_t ret;
 
-  if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -141;
+  if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
+    return -148;
   idx_adr = HEADER_SIZE_B + fno * 4;
   if (idx_adr > SF_SECTOR_PH - 4)
     return FS_STAT_INDEX;
@@ -895,6 +904,7 @@ int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t l
   if (res) {
     if (cb_printf)
       cb_printf("ERROR: Disc Error:%d\n", res); // -107 .. -109
+    if(res == -147) return -147; // Power Loss!
     err++;
   }
 #ifdef JSTAT

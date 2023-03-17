@@ -31,6 +31,7 @@
 * 2.00 / 23.11.2020 nRF52832 (limited SPI DMA-Size <256)
 * 2.10 / 13.02.2021 nRF52832 SPI Pins mapped to optimal position for ANNA-B112 module
 * 2.11 / 16.05.2021 removed 'board.h'
+* 2.12 / 16.03.2023 added 10us delay for init
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------
@@ -113,6 +114,7 @@ int16_t sflash_spi_init(void){
     nrf_gpio_cfg_output(FPIN_LED);  // Might be already init from bsp-drivers
 #endif
     spi_init_flag=true;
+    nrf_delay_us(10);     
     return 0;
 }
 
