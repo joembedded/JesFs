@@ -293,24 +293,28 @@ int16_t fs_start(uint8_t mode) {
     return -147; // Lock Flash Access if power is too low
   }
 
-  // Flash wakeup
-  sflash_ReleaseFromDeepPowerDown();
-  sflash_wait_usec(45);
-  sflash_info.state_flags &= ~(STATE_DEEPSLEEP_OR_POWERFAIL );
+  err=3;    // Try 3 wakes before returning an Error
+  while(err--){
+    // Flash wakeup
+    sflash_ReleaseFromDeepPowerDown();
+    sflash_wait_usec(45);
+    sflash_info.state_flags &= ~(STATE_DEEPSLEEP_OR_POWERFAIL );
 
-  // ID read and get setup
-  id = sflash_QuickScanIdentification();
-
-  if (mode & FS_START_RESTART) {
-    if (sflash_info.total_flash_size && id == sflash_info.identification) {
-      return 0; // Wake only
+    // ID read and get setup
+    id = sflash_QuickScanIdentification();
+    if (mode & FS_START_RESTART) {
+      if (sflash_info.total_flash_size && id == sflash_info.identification) {
+        return 0; // Wake only
+      }
     }
-  }
-  sflash_info.creation_date = 0xFFFFFFFF; // Assume Invalid Disk
+    sflash_info.creation_date = 0xFFFFFFFF; // Assume Invalid Disk
 
-  res = sflash_interpret_id(id);
+    res = sflash_interpret_id(id);
+    if(!res) break;
+  }
   if (res)
-    return res;
+      return res;
+
 
   // OK, Flash is known - Read 12 Bytes (3 Longs) of the Header
   sflash_read(0, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B);

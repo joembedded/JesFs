@@ -52,8 +52,8 @@ int16_t sflash_interpret_id(uint32_t id){
         // Keep Flash-ID for optional Analysis
 	sflash_info.identification=id;
 
-        if(id==0x000000) return -144; // ShortCircuit/Sleep
-        if(id==0xFFFFFF) return -145; // Unconnected
+        if(id==0x000000) return -144; // ShortCircuit/Sleep in SPI?
+        if(id==0xFFFFFF) return -145; // Unconnected in SPI?
 
 	switch(id>>8){   // Check Without Density
 	default:
