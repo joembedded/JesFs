@@ -14,6 +14,7 @@
 * - nRF52840 on PCA10056 DK Board, using the on board 8MB Flash
 * - nRF52840 on NINA-B302 DK Boarf using the on board 1,2,8MB Flash
 * - nRF52832 on ANNA-B112 DK Board using the external 8MB Flash
+* - nRF52832 on EBYTE_E73 using an external 8MB Flash
 *
 * Speical notes:
 * - There is a blocking waiting function used (nrf_delay_us() in sflash_wait_usec()).
@@ -32,6 +33,7 @@
 * 2.10 / 13.02.2021 nRF52832 SPI Pins mapped to optimal position for ANNA-B112 module
 * 2.11 / 16.05.2021 removed 'board.h'
 * 2.12 / 16.03.2023 added 10us delay for init
+* 2.13 / 20.04.2023 added EBYTE_E73-Module
 *******************************************************************************/
 
 // ---------------- required for JesFs ----------------------------

@@ -53,6 +53,17 @@
   #define TB_TX_PIN NRF_GPIO_PIN_MAP(0,3) 
 #endif
 
+#ifdef EBYTE_E73  // Easy-2-Solder CE certified Module from EBYTE (!! No DC/DC !!)
+  //#warning "INFO: TB_TOOLS for EBYTE_E73"  // Just as Info
+  #ifndef NRF52832_XXAA
+    #error "WRONG CPU"
+  #endif
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,13) // Active LOW
+  //#define TB_BUT0   NRF_GPIO_PIN_MAP(xx) //  No Button
+  #define TB_RX_PIN NRF_GPIO_PIN_MAP(0,2) 
+  #define TB_TX_PIN NRF_GPIO_PIN_MAP(0,3) 
+#endif
+
 #ifdef ANNA_SDI12  // ANNA-SDI12 Sensor platform with ANNA-B112
   //#warning "INFO: TB_TOOLS for ANNA_B112"  // Just as Info
   #ifndef NRF52832_XXAA
