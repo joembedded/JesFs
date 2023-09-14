@@ -16,7 +16,8 @@
  * 1.85 / 17.03.2022 added check (Warren)
  * 1.86 / 18.03.2022 corrected bug in fs_date2sec1970()
  * 1.87 / 02.04.2022 fs_strcpy()->fsstrncpy() and some minor opts.
- * 1.88 / 17.03.2023 added feature _supply_voltage_check()
+ * 1.88 / 17.03.2023 added feature _supply_voltage_check() 
+ * 1.89 / 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
  *
  *******************************************************************************/
 
@@ -447,6 +448,12 @@ int16_t fs_format(uint8_t fmode) {
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
     return -148;
+
+    if (_supply_voltage_check()) {
+      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+      return -147; // Lock Flash Access if power is too low
+    }
+
   if (fmode == FS_FORMAT_SOFT) {
     for (sadr = 0; sadr < sflash_info.total_flash_size; sadr += SF_SECTOR_PH) {
       sflash_read(sadr, (uint8_t *)&sbuf, 8); // Read the 8 byte header: Magic and owner (owner for later...)
@@ -646,10 +653,16 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
       return -124;
   }
 
+    if (_supply_voltage_check()) {
+      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+      return -147; // Lock Flash Access if power is too low
+    }
+
+
   if (!sfun_adr) {
     sfun_adr = sflash_get_free_sector();
     if (!sfun_adr)
-      return -113;
+      return -113;  
     if (HEADER_SIZE_B + sflash_info.files_used * 4 >= (SF_SECTOR_PH - 4))
       return -111;
     res = sflash_SectorWrite(HEADER_SIZE_B + sflash_info.files_used * 4, (uint8_t *)&sfun_adr, 4);
@@ -696,6 +709,11 @@ int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len) {
       return -130;
   } else if (!(pdesc->open_flags & SF_OPEN_WRITE))
     return -118;
+
+  if (_supply_voltage_check()) {
+    sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+    return -147; // Lock Flash Access if power is too low
+  }
 
   while (len) {
     maxwrite = SF_SECTOR_PH - pdesc->_sadr_rel;
@@ -753,6 +771,12 @@ int16_t fs_close(FS_DESC *pdesc) {
   if (pdesc->open_flags & SF_OPEN_WRITE) {
     if (sflash_sadr_invalid(s0adr))
       return -120;
+
+    if (_supply_voltage_check()) {
+      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+      return -147; // Lock Flash Access if power is too low
+    }
+
     hinfo[0] = pdesc->file_pos;
     hinfo[1] = pdesc->file_crc32;
     res = sflash_SectorWrite(s0adr + HEADER_SIZE_B + 0, (uint8_t *)hinfo, 8);
@@ -798,6 +822,12 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc) {
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
     return -148;
+
+    if (_supply_voltage_check()) {
+      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+      return -147; // Lock Flash Access if power is too low
+    }
+
   if (!pd_odesc->_head_sadr || !pd_ndesc->_head_sadr)
     return -135;
   if (pd_ndesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))

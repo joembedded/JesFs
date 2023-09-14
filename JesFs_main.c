@@ -33,7 +33,8 @@
 * 2.54: 06.10.2021 added 'tb_get_runtime()' for NRF52
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
 * 2.56: 02.04.2022 improved fs_checkdisk() (nRF52840 J-TAG corrupted FlashDisk via QSPI)
-* 2.57: 17.03.2023 added _supply_voltage_check();
+* 2.70: 17.03.2023 added _feature supply_voltage_check();
+* 2.71: 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
 *******************************************************************************/
 
 #define VERSION "2.57 / 17.03.2023"
@@ -97,8 +98,12 @@ FS_DATE fs_date;  // Structe holding date-time
 uint32_t _time_get(void) {
 	return tb_time_get();
 }
+
+// Mostly all modern CPUs have internal high-speed A/D. Ideal for checking power.
+// Since V2.70 power is checked on fs_start() and all global write-functions on entry.
+// Normally only a few msec for writing/modifying the is required.
 int16_t _supply_voltage_check(void){
-  return 0; // Assume Power OK
+  return 0; // 0: Assume Power OK (Failure if <>0)
 }
 
 

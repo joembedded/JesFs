@@ -233,9 +233,7 @@ void fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 uint32_t fs_date2sec1970(FS_DATE *pd);
 void fs_set_static_secs(uint32_t newsecs);
 
-
 int16_t fs_check_disk(void cb_printf(char* fmt, ...), uint8_t *pline, uint32_t line_size);
-
 
 #ifdef __cplusplus
 }
