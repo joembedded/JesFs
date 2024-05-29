@@ -362,10 +362,11 @@ int16_t fs_start(uint8_t mode) {
     case SECTOR_MAGIC_HEAD_ACTIVE:
       sflash_info.files_active++;
       sflash_info.lusect_adr = sadr;
+      break;
     case SECTOR_MAGIC_HEAD_DELETED:
       sflash_info.files_used++;
       sflash_info.lusect_adr = sadr;
-
+      break;
     case SECTOR_MAGIC_DATA:
       sflash_info.available_disk_size -= SF_SECTOR_PH;
       sflash_info.lusect_adr = sadr;
@@ -449,10 +450,10 @@ int16_t fs_format(uint8_t fmode) {
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
     return -148;
 
-    if (_supply_voltage_check()) {
-      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
-      return -147; // Lock Flash Access if power is too low
-    }
+  if (_supply_voltage_check()) {
+    sflash_info.state_flags |= STATE_POWERFAIL;  // Lock Flash until DEEPSLEEP
+    return -147; // Lock Flash Access if power is too low
+  }
 
   if (fmode == FS_FORMAT_SOFT) {
     for (sadr = 0; sadr < sflash_info.total_flash_size; sadr += SF_SECTOR_PH) {
@@ -653,10 +654,10 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
       return -124;
   }
 
-    if (_supply_voltage_check()) {
-      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
-      return -147; // Lock Flash Access if power is too low
-    }
+  if (_supply_voltage_check()) {
+    sflash_info.state_flags |= STATE_POWERFAIL;  // Lock Flash until DEEPSLEEP
+    return -147; // Lock Flash Access if power is too low
+  }
 
 
   if (!sfun_adr) {
@@ -711,7 +712,7 @@ int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len) {
     return -118;
 
   if (_supply_voltage_check()) {
-    sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+    sflash_info.state_flags |= STATE_POWERFAIL;  // Lock Flash until DEEPSLEEP
     return -147; // Lock Flash Access if power is too low
   }
 
@@ -773,7 +774,7 @@ int16_t fs_close(FS_DESC *pdesc) {
       return -120;
 
     if (_supply_voltage_check()) {
-      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+      sflash_info.state_flags |= STATE_POWERFAIL;  // Lock Flash until DEEPSLEEP
       return -147; // Lock Flash Access if power is too low
     }
 
@@ -823,10 +824,10 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc) {
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
     return -148;
 
-    if (_supply_voltage_check()) {
-      sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
-      return -147; // Lock Flash Access if power is too low
-    }
+  if (_supply_voltage_check()) {
+    sflash_info.state_flags |= STATE_POWERFAIL;;  // Lock Flash until DEEPSLEEP
+    return -147; // Lock Flash Access if power is too low
+  }
 
   if (!pd_odesc->_head_sadr || !pd_ndesc->_head_sadr)
     return -135;
