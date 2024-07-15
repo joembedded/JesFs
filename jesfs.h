@@ -139,7 +139,7 @@ typedef struct{
 	uint32_t    _head_sadr;   // Hidden, head of file
 	uint32_t    _wrk_sadr; // Hidden, working
 	uint32_t    file_pos; // end pos is the current file len
-	uint32_t    file_len;  // len after open (set by fs_open)
+	uint32_t    file_len;  // len after open (set by fs_open) FFFFFFFF if unknown
 	uint32_t    file_crc32; // running CRC32 according ISO 3309, FFFFFFFF if not used (only with SF_OPEN_CRC)
 	uint32_t    file_ctime; // Creation Time of the file UNIX-Time in seconds since 1.1.1970, 0:00:00
 
