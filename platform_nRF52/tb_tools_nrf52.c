@@ -203,10 +203,10 @@ void tb_printf(char* fmt, ...){
     va_start(argptr, fmt);
 
     if(_tb_uart_init_flag==false) return; // Not init...
-
+    // Info: ulen is unlimited size, *_tb_app_uart_line_out has TB_SIZE_LINE_OUT elements, but vsnprintf prints max. TB_SIZE_LINE_OUT-1 plus trailing \0.
     ulen=vsnprintf((char*)_tb_app_uart_line_out, TB_SIZE_LINE_OUT, fmt, argptr);  // vsn: limit!
     va_end(argptr);
-    // vsnprintf() limits output to given size, but might return more.
+
     if(ulen>TB_SIZE_LINE_OUT-1) ulen=TB_SIZE_LINE_OUT-1;
     pl=_tb_app_uart_line_out;
     while(ulen--){

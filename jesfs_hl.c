@@ -959,7 +959,7 @@ int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t l
         continue; // Check unused entries also
     }
     if (cb_printf) if(res>0) {
-      if(res&FS_STAT_INACTIVE) cb_printf("Check Index(%u): ('%s')\n", i,lfs_stat.fname);
+      if(res&FS_STAT_INACTIVE) cb_printf("Check Index(%u): ('%s' (deleted))\n", i,lfs_stat.fname);
       else cb_printf("Check Index(%u): '%s'\n", i,lfs_stat.fname);
     }
   
