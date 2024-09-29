@@ -18,6 +18,7 @@
  * 1.87 / 02.04.2022 fs_strcpy()->fsstrncpy() and some minor opts.
  * 1.88 / 17.03.2023 added feature _supply_voltage_check() 
  * 1.89 / 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
+ * 1.90 / 29.09.2024 cosmetics 
  *
  *******************************************************************************/
 
