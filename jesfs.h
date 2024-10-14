@@ -186,10 +186,10 @@ typedef struct{
     // -- jesfs Header,
     // Init-Infos
     uint32_t lusect_adr;
-    uint32_t available_disk_size;    // Available Disk space in Bytes ('todelete' or echt free)
+    uint32_t available_disk_size;    // Available Disk space in Bytes (Marked 'todelete' or free)
 
     uint16_t files_used;    // Used Header Sectors
-    uint16_t files_active;    // Active files (Used-Active=Deleted)
+    uint16_t files_active;    // Active files (files_used - files_active = files_deleted)
 
 #ifdef JSTAT
 	 uint16_t sectors_todelete;  // Counts in 1, not really required, just for statistics
