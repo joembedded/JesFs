@@ -35,7 +35,7 @@ like the M25R-Series, used on nRF52840-DK, nRF52832 and the CC13xx/CC26xx Launch
 Some Basics about JesFs:
 
 - Ultra-Small RAM and code footprint: can be used on the smallest MCUs with only 8kByte program memory or less (like the famous MSP430-series, almost all kind of 32-Bit ARM cores (M0, M3, M4, ….)). Only 200 Bytes of RAM are sufficient!
-- Completely Open Source (GPL v3) and written in Standard C.
+- Completely Open Source, free and written in Standard C.
 - Works with Serial NOR-Flash from **8kByte to 16MByte** (opt. up to 2GByte), but could also be used with CPU-internal NOR-Flash.
 - Works hand-in-hand with the Ultra-Small JesFsBoot Secure bootloader (requires less than 8kB on standard ARM cores, including an AES-128 encryption engine for reliable Over-the-Air-Updates (“OTA”)).
 - Includes optimised Wear Leveling (for maximum life of the memory).
@@ -89,6 +89,7 @@ Some Basics about JesFs:
 - V2.61 (SAMD20) Atmel SAMD20 contributed (*kudos*!)
 - V2.70 added _feature supply_voltage_check();
 - V2.71 all global fs_-functions check _supply_voltage_check() on entry
+- V2.72 JesFs_hl.c (File V1.91)
 
 ---
 
