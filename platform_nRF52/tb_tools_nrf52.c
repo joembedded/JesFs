@@ -455,7 +455,10 @@ void tb_dbg_pinview(uint32_t pin_number){
     nrf_gpio_pin_sense_t sense;
 
     tb_printf("P:%u.%02u: ",pin_number>>5,pin_number&31); 
-    NRF_GPIO_Type * reg = nrf_gpio_pin_port_decode(&pin_number); // Modifies PIN-Number
+    tb_printf("I:%u ",nrf_gpio_pin_read(pin_number));
+    tb_printf("O:%u ",nrf_gpio_pin_out_read(pin_number));
+
+    NRF_GPIO_Type * reg = nrf_gpio_pin_port_decode(&pin_number); // Modifies PIN-Number to %32!!!
     uint32_t pr=reg->PIN_CNF[pin_number];
 
     dir=(pr>>GPIO_PIN_CNF_DIR_Pos)&1; // 0: Input, 1: Output
@@ -463,9 +466,6 @@ void tb_dbg_pinview(uint32_t pin_number){
     pull=(pr>>GPIO_PIN_CNF_PULL_Pos)&3; // 0: Disabled, 1: Pulldown, 3(!): Pullup
     drive=(pr>>GPIO_PIN_CNF_DRIVE_Pos)&7; // "S0S1","H0S1","S0H1","H0H1","D0S1","D0H1","S0D1","H0D1"
     sense=(pr>>GPIO_PIN_CNF_SENSE_Pos)&3; // 0: Disabled, 2(!):Sense_High 3(!):Sens_low
-
-    tb_printf("I:%u ",nrf_gpio_pin_read(pin_number));
-    tb_printf("O:%u ",nrf_gpio_pin_out_read(pin_number));
 
     tb_printf(dir?"Output ":"Input  "); // 7
     tb_printf(input?"Disconn.  ":"Connected "); // 10
