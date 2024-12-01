@@ -30,6 +30,18 @@
   #define TB_TX_PIN NRF_GPIO_PIN_MAP(0,14) 
 #endif
 
+#ifdef XM126_EVK
+  //#warning "INFO: TB_TOOLS for XM126_EVK (ACCONEER)" // Just as Info
+  #ifndef NRF52840_XXAA
+    #error "WRONG CPU"
+  #endif
+  #define TB_LED0   NRF_GPIO_PIN_MAP(0,4) // Active LOW
+  #define TB_BUT0   NRF_GPIO_PIN_MAP(0,25) // (DFU) Button
+  #define TB_RX_PIN NRF_GPIO_PIN_MAP(0,6) 
+  #define TB_TX_PIN NRF_GPIO_PIN_MAP(0,16) 
+#endif
+
+
 //-------- NRF52832-CPUS -------------
 #ifdef ANNA_B112_EVK
   //#warning "INFO: TB_TOOLS for NINA_B112_EVK"  // Just as Info
