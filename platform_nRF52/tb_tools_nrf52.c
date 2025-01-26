@@ -616,7 +616,7 @@ void tb_time_set(uint32_t new_secs){
 }
 
 // ----- clock ticks functions ---------------------
-// Use the difference of 2 timestamps to calclualte msec Time
+// Use the difference of 2 timestamps to calcullate msec Time - Default: ca.61usec/Tick
 uint32_t tb_get_ticks(void){
   return app_timer_cnt_get();
 }

@@ -279,7 +279,7 @@ static int16_t flash_intrasec_copy(uint32_t sadr, uint32_t dadr, uint16_t clen) 
 
 /* Start Filesystem - Fill structurs and check basic parameters */
 int16_t fs_start(uint8_t mode) {
-  int16_t res;
+  int16_t res = 0;
   uint32_t id;
   uint32_t sadr;
   uint32_t idx_adr;
@@ -946,7 +946,7 @@ int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t l
   }
 #ifdef JSTAT
   if (cb_printf) {
-    cb_printf("Sectors Empty/Recyclable: %d/%d\n", sflash_info.sectors_clear,sflash_info.sectors_todelete);
+    cb_printf("Sectors Empty/Recyclable: %d/%d\n", sflash_info.sectors_clear, sflash_info.sectors_todelete);
     if (sflash_info.sectors_unknown) {
       cb_printf("ERROR: Unknown Sectors: %d\n", sflash_info.sectors_unknown);
       err++;
