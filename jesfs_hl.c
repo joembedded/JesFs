@@ -20,6 +20,7 @@
  * 1.89 / 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
  * 1.90 / 29.09.2024 cosmetics
  * 1.91 / 14.10.2024 fixed bug from 1.90
+ * 1.92 / 20.02.2025 added fs_notexists()
  *
  *******************************************************************************/
 
@@ -690,6 +691,12 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
 
   sflash_info.files_active++;
   return 0;
+}
+
+/* Test if a File exists. If Yes: old File Descriptors can be used. Return 0 if exists, else < 0 */
+int16_t  fs_notexists(char *pname){
+  FS_DESC fs_desc_test;
+  return fs_open(&fs_desc_test, pname, SF_OPEN_READ);
 }
 
 /* Write to File */

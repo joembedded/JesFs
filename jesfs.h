@@ -222,6 +222,7 @@ int16_t fs_format(uint8_t fmode);
 int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz);
 int16_t fs_rewind(FS_DESC *pdesc);
 int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags);
+int16_t fs_notexists(char *pname);
 int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len);
 int16_t fs_close(FS_DESC *pdesc);
 int16_t fs_delete(FS_DESC *pdesc);
