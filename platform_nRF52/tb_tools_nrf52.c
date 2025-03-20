@@ -26,7 +26,8 @@
 * 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
 * 2.56: 14.11.2021 added 'tb_putsl(char* pc)'
 * 2.27: 10.11.2022 'tb_runtime2time()': save time to non-init-RAM, see comment
-* 2.28: 27.11.2022 'tb_time2runtime()': added
+* 2.28: 27.11.2022 added 'tb_time2runtime()' 
+* 2.29: 20.03.2025 added '_tb_default_uart_flag'
 ***************************************************************************************************************/
 
 #include <stdint.h>
@@ -107,6 +108,7 @@ static int32_t _tb_app_timout_ms;
 static uint8_t _tb_app_uart_errorcode; // 1 res. for data, 16: Fifo OVF, ...
 static int16_t _tb_app_uart_peekchar; // -1: nothing or 0..255
 static bool _tb_uart_init_flag=false; 
+static bool _tb_default_uart_flag=false; // if true: tb_tools_uart, false: uart redirected by user
 
 #define TB_SIZE_LINE_OUT  120  // 1 terminal line working buffer (opt. long filenames to print)
 static char _tb_app_uart_line_out[TB_SIZE_LINE_OUT];
@@ -273,6 +275,8 @@ int16_t tb_uart_init(void *pcomm_params,
                                                     
     // Check for Defaults
     if(pcomm_params==NULL) pcomm_params=(void*)&_tb_app_uart_def_comm_params;
+    // Might be helpful if U´b_uart is redirected
+    _tb_default_uart_flag = ( pcomm_params == (void*)&_tb_app_uart_def_comm_params);
     if(prx_buf==NULL){
       prx_buf = _tb_app_uart_def_rx_buf;
       rx_buf_size = sizeof(_tb_app_uart_def_rx_buf);
@@ -300,6 +304,7 @@ int16_t tb_uart_uninit(void){
      uint32_t err_code;
      if(_tb_uart_init_flag == false) return -1; // Not init
      _tb_uart_init_flag = false;
+     _tb_default_uart_flag = false;
      err_code = app_uart_close();
      if(err_code == NRF_SUCCESS) return 0;
      else return -2;
@@ -307,6 +312,9 @@ int16_t tb_uart_uninit(void){
 
 bool tb_is_uart_init(void){
   return _tb_uart_init_flag;
+}
+bool tb_is_default_uart(void){
+  return _tb_default_uart_flag;
 }
 
 /* -------- init Toolbox -----------------

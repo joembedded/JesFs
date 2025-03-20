@@ -42,6 +42,7 @@ int16_t tb_getc(void); // ---- get 1 char (0..255) (or -1 if nothing available)
 // Get String with Timout (if >0) in msec of infinite (Timout 0), No echo (max_uart_in without trailing \0!)
 int16_t tb_gets(char* input, int16_t max_uart_in, uint16_t max_wait_ms, uint8_t echo);
 bool tb_is_uart_init(void);
+bool tb_is_default_uart(void);
 // pcomm_params: (const app_uart_comm_params_t*):
 int16_t tb_uart_init(void *pcomm_params, uint8_t *prx_buf, uint16_t rx_buf_size, uint8_t *ptx_buf, uint16_t tx_buf_size, int32_t timout_ms);
 int16_t tb_uart_uninit(void);
