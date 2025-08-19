@@ -28,6 +28,7 @@
 * 2.27: 10.11.2022 'tb_runtime2time()': save time to non-init-RAM, see comment
 * 2.28: 27.11.2022 added 'tb_time2runtime()' 
 * 2.29: 20.03.2025 added '_tb_default_uart_flag'
+* 2.30: 24.07.2025 added Platform PIN Setup LTX_SHIELD
 ***************************************************************************************************************/
 
 #include <stdint.h>
