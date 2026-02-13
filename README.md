@@ -34,7 +34,7 @@ And I couldn't find one. So I built it! 🛠️
 
 ## What Makes JesFs Special?
 
-### 🎯 Battle-Tested & Production-Ready
+### 🎯 Field-Proven & Production-Ready
 - **Used on thousands of IoT devices** worldwide
 - **Several years** of real-world experience
 - Proven in **professional, scientific, and hobbyist** applications
