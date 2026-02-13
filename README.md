@@ -396,6 +396,7 @@ Documentation for JesFsBoot: 📧 Just drop me a note!
 - 📊 **Performance Tests:** [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf)
 - 🎯 **Use Case - BlackBox:** [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
 - 🚀 **LTX project** [LTX project](https://github.com/joembedded/LTX_server)
+- 🤝 **Contributing Guide:** [CONTRIBUTING.md](CONTRIBUTING.md) – Git workflow, coding standards, and how to submit changes
 
 ### License:
 **MIT License** – Use it freely in commercial, scientific, or hobbyist projects!
