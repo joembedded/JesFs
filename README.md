@@ -239,10 +239,11 @@ Change device behavior without recompiling:
 
 JesFs is modular and portable:
 - **Low-level drivers:** `JesFs_ll_xxxxx.c` (platform-specific)
-  - `JesFs_ll_nrf52.c` for nRF52
+  - `JesFs_ll_pca100xx.c` for nRF52
   - `JesFs_ll_tirtos.c` for CC13xx/CC26xx
   - `JesFs_ll_pc.c` for Windows
-- **Mid/High-level:** `jesfs_ml_hl.c` (hardware-independent)
+- **Mid-level:** `jesfs_ml.c` (flash management, hardware-independent)
+- **High-level:** `jesfs_hl.c` (file API, hardware-independent)
 - **Header:** `jesfs.h` (your main interface)
 - **Tools:** `tb_tools_xxx.c` (UART, Clock, LEDs, etc.)
 
@@ -267,7 +268,9 @@ The nRF52840 DK comes with a massive **8 MB Serial Flash** – perfect for JesFs
 4. Compile and run!
 5. Connect via virtual COM-Port (115200 8N1)
 
-**Project location:** `platform_nRF52/pca10056/ses/JesFsDemo_pca10056.emProject`
+**Project location:** use the SES projects in:
+- `platform_nRF52/nrf52832/ses/`
+- `platform_nRF52/nrf52840/ses/`
 
 ### 2️⃣ TI CC1310/CC1350 Launchpad Demo
 
@@ -350,7 +353,7 @@ Documentation for JesFsBoot: 📧 Just drop me a note!
 ## Version History
 
 ### Latest: V2.72
-- JesFs_hl.c (File V1.91)
+- JesFs_hl.c (File V1.92)
 - All global fs_* functions check supply voltage on entry
 - Added feature: supply voltage check
 
@@ -392,7 +395,7 @@ Documentation for JesFsBoot: 📧 Just drop me a note!
 
 ### Resources:
 - 🌐 **Homepage:** [joembedded.de](https://joembedded.de/)
-- 📄 **Detailed API Docs:** [JesFs.md](JesFs.md)
+- 📄 **Detailed API Docs:** [jesfs.h](jesfs.h) and inline source comments
 - 📊 **Performance Tests:** [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf)
 - 🎯 **Use Case - BlackBox:** [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
 - 🚀 **LTX project** [LTX project](https://github.com/joembedded/LTX_server)
