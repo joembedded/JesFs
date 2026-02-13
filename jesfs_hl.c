@@ -159,7 +159,7 @@ uint32_t fs_date2sec1970(FS_DATE *pd) {
       return 0;
     }
   }
-  if (pd->h > 23 || pd->m > 59 || pd->sec > 59)
+  if (pd->h > 23 || pd->min > 59 || pd->sec > 59)
     return 0;
 
   nsec = ((uint32_t)year_base / 4) * (1461 * SEC_DAY);                // Complete 4-years
