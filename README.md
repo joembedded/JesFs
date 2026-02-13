@@ -343,8 +343,7 @@ JesFs plays perfectly with **JesFsBoot**, a secure bootloader for ARM Cortex-M c
 5. All secure and automatic! 🔒
 
 *Note: Bootloader is optional – JesFs works perfectly standalone too!*
-
-Documentation for JesFsBoot: Coming soon!
+Documentation for JesFsBoot: 📧 Just drop me a note!
 
 ---
 
