@@ -28,7 +28,7 @@ My daily work is the IoT, and I needed a file system that could:
 
 And I couldn't find one. So I built it! 🛠️
 
-**JesFs** is designed for **"Small and Ultra-Low-Power IoT Devices"** that need to communicate over many different channels (WiFi, Mobile Internet, Bluetooth, UART, Radio-Link, ...) and must work reliably for years.
+**JesFs** is designed for **"Small and Ultra-Low-Power IoT Devices"** that need to communicate over many different channels (WiFi, Mobile Internet, Bluetooth, UART, Radio-Link, LoRa, Satellite, ...) and must work reliably for years.
 
 ---
 
