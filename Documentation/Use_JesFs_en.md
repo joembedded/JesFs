@@ -770,8 +770,6 @@ extern SFLASH_INFO sflash_info;
 > [!NOTE]
 > ### 📄 Documentation Info
 > - **Date**: February 13, 2026  
-> - **Based on**: JesFs by joembedded@gmail.com  
-> - **License**: MIT License
 > - **Project**: LTX Logger System
 >
 > 💬 **Questions or feedback?** Always welcome!
