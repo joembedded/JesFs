@@ -173,10 +173,11 @@ git push origin main
 
 ### Common Scenarios
 
-#### Scenario 1: Merge Copilot Branch to Main (Current Branch is Copilot)
+#### Scenario 1: Merge Copilot/Codex Branch to Main (Current Branch is Copilot/Codex)
 ```bash
 git checkout main
-git merge copilot/merge-codex-branch-to-main
+git merge copilot/your-branch-name
+# Or for codex branches: git merge codex/your-branch-name
 git push origin main
 ```
 

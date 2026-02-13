@@ -153,8 +153,10 @@ git checkout main
 # Step 3: Pull latest changes
 git pull origin main
 
-# Step 4: Merge the codex branch
-git merge copilot/your-branch-name
+# Step 4: Merge the codex/copilot branch
+git merge codex/your-branch-name
+# Or for copilot branches:
+# git merge copilot/your-branch-name
 
 # Step 5: Resolve conflicts if any, then push
 git push origin main
