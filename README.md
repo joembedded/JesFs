@@ -23,7 +23,7 @@ My daily work is the IoT, and I needed a file system that could:
 - Run on **ultra-small devices** with minimal resources  
 - Work **reliably for years** without maintenance
 - Handle **firmware updates and paramater changes remotely** and securely
-- Be easily **mirrored to a digital twin in the Cloud**
+- Be easily **mirrored to a digital twin 👯‍♂️ in the Cloud**
   (As used e.g. in the [LTX project](https://github.com/joembedded/LTX_server))
 
 And I couldn't find one. So I built it! 🛠️
@@ -207,10 +207,11 @@ Change device behavior without recompiling:
 
 #### **Tiny Modules:**
 ![RC-CC1310F Module](Documentation/rc1310_module.jpg)  
+
 *The RC-CC1310F module from radiocontrolli.com with 2MB built-in!*
 
 #### **Flash Chips:**
-![CC13xx Flash](Documentation/cc13xx_flash.jpg)  
+![CC13xx Flash](Documentation/cc13xx_flash.jpg) &nbsp;&nbsp;&nbsp; 
 ![nRF52840 DK](Documentation/nrf52840_dk.jpg)
 
 *From 1MB to 8MB – plenty of room for your files!*
@@ -378,7 +379,7 @@ Documentation for JesFsBoot: 📧 Just drop me a note!
 **A:** Use escape sequences (0xFE 0x01 for 0xFF) or use ASCII/Base64 encoding for your data!
 
 ### Q: Can I use JesFs on internal CPU flash?
-**A:** Yes! JesFs works with any NOR-flash, internal or external.
+**A:** Yes! JesFs works with any NOR-flash, internal or external. Only check if single byte writes are possible.
 
 ### Q: How many write cycles can I expect?
 **A:** Typically 1,000 to 1,000,000 erases per sector (check your flash datasheet). JesFs's wear leveling maximizes lifetime.
