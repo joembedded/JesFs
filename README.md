@@ -212,7 +212,7 @@ Change device behavior without recompiling:
 
 #### **Flash Chips:**
 ![CC13xx Flash](Documentation/cc13xx_flash.jpg) &nbsp;&nbsp;&nbsp; 
-![nRF52840 DK](Documentation/nrf52840_dk.jpg)
+![nRF52840 DK](Documentation/Nrf52840_DK.jpg)
 
 *From 1MB to 8MB – plenty of room for your files!*
 
