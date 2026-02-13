@@ -188,6 +188,14 @@ Change device behavior without recompiling:
 - Update graphics, sounds, or any resource
 - Make changes in the field – easy!
 
+###  🎯 A real World JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
+
+![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](intent1500.jpg)
+
+*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus*
+
+[How JesFs is used here 📁](Documentation/Use_JesFs_en.md)
+
 ---
 
 ## Supported Hardware
