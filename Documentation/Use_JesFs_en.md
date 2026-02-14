@@ -46,7 +46,7 @@ nRF52 refers to ARM Cortex CPUs with Bluetooth and 64 MHz:
 For JesFs, an external NOR flash is available via SPI.
 Type and size are managed by JesFs. What's important is that the flash
 can handle the available voltage (most are usable from 1.6V - 3.6V)
-and the maximum SPI frequency used (typically 8 MHz, see source codes).
+and the maximum SPI frequency used (typically 8 MHz - 40 MHz, see source codes).
 
 ### ⚡ Important Features of JesFS
 
