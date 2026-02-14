@@ -10,7 +10,7 @@
 Welcome to **JesFs** – a file system that's currently running on **thousands of IoT devices worldwide**, from mountain peaks to industrial floors, keeping data safe and devices smart since its first deployment!
 
 ![JesFs on LTraX](Documentation/ltx_jesfs.jpg)  
-*[Yes, that's 4MB of file system power on a 2x3 mm chip!]*
+*Yes, that's 4MB of file system power on a 2x3 mm chip!*
 
 ---
 
@@ -190,11 +190,11 @@ Change device behavior without recompiling:
 
 ###  🎯 A real World JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
 
-![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](intent1500.jpg)
+![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](Documentation/intent1500.jpg)
 
-*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus*
+*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWan, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks)*
 
-[How JesFs is used here 📁](Documentation/Use_JesFs_en.md)
+Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
 
 ---
 

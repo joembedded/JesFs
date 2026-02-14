@@ -6,22 +6,28 @@
 
 ![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](intent1500.jpg)
 
-*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus*
-
+*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWan, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks) (Note: This is an OEM product)*
 
 > [!TIP]
 > ### 🔄 Rotating History Storage
-The loggers typically work with a rotating history storage consisting of 2 files, similar to the Black-Box demo in the JesFs documentation. When one file reaches its size limit, it becomes the backup file and a new one is created. This ensures a **latest history is always available** with a defined maximum time depth.
+> The loggers typically work with a rotating history storage consisting of 2 files, similar to the Black-Box demo in the JesFs documentation. When one file reaches its size limit, it becomes the backup file and a new one is created. This ensures a **latest history is always available** with a defined maximum time depth.
+> 
+> **Ideal for:**
+> - 📂 Data that are only used or required temporarily, like logged data or post-mortem data
 
-> [!NOTE]
+
+> [!TIP]
 > ### 🌐 Mirrored File System (Cloud Twin)
 > A special feature: Files can be "mirrored" to a server when needed (e.g., via mobile internet). This means the file system exists in two places simultaneously, and is synchronized with each internet communication:
+> 
+> **Ideal for:**
 > - 📤 Data and parameter settings from "on-site" **to the server**
 > - 📥 Remote commands and firmware updates **from the server**
 
-> [!NOTE]
+> [!TIP]
 > ### 🔄 Firmware Updates Over-The-Air (OTA)
 > JesFs supports secure firmware updates via various channels (BLE, Mobile Internet, LoRa, etc.). With the **JesFsBoot Secure Bootloader**, updates can be encrypted (AES-128), transmitted, and validated.
+> 
 
 > [!IMPORTANT]
 > ### 🤝 Collaboration Offer
@@ -39,7 +45,7 @@ nRF52 refers to ARM Cortex CPUs with Bluetooth and 64 MHz:
  
 For JesFs, an external NOR flash is available via SPI.
 Type and size are managed by JesFs. What's important is that the flash
-can handle the available voltage (most are usable from 1.6V - 3.3V)
+can handle the available voltage (most are usable from 1.6V - 3.6V)
 and the maximum SPI frequency used (typically 8 MHz, see source codes).
 
 ### ⚡ Important Features of JesFS
