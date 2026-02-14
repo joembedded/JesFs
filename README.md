@@ -22,7 +22,7 @@ My daily work is the IoT, and I needed a file system that could:
 - **Survive power losses** without breaking a sweat
 - Run on **ultra-small devices** with minimal resources  
 - Work **reliably for years** without maintenance
-- Handle **firmware updates and paramater changes remotely** and securely
+- Handle **firmware updates and parameter changes remotely** and securely
 - Be easily **mirrored to a digital twin 👯‍♂️ in the Cloud**
   (As used e.g. in the [LTX project](https://github.com/joembedded/LTX_server))
 
@@ -71,6 +71,12 @@ And I couldn't find one. So I built it! 🛠️
 - **Flash sizes:** 8 kByte to 16 MByte (optionally up to 2 GByte)
 - **Tested with:** Macronix MX25Rxx, GigaDevices GD25WDxx/GD25WQxx, and more
 - **Platforms:** nRF52840, nRF52832, CC13xx/CC26xx, SAMD20, Windows (for development), and others
+
+---
+
+> [!IMPORTANT]
+> **🧑‍💻 Statement on AI Usage:** The entire codebase was authored, manually entered, and thoroughly reviewed by qualified human engineers. However AI tools supported documentation and review processes. No AI-generated source code was directly copied or integrated.
+And yes, I'm happy to let the AI add Emojis to the docs 🚀- makes it more readable. I like it 😁👍 
 
 ---
 
@@ -144,7 +150,7 @@ This is something you won't find in traditional file systems!
 
 **The Problem:** Traditional systems must close files to update directory tables. If power fails during close → data corruption or loss!
 
-**JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding). Ideal for continously growing files, like on a data logger.
+**JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding). Ideal for continuously growing files, like on a data logger.
 
 **Result:** Power loss? No problem! Your data is safe. ✅
 
@@ -245,16 +251,34 @@ Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_J
 - **Total minimum:** ~200 Bytes!
 
 ### Code Architecture
+- **Only for test on PC:** `JesFs_main.c`
+  Compile the demo either within an IDE or as a 'single liner' with 'gcc' (optionally with `-std=c99`):
 
-JesFs is modular and portable:
+  ```bash
+  gcc -o jesfs.exe JesFs_main.c jesfs_hl.c jesfs_ml.c platform_WIN/JesFs_ll_pc.c platform_WIN/tb_tools_win.c -I. -DWIN32 -Wall
+  ```
+
+**JesFs itself is modular and portable:**
 - **Low-level drivers:** `JesFs_ll_xxxxx.c` (platform-specific)
   - `JesFs_ll_pca100xx.c` for nRF52
   - `JesFs_ll_tirtos.c` for CC13xx/CC26xx
   - `JesFs_ll_pc.c` for Windows
+  - Other Hardware: Adapt one of the above '_ll_'
+
 - **Mid-level:** `jesfs_ml.c` (flash management, hardware-independent)
+
 - **High-level:** `jesfs_hl.c` (file API, hardware-independent)
 - **Header:** `jesfs.h` (your main interface)
+
+**Per platform a toolbox defines some helpers:**
 - **Tools:** `tb_tools_xxx.c` (UART, Clock, LEDs, etc.)
+- Also 2 callback functions are required:
+  - `uint32_t _time_get(void)`: returns the unsigned UNIX timestamp, which goes up to approximately year 2100 😉
+  - `int16_t _supply_voltage_check(void)`: returns 0 if the power is valid, at least for the time of the operation (see code).
+  > [!NOTE]
+  > As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher than the minimum.
+  
+
 
 ### External File Sync
 
