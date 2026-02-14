@@ -56,7 +56,7 @@ and the maximum SPI frequency used (typically 8 MHz, see source codes).
 - ⚡ **Fast**: Deep Sleep to Ready in microseconds
 - 🎯 **Simple API**: Similar to standard C file functions
 - ✅ **CRC32 Checking**: Optional for data integrity (ISO 3309)
-- 🔓 **Unclosed Files**: Supports continued writing after power failure
+- 🔓 **Unclosed Files**: Supports continued writing after power failure, ideal for continously growing files, like for data logging.
 - 🔄 **Firmware OTA**: Ideal also for (secure) firmware updates
 
 ---
