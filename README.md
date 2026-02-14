@@ -275,8 +275,8 @@ Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_J
 - Also 2 callback functions are required:
   - `uint32_t _time_get(void)`: returns the unsigned UNIX timestamp, which goes up to approximately year 2100 😉
   - `int16_t _supply_voltage_check(void)`: returns 0 if the power is valid, at least for the time of the operation (see code).
-  > [!NOTE]
-  > As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher than the minimum.
+  > 
+  >🔋As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher here than the minimum.
   
 
 
