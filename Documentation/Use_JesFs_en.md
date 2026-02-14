@@ -6,7 +6,7 @@
 
 ![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](intent1500.jpg)
 
-*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWan, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks) (Note: This is an OEM product)*
+*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWAN, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks) (Note: This is an OEM product)*
 
 > [!TIP]
 > ### 🔄 Rotating History Storage

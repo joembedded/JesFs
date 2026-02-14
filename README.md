@@ -1,6 +1,6 @@
 # ![JesFs Logo](Documentation/jesfs_logo.jpg)
 
-> *"I have detailed Files"* – The T800, Terminator II  
+> _**"I have detailed Files"** – The T800, Terminator II_
 
 
 # JesFs – Jo's Embedded Serial File System
@@ -144,7 +144,7 @@ This is something you won't find in traditional file systems!
 
 **The Problem:** Traditional systems must close files to update directory tables. If power fails during close → data corruption or loss!
 
-**JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding).
+**JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding). Ideal for continously growing files, like on a data logger.
 
 **Result:** Power loss? No problem! Your data is safe. ✅
 
@@ -192,7 +192,7 @@ Change device behavior without recompiling:
 
 ![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](Documentation/intent1500.jpg)
 
-*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWan, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks)*
+*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWAN, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks)*
 
 Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
 
