@@ -16,28 +16,28 @@
 *
 * (C) joembedded@gmail.com - www.joembedded.de
 * Version: 
-* 1.5: 25.11.2019 
-* 1.51: 07.12.2019 (nRF52) added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
-* 1.6: 22.12.2019  added fs_check_disk() for detailed checks
-* 1.61: 05.01.2020 source cosmetics and (nRF52) SPIM 16MHz as default
-* 1.62: 19.01.2020 Changed WD behavior in tb_tools
-* 1.7: 25.02.2020 (nRF52) Added Defines for u-Blox NINA-B3 
-* 1.8: 20.03.2020 Added Time set with '!' and UART-RX-Error
-* 2.0: 06.09.2020 (nRF52) Changed UART Driver to APP_UART  for Multi-Use in tb_tools
-* 2.01: 08.09.2020 (nRF52) Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
-* 2.02: 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
-* 2.03: 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
-* 2.04: 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
-* 2.05: 12.03.2021 Added print of Flash ID for analysis 
-* 2.06: 21.03.2021 Added hint about 'Bulk Erase'/Soft format (see case 'F'))
-* 2.54: 06.10.2021 added 'tb_get_runtime()' for NRF52
-* 2.55: 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
-* 2.56: 02.04.2022 improved fs_checkdisk() (nRF52840 J-TAG corrupted FlashDisk via QSPI)
-* 2.70: 17.03.2023 added _feature supply_voltage_check();
-* 2.71: 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
+* 25.11.2019
+* 07.12.2019 (nRF52) added deep sleep functions in Toolbox (nrF52840<3uA) (see cmd 's')
+* 22.12.2019  added fs_check_disk() for detailed checks
+* 05.01.2020 source cosmetics and (nRF52) SPIM 16MHz as default
+* 19.01.2020 Changed WD behavior in tb_tools
+* 25.02.2020 (nRF52) Added Defines for u-Blox NINA-B3
+* 20.03.2020 Added Time set with '!' and UART-RX-Error
+* 06.09.2020 (nRF52) Changed UART Driver to APP_UART  for Multi-Use in tb_tools
+* 08.09.2020 (nRF52) Fixed Error in SDK17 (see tb_tools_nrf52.c-> 'SDK17')
+* 23.09.2020 (nRF52) Adapted to SDK17.0.2 (still Problem in 'nrf_drv_clock.c' -> see 'SDK17')
+* 22.11.2020 Corrected small error in JesFs_main.c 'r' command.
+* 11.02.2021 Corrected small error in JesFs_main.c 'X' command.
+* 12.03.2021 Added print of Flash ID for analysis
+* 21.03.2021 Added hint about 'Bulk Erase'/Soft format (see case 'F'))
+* 06.10.2021 added 'tb_get_runtime()' for NRF52
+* 06.10.2021 INFO: SDK17.1.0: There is still an Error on nrf_drv_clk.c ( -> search in this file 'SDK17')
+* 02.04.2022 improved fs_checkdisk() (nRF52840 J-TAG corrupted FlashDisk via QSPI)
+* 17.03.2023 added _feature supply_voltage_check();
+* 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
 *******************************************************************************/
 
-#define VERSION "2.57 / 17.03.2023"
+#define VERSION "17.03.2023"
 
 #ifdef WIN32		// Visual Studio Code defines WIN32
  #define _CRT_SECURE_NO_WARNINGS	// VS somtimes complains traditional C

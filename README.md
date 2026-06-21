@@ -1,11 +1,10 @@
 # ![JesFs Logo](Documentation/jesfs_logo.jpg)
 
-> _**"I have detailed Files"** – The T800, Terminator II_
-
+> _"I have detailed Files."_ - A literary nod to the T800 in Terminator II (Blockbuster, 1991).
 
 # JesFs – Jo's Embedded Serial File System
 
-## **The File System for real IoT** 🚀
+## **The File System for real IoT**
 
 Welcome to **JesFs** – a file system that's currently running on **thousands of IoT devices worldwide**, from mountain peaks to industrial floors, keeping data safe and devices smart since its first deployment!
 
@@ -23,10 +22,10 @@ My daily work is the IoT, and I needed a file system that could:
 - Run on **ultra-small devices** with minimal resources  
 - Work **reliably for years** without maintenance
 - Handle **firmware updates and parameter changes remotely** and securely
-- Be easily **mirrored to a digital twin 👯‍♂️ in the Cloud**
+- Be easily **mirrored to a digital twin in the Cloud**
   (As used e.g. in the [LTX project](https://github.com/joembedded/LTX_server))
 
-And I couldn't find one. So I built it! 🛠️
+And I couldn't find one. So I built it.
 
 **JesFs** is designed for **"Small and Ultra-Low-Power IoT Devices"** that need to communicate over many different channels (WiFi, Mobile Internet, Bluetooth, UART, Radio-Link, LoRa, Satellite, ...) and must work reliably for years.
 
@@ -34,40 +33,40 @@ And I couldn't find one. So I built it! 🛠️
 
 ## What Makes JesFs Special?
 
-### 🎯 Field-Proven & Production-Ready
+### Field-Proven & Production-Ready
 - **Used on thousands of IoT devices** worldwide
 - **Several years** of real-world experience
 - Proven in **professional, scientific, and hobbyist** applications
 - **MIT License** – completely open source and free
 
-### 💪 Incredibly Small Footprint
+### Incredibly Small Footprint
 - Works on MCUs with only **8kByte program memory** (yes, really!)
 - Requires only **200 Bytes of RAM** minimum
 - Supports devices from tiny **16-Bit** to powerful **ARM** cores
 - Perfect for battery-powered devices
 
-### ⚡ Blazing Fast Performance
+### Blazing Fast Performance
 - **Reading:** 0.5 - 3.75 MB/sec (depending on SPI speed & CRC usage)
 - **Silent reading:** ~100 MB/sec (for finding file ends)
 - **Writing:** 30-70 kB/sec
 - **Deep Sleep to Ready:** Just a few microseconds!
 - **Power consumption in Deep Sleep:** <0.5µA (with MX25Rxxxx chips)
 
-### 🛡️ Robust & Secure
+### Robust & Secure
 - **No data loss** on power failure or reset
 - **CRC32 integrity checking** (ISO 3309 standard)
 - Works with the **JesFsBoot secure bootloader**
 - **AES-128 encrypted** firmware updates possible via OTA, BLE, ...
 - Optimized **wear leveling** for maximum flash lifetime
 
-### 🎨 Developer Friendly
+### Developer Friendly
 - **Intuitive API** – if you know `fopen()`, you know JesFs! (Note: But JesFs is not POSIX-compliant)
 - **Flat file system** – no complex directory structures
 - **Up to ~1000 files** on standard 4KB sector flash
 - **Unclosed files support** – unique feature for IoT applications!
 - Works **standalone** or with **RTOS**
 
-### 🌍 Wide Platform Support
+### Wide Platform Support
 - **Flash sizes:** 8 kByte to 16 MByte (optionally up to 2 GByte)
 - **Tested with:** Macronix MX25Rxx, GigaDevices GD25WDxx/GD25WQxx, and more
 - **Platforms:** nRF52840, nRF52832, CC13xx/CC26xx, SAMD20, Windows (for development), and others
@@ -75,8 +74,7 @@ And I couldn't find one. So I built it! 🛠️
 ---
 
 > [!IMPORTANT]
-> **🧑‍💻 Statement on AI Usage:** The entire codebase was authored, manually entered, and thoroughly reviewed by qualified human engineers. However AI tools supported documentation and review processes. No AI-generated source code was directly copied or integrated.
-And yes, I'm happy to let the AI add Emojis to the docs 🚀- makes it more readable. I like it 😁👍 
+> **Statement on AI Usage:** The entire codebase was authored, manually entered, and thoroughly reviewed by qualified human engineers. However AI tools supported documentation and review processes. No AI-generated source code was directly copied or integrated. 
 
 ---
 
@@ -95,7 +93,7 @@ And yes, I'm happy to let the AI add Emojis to the docs 🚀- makes it more read
 - Start with TI-RTOS "empty" project via Resource Explorer
 - Add JesFs files to your project
 - Add **CC13XX_CC26XX** as Preprocessor Definition
-- Done! ✨
+- Done.
 
 #### **For Windows Development:**
 - Use the included Windows demo project
@@ -127,7 +125,7 @@ int16_t  fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t 
 void     fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
 ```
 
-*Looks familiar? That's the point! 😊*
+*Looks familiar? That's the point.* 😁
 
 ---
 
@@ -144,7 +142,7 @@ NOR-Flash has a special characteristic: you can only write **"0"**, never direct
 - **Head:** Where each file starts
 - **Sector Pool:** The rest of your storage
 
-### The Magic of Unclosed Files 🎩
+### The Magic of Unclosed Files
 
 This is something you won't find in traditional file systems! 
 
@@ -152,7 +150,7 @@ This is something you won't find in traditional file systems!
 
 **JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding). Ideal for continuously growing files, like on a data logger.
 
-**Result:** Power loss? No problem! Your data is safe. ✅
+**Result:** Power loss? No problem. Your data is safe.
 
 ### Performance Stats
 
@@ -167,7 +165,7 @@ See [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf) for
 
 ## Real-World Use Cases
 
-### 🎯 The BlackBox Demo – An IoT *Flight Recorder*
+### The BlackBox Demo – An IoT *Flight Recorder*
 
 Ever wondered what went wrong when a device fails after years of reliable operation?
 
@@ -179,7 +177,7 @@ Ever wondered what went wrong when a device fails after years of reliable operat
 
 Read more: [usecase_BlackBox/BlackBox_Eval.pdf](usecase_BlackBox/BlackBox_Eval.pdf)
 
-### 🌐 Remote Firmware Updates possible
+### Remote Firmware Updates possible
 
 Think of your embedded devices updating themselves:
 - Via **WiFi**, **Mobile Internet**, **Bluetooth**, **UART**, or **Radio-Link**
@@ -187,20 +185,20 @@ Think of your embedded devices updating themselves:
 - No physical access needed!
 - Works seamlessly with **JesFsBoot** secure bootloader (only 8kB!)
 
-### 📝 Configuration & Language Files
+### Configuration & Language Files
 
 Change device behavior without recompiling:
 - Store settings, calibration data, language files
 - Update graphics, sounds, or any resource
 - Make changes in the field – easy!
 
-###  🎯 A real World JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
+###  A real World JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
 
 ![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](Documentation/intent1500.jpg)
 
 *LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWAN, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks)*
 
-Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
+Read the full story [How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
 
 ---
 
@@ -273,16 +271,20 @@ Read the full story [📰 How JesFs is used on LTX Type1500](Documentation/Use_J
 **Per platform a toolbox defines some helpers:**
 - **Tools:** `tb_tools_xxx.c` (UART, Clock, LEDs, etc.)
 - Also 2 callback functions are required:
-  - `uint32_t _time_get(void)`: returns the unsigned UNIX timestamp, which goes up to approximately year 2100 😉
+  - `uint32_t _time_get(void)`: returns the unsigned UNIX timestamp, which goes up to approximately year 2100.
   - `int16_t _supply_voltage_check(void)`: returns 0 if the power is valid, at least for the time of the operation (see code).
   > 
-  >🔋As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher here than the minimum.
+  > As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher here than the minimum.
   
 
 
 ### External File Sync
 
-Special flag `SF_OPEN_EXT_SYNC` marks files for automatic synchronization to external servers. There's even a PHP framework for mapping JesFs files to web servers!
+Special flag `SF_OPEN_EXT_SYNC` marks files that are relevant for external synchronization.
+
+Important: this bit is not used internally by JesFs core logic. That is exactly why it is useful for application-level workflows, for example to automatically mirror relevant files to a cloud-side "digital twin".
+
+There's even a PHP framework for mapping JesFs files to web servers.
 
 Visit [joembedded.de](https://joembedded.de/) for more details.
 
@@ -376,10 +378,10 @@ JesFs plays perfectly with **JesFsBoot**, a secure bootloader for ARM Cortex-M c
 2. Bootloader reads and decrypts on-the-fly
 3. Programs the application flash
 4. Boots into new firmware
-5. All secure and automatic! 🔒
+5. All secure and automatic.
 
 *Note: Bootloader is optional – JesFs works perfectly standalone too!*
-Documentation for JesFsBoot: 📧 Just drop me a note!
+Documentation for JesFsBoot: Just drop me a note.
 
 ---
 
@@ -427,11 +429,11 @@ Documentation for JesFsBoot: 📧 Just drop me a note!
 ## Community & Support
 
 ### Resources:
-- 🌐 **Homepage:** [joembedded.de](https://joembedded.de/)
-- 📄 **Detailed API Docs:** [jesfs.h](jesfs.h) and inline source comments
-- 📊 **Performance Tests:** [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf)
-- 🎯 **Use Case - BlackBox:** [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
-- 🚀 **LTX project** [LTX project](https://github.com/joembedded/LTX_server)
+- **Homepage:** [joembedded.de](https://joembedded.de/)
+- **Detailed API Docs:** [jesfs.h](jesfs.h) and inline source comments
+- **Performance Tests:** [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf)
+- **Use Case - BlackBox:** [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
+- **LTX project** [LTX project](https://github.com/joembedded/LTX_server)
 
 ### License:
 **MIT License** – Use it freely in commercial, scientific, or hobbyist projects!

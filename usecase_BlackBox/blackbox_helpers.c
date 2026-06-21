@@ -73,7 +73,7 @@ void helper_show_directory(void){
 
 		tb_printf("Disk size: %d Bytes\n",   sflash_info.total_flash_size);
 		if(sflash_info.creation_date==0xFFFFFFFF){  // Severe Error
-			tb_printf("Error: Invalid/Unformated Disk! (-108)\n");
+			tb_printf("Error: Invalid/Unformated Disk! (%d)\n", JESFS_ERR_BAD_MAGIC);
 			return;
 		}
 		tb_printf("Disk available: %d Bytes / %d Sectors\n",sflash_info.available_disk_size,sflash_info.available_disk_size/SF_SECTOR_PH);

@@ -4,23 +4,8 @@
  * JesFs - Jo's Embedded Serial File System
  *
  * (C) joembedded@gmail.com - www.joembedded.de
- * Version:
- * 1.5 / 25.11.2019
- * 1.6 / 22.12.2019 added fs_check_disk()
- * 1.7 / 12.03.2020 added fs_date2sec1970()
- * 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
- * 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
- * 1.82 / 21.03.2021 added comment fs_format() Timeouts
- * 1.83 / 11.07.2021 added Pin Definitions for NRF52
- * 1.84 / 15.08.2021 check in fs_date2sec1970
- * 1.85 / 17.03.2022 added check (Warren)
- * 1.86 / 18.03.2022 corrected bug in fs_date2sec1970()
- * 1.87 / 02.04.2022 fs_strcpy()->fsstrncpy() and some minor opts.
- * 1.88 / 17.03.2023 added feature _supply_voltage_check()
- * 1.89 / 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
- * 1.90 / 29.09.2024 cosmetics
- * 1.91 / 14.10.2024 fixed bug from 1.90
- * 1.92 / 20.02.2025 added fs_notexists()
+ *
+ * Version: see jesfs.h
  *
  *******************************************************************************/
 
@@ -34,11 +19,11 @@
 
 extern uint32_t _time_get(void);            // We need Unix-Seconds, must be defined outside - UserProvided!
 static uint32_t _static_time = 0;           // If <>0: time used for fs_open() with Create or fs_format()
-extern int16_t _supply_voltage_check(void); // Return 0 if Power is OK, else  Error -147
+extern int16_t _supply_voltage_check(void); // Return 0 if Power is OK, else JESFS_ERR_VOLTAGE_TOO_LOW
 
-// Driver designed for 4k-Flash (or larger) - JesFs
+// Driver designed for 4k-Flash (optionally larger ok, but not standard for SPI NOR Flash) - JesFs
 #if SF_SECTOR_PH != 4096
-#error "Phyiscal Sector Size SPIFlash must be 4K"
+#error "Physical Sector Size SPI Flash must be 4096 Bytes"
 #endif
 #if FNAMELEN != 21
 #error "FNAMELEN fixed to 21+Zero-Byte by Design"
@@ -212,20 +197,20 @@ static int16_t flash_set2delete(uint32_t sadr) {
   max_sect = (sflash_info.total_flash_size / SF_SECTOR_PH);
   while (--max_sect) {
     if (sflash_sadr_invalid(sadr))
-      return -120;
+      return JESFS_ERR_BAD_SECTOR_ADDR;
     sflash_read(sadr, (uint8_t *)thdr, 12);
     if (thdr[0] == SECTOR_MAGIC_HEAD_ACTIVE) {
       if (thdr[1] != 0xFFFFFFFF)
-        return -122;
+        return JESFS_ERR_BAD_SECTOR_OWNER;
       thdr[0] = SECTOR_MAGIC_HEAD_DELETED;
       sflash_info.files_active--;
     } else if (thdr[0] == SECTOR_MAGIC_DATA) {
       if (thdr[1] != oadr)
-        return -122;
+        return JESFS_ERR_BAD_SECTOR_OWNER;
       thdr[0] = SECTOR_MAGIC_TODELETE;
       sflash_info.available_disk_size += SF_SECTOR_PH;
     } else
-      return -123; // Illegal
+      return JESFS_ERR_BAD_SECTOR_TYPE; // Illegal
     res = sflash_SectorWrite(sadr, (uint8_t *)thdr, 4);
     if (res)
       return res;
@@ -233,7 +218,7 @@ static int16_t flash_set2delete(uint32_t sadr) {
     if (sadr == 0xFFFFFFFF)
       return 0;
   }
-  return -121;
+  return JESFS_ERR_SECTOR_LIST_CYCLE;
 }
 // Find last used byte index in a sector (max_sec_rd<=SF_SECTOR_PH). Returns 0 is sector is totaly empty (all bytes FF)
 static uint16_t sflash_find_mlen(uint32_t sadr, uint16_t max_sec_rd) {
@@ -294,7 +279,7 @@ int16_t fs_start(uint8_t mode) {
     sflash_info.total_flash_size = 0;
     sflash_info.identification = 0;
     sflash_info.state_flags |= STATE_POWERFAIL;
-    return -147; // Lock Flash Access if power is too low
+    return JESFS_ERR_VOLTAGE_TOO_LOW; // Lock Flash Access if power is too low
   }
 
   err = 3; // Try 3 wakes before returning an Error
@@ -324,11 +309,11 @@ int16_t fs_start(uint8_t mode) {
   sflash_read(0, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B);
 
   if (sflash_info.databuf.u32[0] == 0xFFFFFFFF)
-    return -108;
+    return JESFS_ERR_BAD_MAGIC;
   if (sflash_info.databuf.u32[0] != HEADER_MAGIC)
-    return -146;
+    return JESFS_ERR_BAD_MAGIC_HEADER;
   if (sflash_info.databuf.u32[1] != sflash_info.identification)
-    return -109;
+    return JESFS_ERR_FLASH_ID_MISMATCH;
 
   sflash_info.creation_date = sflash_info.databuf.u32[2]; // Creation date must be anyting different from 0xFFFFFFFF
 
@@ -425,14 +410,14 @@ int16_t fs_start(uint8_t mode) {
   }
 
   if (err || (uint16_t)id != sflash_info.files_used)
-    return -107; // Corrupt Data?
+    return JESFS_ERR_FS_STRUCTURE_PROBLEM; // Corrupt Data?
   return 0;      // OK
 }
 
 /* Set Flash to Ultra-Low-Power mode. Call fs_start(FS_RESTART) to continue/wake */
 int16_t fs_deepsleep(void) {
   if (sflash_info.state_flags & STATE_DEEPSLEEP)
-    return -140; // Already sleeping, 2.nd command could wake FS again
+    return JESFS_ERR_DEEPSLEEP_ALREADY; // Already sleeping, 2.nd command could wake FS again
   sflash_info.state_flags |= (STATE_DEEPSLEEP);
   sflash_DeepPowerDown();
   sflash_spi_close(); // Added V1.51
@@ -448,11 +433,11 @@ int16_t fs_format(uint8_t fmode) {
   uint32_t sadr;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
 
   if (_supply_voltage_check()) {
     sflash_info.state_flags |= STATE_POWERFAIL; // Lock Flash until DEEPSLEEP
-    return -147;                                // Lock Flash Access if power is too low
+    return JESFS_ERR_VOLTAGE_TOO_LOW;           // Lock Flash Access if power is too low
   }
 
   if (fmode == FS_FORMAT_SOFT) {
@@ -469,12 +454,12 @@ int16_t fs_format(uint8_t fmode) {
     }
   } else if (fmode == FS_FORMAT_FULL) {
     if (sflash_WaitWriteEnabled())
-      return -102; // Wait enabled until OK, Fehler 1:1
+      return JESFS_ERR_WRITE_ENABLE_FAILED; // Wait enabled until OK, Fehler 1:1
     sflash_BulkErase();
     if (sflash_WaitBusy(240000))
-      return -101; //
+      return JESFS_ERR_FLASH_TIMEOUT; //
   } else
-    return -139; // Parameter
+    return JESFS_ERR_BAD_FORMAT_PARAM; // Parameter
 
   sbuf[0] = HEADER_MAGIC;
   sbuf[1] = sflash_info.identification;
@@ -518,32 +503,32 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
   uint16_t uc_mlen;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   if (!pdesc->_head_sadr)
-    return -117;
+    return JESFS_ERR_BAD_DESCRIPTOR;
   if (!(pdesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))) // Warren mod. 17.03.2022
-    return -125;
+    return JESFS_ERR_BAD_FILE_FLAGS;
 
   while (anz) {
     sflash_read(pdesc->_wrk_sadr, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B + FINFO_SIZE_B);
     h = sflash_info.databuf.u32[0];
     if (h == SECTOR_MAGIC_HEAD_ACTIVE) {
       if (sflash_info.databuf.u32[1] != 0xFFFFFFFF)
-        return -128;
+        return JESFS_ERR_SECTOR_HEADER_OWNER;
     } else if (h == SECTOR_MAGIC_DATA) {
       if (sflash_info.databuf.u32[1] != pdesc->_head_sadr)
-        return -122;
+        return JESFS_ERR_BAD_SECTOR_OWNER;
     } else
-      return -123;
+      return JESFS_ERR_BAD_SECTOR_TYPE;
 
     next_sect = sflash_info.databuf.u32[2];
     if (sflash_sadr_invalid(next_sect))
-      return -120;
+      return JESFS_ERR_BAD_SECTOR_ADDR;
 
     while (anz) {
       max_sec_rd = (SF_SECTOR_PH - pdesc->_sadr_rel);
       if (max_sec_rd > (SF_SECTOR_PH - HEADER_SIZE_B))
-        return -129;
+        return JESFS_ERR_FILE_DESC_CORRUPTED;
 
       if (pdesc->file_len != 0xFFFFFFFF) {
         h = pdesc->file_len - pdesc->file_pos;
@@ -579,6 +564,9 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
         if (next_sect != 0xFFFFFFFF) {
           pdesc->_wrk_sadr = next_sect;
           pdesc->_sadr_rel = HEADER_SIZE_B;
+        } else {
+          if (anz)
+            return JESFS_ERR_BAD_FS_STRUCTURE;
         }
         break;
       }
@@ -590,9 +578,9 @@ int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz) {
 /* Rewind File to Start */
 int16_t fs_rewind(FS_DESC *pdesc) {
   if (!pdesc->_head_sadr)
-    return -117;
+    return JESFS_ERR_BAD_DESCRIPTOR;
   if (pdesc->open_flags & SF_OPEN_WRITE)
-    return -118;
+    return JESFS_ERR_NOT_OPEN_FOR_WRITE;
   pdesc->_wrk_sadr = pdesc->_head_sadr;
   pdesc->file_pos = 0;
   pdesc->_sadr_rel = HEADER_SIZE_B + FINFO_SIZE_B;
@@ -609,13 +597,19 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
   uint32_t sfun_adr = 0;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   pdesc->_head_sadr = 0;
   pdesc->file_crc32 = 0xFFFFFFFF;
   if (sflash_info.creation_date == 0xFFFFFFFF)
-    return -108; // Disk not formatted
-  if (!*pname || fs_strlen(pname) > FNAMELEN)
-    return -110;
+    return JESFS_ERR_BAD_MAGIC; // Disk not formatted
+  if (!pname)
+    return JESFS_ERR_BAD_FILENAME;
+  for (i = 0; i <= FNAMELEN; i++) {
+    if (!pname[i])
+      break;
+  }
+  if (!*pname || i > FNAMELEN)
+    return JESFS_ERR_BAD_FILENAME;
 
   for (i = 0; i < sflash_info.files_used; i++) {
     sflash_read(HEADER_SIZE_B + i * 4, (uint8_t *)&sadr, 4);
@@ -623,7 +617,7 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
     if (sflash_info.databuf.u32[0] == SECTOR_MAGIC_HEAD_DELETED) {
       sfun_adr = sadr;
     } else if (sflash_info.databuf.u32[0] != SECTOR_MAGIC_HEAD_ACTIVE)
-      return -114;
+      return JESFS_ERR_INDEX_CORRUPTED;
     else if (!fs_strcmp(pname, (char *)&sflash_info.databuf.u8[HEADER_SIZE_B + 12])) {
       break;
     }
@@ -651,20 +645,20 @@ int16_t fs_open(FS_DESC *pdesc, char *pname, uint8_t flags) {
     sfun_adr = sadr;
   } else {
     if (!(flags & SF_OPEN_CREATE))
-      return -124;
+      return JESFS_ERR_FILE_NOT_FOUND;
   }
 
   if (_supply_voltage_check()) {
     sflash_info.state_flags |= STATE_POWERFAIL; // Lock Flash until DEEPSLEEP
-    return -147;                                // Lock Flash Access if power is too low
+    return JESFS_ERR_VOLTAGE_TOO_LOW;           // Lock Flash Access if power is too low
   }
 
   if (!sfun_adr) {
     sfun_adr = sflash_get_free_sector();
     if (!sfun_adr)
-      return -113;
+      return JESFS_ERR_NO_FREE_SECTOR;
     if (HEADER_SIZE_B + sflash_info.files_used * 4 >= (SF_SECTOR_PH - 4))
-      return -111;
+      return JESFS_ERR_INDEX_FULL;
     res = sflash_SectorWrite(HEADER_SIZE_B + sflash_info.files_used * 4, (uint8_t *)&sfun_adr, 4);
     if (res)
       return res;
@@ -707,28 +701,28 @@ int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len) {
   uint32_t newsect;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   if (!pdesc->_head_sadr)
-    return -117;
+    return JESFS_ERR_BAD_DESCRIPTOR;
   if (pdesc->open_flags & SF_OPEN_RAW) {
     if (pdesc->file_pos != pdesc->file_len)
-      return -130;
+      return JESFS_ERR_RAW_WRITE_UNKNOWN_END;
   } else if (!(pdesc->open_flags & SF_OPEN_WRITE))
-    return -118;
+    return JESFS_ERR_NOT_OPEN_FOR_WRITE;
 
   if (_supply_voltage_check()) {
     sflash_info.state_flags |= STATE_POWERFAIL; // Lock Flash until DEEPSLEEP
-    return -147;                                // Lock Flash Access if power is too low
+    return JESFS_ERR_VOLTAGE_TOO_LOW;           // Lock Flash Access if power is too low
   }
 
   while (len) {
     maxwrite = SF_SECTOR_PH - pdesc->_sadr_rel;
     if (maxwrite > SF_SECTOR_PH)
-      return -112;
+      return JESFS_ERR_SECTOR_BORDER_VIOLATED;
     if (!maxwrite) {
       newsect = sflash_get_free_sector();
       if (!newsect)
-        return -113;
+        return JESFS_ERR_NO_FREE_SECTOR;
 
       res = sflash_SectorWrite(pdesc->_wrk_sadr + 8, (uint8_t *)&newsect, 4);
       if (res)
@@ -769,18 +763,18 @@ int16_t fs_close(FS_DESC *pdesc) {
   uint32_t hinfo[2];
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   if (!pdesc->_head_sadr)
-    return -117;
+    return JESFS_ERR_BAD_DESCRIPTOR;
   s0adr = pdesc->_head_sadr;
   pdesc->_head_sadr = 0; // Invalidate descriptor
   if (pdesc->open_flags & SF_OPEN_WRITE) {
     if (sflash_sadr_invalid(s0adr))
-      return -120;
+      return JESFS_ERR_BAD_SECTOR_ADDR;
 
     if (_supply_voltage_check()) {
       sflash_info.state_flags |= STATE_POWERFAIL; // Lock Flash until DEEPSLEEP
-      return -147;                                // Lock Flash Access if power is too low
+      return JESFS_ERR_VOLTAGE_TOO_LOW;           // Lock Flash Access if power is too low
     }
 
     hinfo[0] = pdesc->file_pos;
@@ -807,11 +801,11 @@ int16_t fs_delete(FS_DESC *pdesc) {
   int16_t res;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   if (!pdesc->_head_sadr)
-    return -117;
+    return JESFS_ERR_BAD_DESCRIPTOR;
   if (pdesc->open_flags & SF_OPEN_WRITE)
-    return -125;
+    return JESFS_ERR_BAD_FILE_FLAGS;
   res = flash_set2delete(pdesc->_head_sadr);
   if (res)
     return res;
@@ -827,20 +821,20 @@ int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc) {
   int16_t res;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
 
   if (_supply_voltage_check()) {
     sflash_info.state_flags |= STATE_POWERFAIL;
     ;            // Lock Flash until DEEPSLEEP
-    return -147; // Lock Flash Access if power is too low
+    return JESFS_ERR_VOLTAGE_TOO_LOW; // Lock Flash Access if power is too low
   }
 
   if (!pd_odesc->_head_sadr || !pd_ndesc->_head_sadr)
-    return -135;
+    return JESFS_ERR_RENAME_FILES_NOT_OPEN;
   if (pd_ndesc->open_flags & (SF_OPEN_READ | SF_OPEN_RAW))
-    return -133;
+    return JESFS_ERR_RENAME_OPEN_FOR_READ_OR_RAW;
   if (pd_ndesc->file_len)
-    return -134;
+    return JESFS_ERR_RENAME_TARGET_NOT_EMPTY;
 
   if (pd_odesc->file_len == 0xFFFFFFFF)
     mlen = sflash_find_mlen(pd_odesc->_head_sadr + HEADER_SIZE_B + FINFO_SIZE_B, SF_SECTOR_PH - HEADER_SIZE_B - FINFO_SIZE_B);
@@ -881,7 +875,7 @@ int16_t fs_info(FS_STAT *pstat, uint16_t fno) {
   int16_t ret;
 
   if (sflash_info.state_flags & STATE_DEEPSLEEP_OR_POWERFAIL)
-    return -148;
+    return JESFS_ERR_FLASH_NOT_ACCESSIBLE;
   idx_adr = HEADER_SIZE_B + fno * 4;
   if (idx_adr > SF_SECTOR_PH - 4)
     return FS_STAT_INDEX;
@@ -889,9 +883,9 @@ int16_t fs_info(FS_STAT *pstat, uint16_t fno) {
   if (sadr == 0xFFFFFFFF)
     return 0; // This Index-Entry is unused
   if (!sadr)
-    return -143;                            // Index is taboo!
+    return JESFS_ERR_BAD_INDEX_ENTRY;       // Index is taboo!
   if (sadr >= sflash_info.total_flash_size) // Points to outside? Severe Error
-    return -115;
+    return JESFS_ERR_STAT_INDEX_RANGE;
 
   sflash_read(sadr, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B + FINFO_SIZE_B);
 
@@ -907,9 +901,9 @@ int16_t fs_info(FS_STAT *pstat, uint16_t fno) {
     // Entry points to unidentified Head. Possible Reason:
     // PowerLoss on fs_open() for Write/Create or on nRF52: J-TAG (which can access the serial flash!)
   case 0xFFFFFFFF:
-    return -126;
+    return JESFS_ERR_BAD_FS_STRUCTURE;
   default:
-    return -142;
+    return JESFS_ERR_BAD_INDEX_HEAD;
   }
 
   pstat->_head_sadr = sadr;
@@ -943,12 +937,15 @@ int16_t fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t l
   if (cb_printf)
     cb_printf("Check Disk...\n");
 
+  if (!line_size)
+    return JESFS_ERR_BAD_FORMAT_PARAM;
+
   res = fs_start(FS_START_NORMAL);
   if (res) {
     if (cb_printf)
-      cb_printf("ERROR: Disc Error:%d\n", res); // -107 .. -109
-    if (res == -147)
-      return -147; // Power Loss!
+      cb_printf("ERROR: Disc Error:%d\n", res); // JESFS_ERR_FS_STRUCTURE_PROBLEM .. JESFS_ERR_FLASH_ID_MISMATCH
+    if (res == JESFS_ERR_VOLTAGE_TOO_LOW)
+      return JESFS_ERR_VOLTAGE_TOO_LOW; // Power Loss!
     err++;
   }
 #ifdef JSTAT

@@ -7,7 +7,8 @@
 * the (internal) medium/low level drivers
 *
 * (C) joembedded@gmail.com - www.joembedded.de
-* Version: see Header Files
+*
+* Version: see jesfs.h
 *
 *******************************************************************************/
 

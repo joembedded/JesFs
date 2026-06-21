@@ -3,74 +3,159 @@
 *
 * JesFs - Jo's Embedded Serial File System
 *
-* Tested on 
+* Tested on
 * - Win
-* - TI-RTOS CC13xx/CC26xx Launchpad 
+* - TI-RTOS CC13xx/CC26xx Launchpad
 * - nRF52840 on PCA10056 DK Board
 *
 * (C) joembedded@gmail.com - www.joembedded.de
-* Version: 
-* 1.5 / 25.11.2019
-* 1.6 / 22.12.2019 added fs_disk_check()
-* 1.7 / 12.03.2020 added fs_date2sec1970()
-* 1.8 / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
-* 1.9 / 22.02.2021 added/edited Devicelist, added new Flash Family GD25WD
-* 1.10 / 28.02.2021 added/edited Devicelist, added new Flash Family GD25WQ
-* 1.11 / 16.03.2023 added more checks (Errors -144 ff)
+* Version:
+* 0.0  / ca. 1994 - The idea: 'detailed Files' evolved
+* 1.5  / 25.11.2019
+* 1.6  / 22.12.2019 added fs_check_disk()
+* 1.7  / 12.03.2020 added fs_date2sec1970()
+* 1.8  / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
+* 1.81 / 19.12.2020 redundant code removed in fs_date2sec1970()
+* 1.82 / 21.03.2021 added comment fs_format() Timeouts
+* 1.83 / 11.07.2021 added Pin Definitions for NRF52
+* 1.84 / 15.08.2021 check in fs_date2sec1970()
+* 1.85 / 17.03.2022 added check (Warren)
+* 1.86 / 18.03.2022 corrected bug in fs_date2sec1970()
+* 1.87 / 02.04.2022 fs_strcpy()->fs_strncpy() and some minor opts.
+* 1.88 / 17.03.2023 added feature _supply_voltage_check()
+* 1.89 / 14.09.2023 all global fs_-functions check _supply_voltage_check() on entry
+* 1.90 / 29.09.2024 cosmetics
+* 1.91 / 14.10.2024 fixed bug from 1.90
+* 1.92 / 20.02.2025 added fs_notexists()
+* 1.93 / 21.06.2026 reformatted errors for better reading and configurable JESFS_ERR_BASE
+* 1.94 / 21.06.2026 hardened fs_read(), fs_check_disk(), and fs_open() 
 *
 *******************************************************************************/
 
-/* List of Errors
--100: SPI Init (Hardware)
--101: Flash Timeout WaitBusy
--102: SPI Can not set WriteEnableBit (Flash locked?)
--103: FlashID:Unknown/illegal, readable but unknown Flash Density (describes the size)
--104: FlashID:Unknown Flash ID, readable but unknown (eg. 0xC228 for Macronix M25xx, see docu)
--105: Illegal flash addr
--106: Block crosses sector border
--107: fs_start found problems in the filesystem structure (-> run recover)
--108: Unknown MAGIC, this Flash is either unformated or contains other data
--109: Flash-ID in the Flash Index does not match Hardware-ID (-> run recover)
--110: Filename to long/short
--111: Too many files, Index full! (ca. 1000 for 4k sectors)
--112: Sector border violated (before write)
--113: Flash full! No free sectors available or Flash not formatted
--114: Index corrupted (-> run recover) (or FS in deepsleep (see internal flag STATE_DEEPSLEEP))
--115: Number out of range Index (fs_stat)
--116: No active file at this entry (fs_stat)
--117: Illegal descriptor or file not open
--118: File not open for writing
--119: Index out of range
--120: Illegal sector address
--121: Short circle in sector list (-> run recover)
--122: sector list contains illegal file owner (-> run recover)
--123: Illegal sector type (-> run recover)
--124: File not found
--125: Illegal file flags (e.g. trying to delete a file opened for write)
--126: Illegal file system structure (-> run recover ((possible reason: PowerLoss, , Index defect points to HEAD 0xFFFFFFFF)))
--127: Closed files can not be continued (for writing)
--128: Sector defect ('Header with owner') (-> run recover)
--129: File descriptor corrupted.
--130: Try to write to (unclosed) file in RAW with unknown end position
--131: Sector corrupted: Empty marked sector not empty
--132: File is empty
--133: Rename not possible with Files open as READ or RAW
--134: Rename requires an empty File as new Filename
--135: Both files must be open for Rename
--136: Erase Sector failed
--137: Write to Flash Failed
--138: Verify Failed
--139: Format parameter
--140: Command Deepsleep: Filesystem already sleeping (only informative)
--141: Other Commands: Filesystem sleeping!
--142: Illegal file system structure (-> run recover, Index defect points to illegal HEAD)
--143: Illegal file system structure (-> run recover, Index defect)
--144: FlashID:ZeroSleep read as 0x000000 (Short Circuit on SPI or Flash still Sleepmode)
--145: FlashID:UnConnected read as 0xFFFFFF (SPI unconnected or Flash corrupt)
--146: Illegal MagicHeader: Invalid Value found (and not 0xFFFFFFFF)
--147: Device Voltage too low 
--148: Flash not accesible: Deepsleep or PowerFail
+/* Error overview
+ *
+ * SPI / Flash HW access
+ * - JESFS_ERR_SPI_INIT                  : SPI init failed (hardware)
+ * - JESFS_ERR_FLASH_TIMEOUT             : Flash timeout while waiting for busy=0
+ * - JESFS_ERR_WRITE_ENABLE_FAILED       : Could not set flash WriteEnable bit (flash locked?)
+ * - JESFS_ERR_FLASH_ADDR_INVALID        : Illegal flash address
+ * - JESFS_ERR_BLOCK_CROSSES_SECTOR      : Block crosses sector border
+ * - JESFS_ERR_SECTOR_BORDER_VIOLATED    : Sector border violated (before write)
+ * - JESFS_ERR_ERASE_FAILED              : Sector erase failed
+ * - JESFS_ERR_WRITE_FAILED              : Flash write failed
+ * - JESFS_ERR_VERIFY_FAILED             : Verify failed
+ *
+ * Flash ID / connectivity
+ * - JESFS_ERR_FLASH_ID_BAD_DENSITY      : Flash ID readable, but density unknown/illegal
+ * - JESFS_ERR_FLASH_ID_UNKNOWN          : Flash ID readable, but manufacturer/type unknown
+ * - JESFS_ERR_FLASH_ID_MISMATCH         : Flash ID in index does not match hardware ID (run recover)
+ * - JESFS_ERR_FLASH_ID_ZERO_SLEEP       : Flash ID read as 0x000000 (short on SPI or still in sleep)
+ * - JESFS_ERR_FLASH_ID_UNCONNECTED      : Flash ID read as 0xFFFFFF (SPI unconnected or flash corrupt)
+ *
+ * Filesystem layout / integrity
+ * - JESFS_ERR_FS_STRUCTURE_PROBLEM      : fs_start found structural filesystem problems (run recover)
+ * - JESFS_ERR_BAD_MAGIC                 : Unknown magic (unformatted flash or different data)
+ * - JESFS_ERR_INDEX_CORRUPTED           : Index corrupted (or FS in deep sleep, see STATE_DEEPSLEEP)
+ * - JESFS_ERR_BAD_FS_STRUCTURE          : Illegal filesystem structure (possible power-loss side effects)
+ * - JESFS_ERR_BAD_INDEX_HEAD            : Illegal filesystem structure, index points to illegal HEAD
+ * - JESFS_ERR_BAD_INDEX_ENTRY           : Illegal filesystem structure, bad index entry
+ * - JESFS_ERR_BAD_MAGIC_HEADER          : Illegal magic header value (and not 0xFFFFFFFF)
+ * - JESFS_ERR_SECTOR_LIST_CYCLE         : Short cycle in sector list (run recover)
+ * - JESFS_ERR_BAD_SECTOR_OWNER          : Sector list contains illegal file owner (run recover)
+ * - JESFS_ERR_BAD_SECTOR_TYPE           : Illegal sector type (run recover)
+ * - JESFS_ERR_SECTOR_HEADER_OWNER       : Sector defect ('header with owner') (run recover)
+ * - JESFS_ERR_EMPTY_SECTOR_NOT_EMPTY    : Corrupted sector: empty-marked sector is not empty
+ *
+ * Capacity / indexing / metadata
+ * - JESFS_ERR_BAD_FILENAME              : Filename too long/short
+ * - JESFS_ERR_INDEX_FULL                : Too many files, index full (about 1000 with 4k sectors)
+ * - JESFS_ERR_NO_FREE_SECTOR            : Flash full (no free sectors) or flash not formatted
+ * - JESFS_ERR_STAT_INDEX_RANGE          : fs_stat index out of range
+ * - JESFS_ERR_STAT_NO_ACTIVE_FILE       : fs_stat entry has no active file
+ * - JESFS_ERR_INDEX_OUT_OF_RANGE        : Index out of range
+ * - JESFS_ERR_BAD_SECTOR_ADDR           : Illegal sector address
+ * - JESFS_ERR_FILE_EMPTY                : File is empty
+ *
+ * File descriptor / operation usage
+ * - JESFS_ERR_BAD_DESCRIPTOR            : Illegal descriptor or file not open
+ * - JESFS_ERR_NOT_OPEN_FOR_WRITE        : File not open for writing
+ * - JESFS_ERR_FILE_NOT_FOUND            : File not found
+ * - JESFS_ERR_BAD_FILE_FLAGS            : Illegal file flags for requested operation
+ * - JESFS_ERR_CLOSED_FILE_CONTINUE      : Closed file cannot be continued for writing
+ * - JESFS_ERR_FILE_DESC_CORRUPTED       : File descriptor corrupted
+ * - JESFS_ERR_RAW_WRITE_UNKNOWN_END     : RAW write on unclosed file with unknown end position
+ * - JESFS_ERR_RENAME_OPEN_FOR_READ_OR_RAW : Rename not possible when files are open as READ or RAW
+ * - JESFS_ERR_RENAME_TARGET_NOT_EMPTY   : Rename requires an empty target file
+ * - JESFS_ERR_RENAME_FILES_NOT_OPEN     : Both files must be open for rename
+ *
+ * State / power / command constraints
+ * - JESFS_ERR_BAD_FORMAT_PARAM          : Illegal format parameter
+ * - JESFS_ERR_DEEPSLEEP_ALREADY         : Deep sleep command while already sleeping (informative)
+ * - JESFS_ERR_FS_SLEEPING               : Command rejected because filesystem is sleeping
+ * - JESFS_ERR_VOLTAGE_TOO_LOW           : Device voltage too low
+ * - JESFS_ERR_FLASH_NOT_ACCESSIBLE      : Flash not accessible (deep sleep or power fail)
  */
+
+#include <stdint.h>
+
+typedef int16_t jesfs_err_t;
+
+#define JESFS_OK 0
+/* Keep errors negative because positive fs_read() values are byte counts. */
+#ifndef JESFS_ERR_BASE
+#define JESFS_ERR_BASE 100
+#endif
+#define JESFS_ERR(n) (-(JESFS_ERR_BASE + (n)))
+
+#define JESFS_ERR_SPI_INIT                    JESFS_ERR(0)
+#define JESFS_ERR_FLASH_TIMEOUT              JESFS_ERR(1)
+#define JESFS_ERR_WRITE_ENABLE_FAILED        JESFS_ERR(2)
+#define JESFS_ERR_FLASH_ID_BAD_DENSITY       JESFS_ERR(3)
+#define JESFS_ERR_FLASH_ID_UNKNOWN           JESFS_ERR(4)
+#define JESFS_ERR_FLASH_ADDR_INVALID         JESFS_ERR(5)
+#define JESFS_ERR_BLOCK_CROSSES_SECTOR       JESFS_ERR(6)
+#define JESFS_ERR_FS_STRUCTURE_PROBLEM       JESFS_ERR(7)
+#define JESFS_ERR_BAD_MAGIC                  JESFS_ERR(8)
+#define JESFS_ERR_FLASH_ID_MISMATCH          JESFS_ERR(9)
+#define JESFS_ERR_BAD_FILENAME               JESFS_ERR(10)
+#define JESFS_ERR_INDEX_FULL                 JESFS_ERR(11)
+#define JESFS_ERR_SECTOR_BORDER_VIOLATED     JESFS_ERR(12)
+#define JESFS_ERR_NO_FREE_SECTOR             JESFS_ERR(13)
+#define JESFS_ERR_INDEX_CORRUPTED            JESFS_ERR(14)
+#define JESFS_ERR_STAT_INDEX_RANGE           JESFS_ERR(15)
+#define JESFS_ERR_STAT_NO_ACTIVE_FILE        JESFS_ERR(16)
+#define JESFS_ERR_BAD_DESCRIPTOR             JESFS_ERR(17)
+#define JESFS_ERR_NOT_OPEN_FOR_WRITE         JESFS_ERR(18)
+#define JESFS_ERR_INDEX_OUT_OF_RANGE         JESFS_ERR(19)
+#define JESFS_ERR_BAD_SECTOR_ADDR            JESFS_ERR(20)
+#define JESFS_ERR_SECTOR_LIST_CYCLE          JESFS_ERR(21)
+#define JESFS_ERR_BAD_SECTOR_OWNER           JESFS_ERR(22)
+#define JESFS_ERR_BAD_SECTOR_TYPE            JESFS_ERR(23)
+#define JESFS_ERR_FILE_NOT_FOUND             JESFS_ERR(24)
+#define JESFS_ERR_BAD_FILE_FLAGS             JESFS_ERR(25)
+#define JESFS_ERR_BAD_FS_STRUCTURE           JESFS_ERR(26)
+#define JESFS_ERR_CLOSED_FILE_CONTINUE       JESFS_ERR(27)
+#define JESFS_ERR_SECTOR_HEADER_OWNER        JESFS_ERR(28)
+#define JESFS_ERR_FILE_DESC_CORRUPTED        JESFS_ERR(29)
+#define JESFS_ERR_RAW_WRITE_UNKNOWN_END      JESFS_ERR(30)
+#define JESFS_ERR_EMPTY_SECTOR_NOT_EMPTY     JESFS_ERR(31)
+#define JESFS_ERR_FILE_EMPTY                 JESFS_ERR(32)
+#define JESFS_ERR_RENAME_OPEN_FOR_READ_OR_RAW JESFS_ERR(33)
+#define JESFS_ERR_RENAME_TARGET_NOT_EMPTY    JESFS_ERR(34)
+#define JESFS_ERR_RENAME_FILES_NOT_OPEN      JESFS_ERR(35)
+#define JESFS_ERR_ERASE_FAILED               JESFS_ERR(36)
+#define JESFS_ERR_WRITE_FAILED               JESFS_ERR(37)
+#define JESFS_ERR_VERIFY_FAILED              JESFS_ERR(38)
+#define JESFS_ERR_BAD_FORMAT_PARAM           JESFS_ERR(39)
+#define JESFS_ERR_DEEPSLEEP_ALREADY          JESFS_ERR(40)
+#define JESFS_ERR_FS_SLEEPING                JESFS_ERR(41)
+#define JESFS_ERR_BAD_INDEX_HEAD             JESFS_ERR(42)
+#define JESFS_ERR_BAD_INDEX_ENTRY            JESFS_ERR(43)
+#define JESFS_ERR_FLASH_ID_ZERO_SLEEP        JESFS_ERR(44)
+#define JESFS_ERR_FLASH_ID_UNCONNECTED       JESFS_ERR(45)
+#define JESFS_ERR_BAD_MAGIC_HEADER           JESFS_ERR(46)
+#define JESFS_ERR_VOLTAGE_TOO_LOW            JESFS_ERR(47)
+#define JESFS_ERR_FLASH_NOT_ACCESSIBLE       JESFS_ERR(48)
 
 #ifdef __cplusplus
 extern "C"{
@@ -91,16 +176,16 @@ extern "C"{
 //#define SF_TX_TRANSFER_LIMIT 64
 
 // Define this macro for additional statistics
-#define JSTAT 
+#define JSTAT
 
-// Sample-Flash ID MACRONIX (Ultra-Low-Power), add others
+// Sample-Flash JEDEC ID (Format 0xMMTTDD)
+
 #define MACRONIX_MANU_TYP_RX    0xC228  // Macronix MX25R-Low-Power-Series first 2 ID-Bytes (without Density)
-//#define GIGADEV_MANU_TYP_RC     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density), WARNING: Will not work <3V!!!
+//#define GIGADEV_MANU_TYP_RC     0xC840  // GigaDevices (used in RC1310F) first 2 ID-Bytes (without Density), WARNING: OK, but will not work for < 3V!!!
 #define GIGADEV_MANU_TYP_WD     0xC864  // GigaDevices (same as MX25R, e.g. GD25WD80C)
 #define GIGADEV_MANU_TYP_WQ     0xC865  // GigaDevices (same as MX25R,e.g. GD25WQ64E)
 
 //------------------- Area for User Settings END -------------------------------
-
 
 #define FNAMELEN 21  // maximum filename len (Byte 22 must be 0, as in regular strings)...
 
@@ -130,9 +215,9 @@ extern "C"{
 #define FS_STAT_INDEX   128   // Requested Index would be outside of Index (used for Diagnostic)
 
 // Flags for state_flag
-#define STATE_DEEPSLEEP 1   // if set: JesFS in in deep sleep (Code -141)
-#define STATE_POWERFAIL 2   // if set: Not enabled due to Power Fail (Code -147)
-#define STATE_DEEPSLEEP_OR_POWERFAIL (STATE_DEEPSLEEP | STATE_POWERFAIL) // (Code -148)
+#define STATE_DEEPSLEEP 1   // if set: JesFS in in deep sleep (JESFS_ERR_FS_SLEEPING)
+#define STATE_POWERFAIL 2   // if set: Not enabled due to Power Fail (JESFS_ERR_VOLTAGE_TOO_LOW)
+#define STATE_DEEPSLEEP_OR_POWERFAIL (STATE_DEEPSLEEP | STATE_POWERFAIL) // JESFS_ERR_FLASH_NOT_ACCESSIBLE
 
 // Filedescriptor
 typedef struct{

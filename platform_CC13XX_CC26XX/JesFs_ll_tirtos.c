@@ -64,7 +64,7 @@ int16_t sflash_spi_init(void){
 	spiParams.transferCallbackFxn = NULL;
 
 	flash_spi_handle = SPI_open(Board_SPI0, &spiParams);   // Close
-	if (!flash_spi_handle ) return -100;   // Watchdog will kill
+	if (!flash_spi_handle ) return JESFS_ERR_SPI_INIT;   // Watchdog will kill
 	return 0;
 }
 

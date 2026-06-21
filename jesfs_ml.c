@@ -4,7 +4,8 @@
  * JesFs - Jo's Embedded Serial File System
  *
  * (C)joembedded@gmail.com - www.joembedded.de
- * Version: see Header Files
+ *
+ * Version: see jesfs.h
  *
  *******************************************************************************/
 
@@ -39,11 +40,11 @@ uint32_t sflash_QuickScanIdentification(void) {
   sflash_deselect();
   // Build 32Bit id safely, so it will work also on 16 Bit compilers (like MSP430)
   id = buf[0];
-  id <<= 8; // Manufacturer
+  id <<= 8; // Manufacturer MM
   id |= buf[1];
-  id <<= 8;     // Type
-  id |= buf[2]; // Density
-  return id;
+  id <<= 8;     // Type TT 
+  id |= buf[2]; // Density DD
+  return id; // 0xMMTTDD
 }
 
 /* Analyse ID (3 Bytes) of the flash */
@@ -55,13 +56,13 @@ int16_t sflash_interpret_id(uint32_t id) {
   sflash_info.identification = id;
 
   if (id == 0x000000)
-    return -144; // ShortCircuit/Sleep in SPI?
+    return JESFS_ERR_FLASH_ID_ZERO_SLEEP; // ShortCircuit/Sleep in SPI?
   if (id == 0xFFFFFF)
-    return -145; // Unconnected in SPI?
+    return JESFS_ERR_FLASH_ID_UNCONNECTED; // Unconnected in SPI?
 
   switch (id >> 8) { // Check Without Density
   default:
-    return -104; // Unknown ID/Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
+    return JESFS_ERR_FLASH_ID_UNKNOWN; // Unknown ID/Type (!!: e.g. Micron has otherTypes th. Macronix, but identical Fkts (Quiescent Current for Macronix is the lowest..)
 
   // List of tested/knownAsGood Flash-Manufacturer/IDs (see Header File).  Others may be added later
   case MACRONIX_MANU_TYP_RX: // Macronix - The 1MB-Version is on the TI CC1310 Launchpad, 2-16 MB on LTraX, ..
@@ -77,7 +78,7 @@ int16_t sflash_interpret_id(uint32_t id) {
 #else
   h = id & 255; // Density
   if (h < MIN_DENSITY || h > MAX_DENSITY)
-    return -103; // Unknown Density! 8*512kB-8*16MB ist OK
+    return JESFS_ERR_FLASH_ID_BAD_DENSITY; // Unknown Density! 8*512kB-8*16MB ist OK
 #endif
   sflash_info.total_flash_size = 1 << (h); // All OK for JesFs: 8k-16MB OK fuer 3B-SPI Flash, opt. 2GB
   return 0;                                // OK
@@ -182,7 +183,7 @@ int16_t sflash_WaitBusy(uint32_t msec) {
     if (!(sflash_ReadStatusReg() & 1))
       return 0; // OK
   }
-  return -101; // Fehler! Timout
+  return JESFS_ERR_FLASH_TIMEOUT; // Fehler! Timout
 }
 
 // WriteEnabled setzen und checken ob OK (lt. DB) oder Fehler(-1)
@@ -191,7 +192,7 @@ int16_t sflash_WaitWriteEnabled(void) {
   sflash_WriteEnable();
   if (sflash_ReadStatusReg() & 2)
     return 0;
-  return -102; // Fehler! Flash locked? oder WP
+  return JESFS_ERR_WRITE_ENABLE_FAILED; // Fehler! Flash locked? oder WP
 }
 
 /* Write Sector up to maximum. Write in Pages. Attention: Pageprog keeps the SFlash busy for a few mesec. Theoretically
@@ -201,10 +202,10 @@ int16_t sflash_SectorWrite(uint32_t sflash_adr, uint8_t *sbuf, uint32_t len) {
   uint32_t maxwrite;
 
   if (sflash_adr >= sflash_info.total_flash_size)
-    return -105; // Flash Full! Illegal Address
+    return JESFS_ERR_FLASH_ADDR_INVALID; // Flash Full! Illegal Address
   maxwrite = SF_SECTOR_PH - (sflash_adr & (SF_SECTOR_PH - 1));
   if (len > maxwrite)
-    return -106; // Sektorviolation
+    return JESFS_ERR_BLOCK_CROSSES_SECTOR; // Sektorviolation
 
   while (len) {
     maxwrite = 256 - (uint8_t)sflash_adr;
@@ -215,10 +216,10 @@ int16_t sflash_SectorWrite(uint32_t sflash_adr, uint8_t *sbuf, uint32_t len) {
     if (len < maxwrite)
       maxwrite = len; // Dann halt weniger in diesem Block schreiben
     if (sflash_WaitWriteEnabled())
-      return -102; // Wait unt. OK, Fehler 1:1
+      return JESFS_ERR_WRITE_ENABLE_FAILED; // Wait unt. OK, Fehler 1:1
     sflash_PageWrite(sflash_adr, sbuf, maxwrite);
     if (sflash_WaitBusy(100))
-      return -101; // 100 msec unt. Page OK
+      return JESFS_ERR_FLASH_TIMEOUT; // 100 msec unt. Page OK
     sbuf += maxwrite;
     sflash_adr += maxwrite;
     len -= maxwrite;
@@ -229,10 +230,10 @@ int16_t sflash_SectorWrite(uint32_t sflash_adr, uint8_t *sbuf, uint32_t len) {
 // HighLevel SectorErase (inc. Error Check and
 int16_t sflash_SectorErase(uint32_t sadr) {
   if (sflash_WaitWriteEnabled())
-    return -102;
+    return JESFS_ERR_WRITE_ENABLE_FAILED;
   sflash_llSectorErase4k(sadr);
   if (sflash_WaitBusy(400))
-    return -101; // 400 msec max page
+    return JESFS_ERR_FLASH_TIMEOUT; // 400 msec max page
   return 0;
 }
 //------------------- MediumLevel SPI OK ------------------------

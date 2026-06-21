@@ -209,7 +209,7 @@ void *main(void *arg0){
 	tb_printf("'! [SECONDS]' Print Time or optionally set UNIX-Seconds\n");
 	tb_printf("'q'           Exit (on __WIN32__/WIN32: save Disk as File 'default.disk')\n\n");
 
-	tb_printf("Init-JesFS: Res:%d\n",fs_start(FS_START_NORMAL));  // Unformated: Return -108 (see jesfs.h)
+	tb_printf("Init-JesFS: Res:%d\n",fs_start(FS_START_NORMAL));  // Unformated: Return JESFS_ERR_BAD_MAGIC (see jesfs.h)
 
 	while (1) {
 		tb_board_led_invert(0); // Toggle LED (if available)

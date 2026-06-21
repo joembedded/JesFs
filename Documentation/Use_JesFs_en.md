@@ -1,6 +1,6 @@
-# 📁 JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
+# JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
 
-## 🎯 Overview
+## Overview
 
 **JesFs** (Jo's Embedded Serial File System) is a robust, power-efficient file system for IoT devices, specifically designed for ultra-low-power applications. It is used in this project for all nRF52-based loggers.
 
@@ -9,33 +9,33 @@
 *LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWAN, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks) (Note: This is an OEM product)*
 
 > [!TIP]
-> ### 🔄 Rotating History Storage
+> ### Rotating History Storage
 > The loggers typically work with a rotating history storage consisting of 2 files, similar to the Black-Box demo in the JesFs documentation. When one file reaches its size limit, it becomes the backup file and a new one is created. This ensures a **latest history is always available** with a defined maximum time depth.
 > 
 > **Ideal for:**
-> - 📂 Data that are only used or required temporarily, like logged data or post-mortem data
+> - Data that are only used or required temporarily, like logged data or post-mortem data
 
 
 > [!TIP]
-> ### 🌐 Mirrored File System (Cloud Twin)
+> ### Mirrored File System (Cloud Twin)
 > A special feature: Files can be "mirrored" to a server when needed (e.g., via mobile internet). This means the file system exists in two places simultaneously, and is synchronized with each internet communication:
 > 
 > **Ideal for:**
-> - 📤 Data and parameter settings from "on-site" **to the server**
-> - 📥 Remote commands and firmware updates **from the server**
+> - Data and parameter settings from "on-site" **to the server**
+> - Remote commands and firmware updates **from the server**
 
 > [!TIP]
-> ### 🔄 Firmware Updates Over-The-Air (OTA)
+> ### Firmware Updates Over-The-Air (OTA)
 > JesFs supports secure firmware updates via various channels (BLE, Mobile Internet, LoRa, etc.). With the **JesFsBoot Secure Bootloader**, updates can be encrypted (AES-128), transmitted, and validated.
 > 
 
 > [!IMPORTANT]
-> ### 🤝 Collaboration Offer
+> ### Collaboration Offer
 > This documentation is the (internally used) system documentation for the LTX loggers.
-> While the embedded software of the LTX project is not freely available, inquiries about **loggers, sensors, or collaboration** are warmly welcome at any time 📧!
+> While the embedded software of the LTX project is not freely available, inquiries about **loggers, sensors, or collaboration** are warmly welcome at any time.
 
 
-### 💻 Hardware Platform
+### Hardware Platform
 
 nRF52 refers to ARM Cortex CPUs with Bluetooth and 64 MHz:
 - **NORDIC nRF52832** (512kB Flash, 64kB RAM) 
@@ -48,22 +48,22 @@ Type and size are managed by JesFs. What's important is that the flash
 can handle the available voltage (most are usable from 1.6V - 3.6V)
 and the maximum SPI frequency used (typically 8 MHz - 40 MHz, see source codes).
 
-### ⚡ Important Features of JesFS
+### Important Features of JesFS
 
-- 🔋 **Power-efficient**: Deep Sleep with <0.5µA (with MX25Rxxxx Flash)
-- 🛡️ **Robust**: No data loss during power failure
-- 📦 **Compact**: Only 200 bytes RAM minimum required
-- ⚡ **Fast**: Deep Sleep to Ready in microseconds
-- 🎯 **Simple API**: Similar to standard C file functions
-- ✅ **CRC32 Checking**: Optional for data integrity (ISO 3309)
-- 🔓 **Unclosed Files**: Supports continued writing after power failure, ideal for continously growing files, like for data logging.
-- 🔄 **Firmware OTA**: Ideal also for (secure) firmware updates
+- **Power-efficient**: Deep Sleep with <0.5µA (with MX25Rxxxx Flash)
+- **Robust**: No data loss during power failure
+- **Compact**: Only 200 bytes RAM minimum required
+- **Fast**: Deep Sleep to Ready in microseconds
+- **Simple API**: Similar to standard C file functions
+- **CRC32 Checking**: Optional for data integrity (ISO 3309)
+- **Unclosed Files**: Supports continued writing after power failure, ideal for continously growing files, like for data logging.
+- **Firmware OTA**: Ideal also for (secure) firmware updates
 
 ---
 
-## 🔧 Hardware Requirements
+## Hardware Requirements
 
-### 💾 Supported Flash ICs
+### Supported Flash ICs
 
 Tested with the following Serial Flash ICs via SPI:
 
@@ -71,22 +71,22 @@ Tested with the following Serial Flash ICs via SPI:
 - **GigaDevices GD25WDxx** series (e.g., GD25WD80C)
 - **GigaDevices GD25WQxx** series (e.g., GD25WQ64E)
 
-### 📊 Typical Flash Sizes
+### Typical Flash Sizes
 
 - **MX25R8035F**: 1 MByte (recommended for smaller loggers)
 - **MX25R6435F**: 8 MByte (for extensive data loggers)
 - JesFs itself supports 8 kByte to 16 MByte (optionally up to 2 GByte)
 
-### 🎛️ nRF52 Platforms
+### nRF52 Platforms
 
 - **nRF52832** (used in the projects)
 - **nRF52840** (used in the projects)
 
 ---
 
-## 📚 Required Files from `../JesFs/`
+## Required Files from `../JesFs/`
 
-### 📌 Core Files (always required)
+### Core Files (always required)
 
 | File | Description |
 |------|-------------|
@@ -94,7 +94,7 @@ Tested with the following Serial Flash ICs via SPI:
 | `jesfs_int.h` | Internal definitions (e.g., `fs_date()`) |
 | `tb_tools.h` | Tool header for platform integration |
 
-### ⚙️ Implementation Files
+### Implementation Files
 
 | File | Usage |
 |------|-------|
@@ -105,11 +105,11 @@ Tested with the following Serial Flash ICs via SPI:
 
 ---
 
-## 🔨 Integration in SEGGER Embedded Studio (SES)
+## Integration in SEGGER Embedded Studio (SES)
 
 Works, of course, similar with other IDEs too.
 
-### 1️⃣ Add Files to Project
+### 1. Add Files to Project
 
 Include the JesFs files in the `.emProject` file:
 
@@ -126,7 +126,7 @@ Include the JesFs files in the `.emProject` file:
 </folder>
 ```
 
-### 2️⃣ Set Include Paths
+### 2. Set Include Paths
 
 In Project Options under `c_user_include_directories`, add the JesFs path:
 
@@ -143,7 +143,7 @@ In Project Options under `c_user_include_directories`, add the JesFs path:
 ...;$(SDK_ROOT)/modules/nrfx/mdk;../../../../../JesFs;...
 ```
 
-### 3️⃣ Post-Build Command (optional)
+### 3. Post-Build Command (optional)
 
 > [!TIP]
 > The (optional) tool `JesFsHex2Bin.exe` creates a binary file, e.g., for OTA updates.
@@ -155,9 +155,9 @@ post_build_command="../../../../Tools/JesFsHex2Bin.exe $(OutDir)/$(ProjectName).
 
 ---
 
-## ⚙️ Initial Configuration
+## Initial Configuration
 
-### 1️⃣ Define Flash Type
+### 1. Define Flash Type
 
 In a header file or in the project defines:
 
@@ -168,7 +168,7 @@ In a header file or in the project defines:
 #define GIGADEV_MANU_TYP_WQ     0xC865  // GD25WQ series
 ```
 
-### 2️⃣ Enable Optional Features
+### 2. Enable Optional Features
 
 ```c
 // Enable statistics (recommended for development)
@@ -181,12 +181,12 @@ In a header file or in the project defines:
 
 ---
 
-## 💡 Usage in the Application
+## Usage in the Application
 
 > [!TIP]
 > Here comes the really exciting part! Writing and reading files.
 
-### 1️⃣ Include Headers
+### 1. Include Headers
 
 ```c
 #include "jesfs.h"     // JesFs Filesystem
@@ -194,7 +194,7 @@ In a header file or in the project defines:
 #include "tb_tools.h"  // Tools
 ```
 
-### 2️⃣ Initialize File System
+### 2. Initialize File System
 
 > [!IMPORTANT]
 > JesFs has a routine for checking the system voltage as a callback (e.g., called in `fs_start()`). Typically, you know approximately how long the system capacities can maintain voltage and how long writing takes.
@@ -226,7 +226,7 @@ if (res) {
 
 ---
 
-### 3️⃣ Open File
+### 3. Open File
 
 ```c
 FS_DESC file_desc;
@@ -257,11 +257,11 @@ res = fs_open(&file_desc, "params.cfg",
 - `SF_OPEN_CREATE`: Create file (overwrites existing!)
 - `SF_OPEN_RAW`: For unclosed files (Read + Write)
 - `SF_OPEN_CRC`: Calculate CRC32 checksum
-- `SF_OPEN_EXT_SYNC`: Marks file for external synchronization
+- `SF_OPEN_EXT_SYNC`: Application-defined sync marker. JesFs itself does not evaluate this bit, making it useful to flag files that should be mirrored automatically to a cloud-side "digital twin".
 
 ---
 
-### 4️⃣ Read Data
+### 4. Read Data
 
 ```c
 uint8_t buffer[256];
@@ -285,7 +285,7 @@ fs_read(&file_desc, NULL, 0xFFFFFFFF);
 
 ---
 
-### 5️⃣ Write Data
+### 5. Write Data
 
 ```c
 char data[] = "Measurement: 23.5°C\n";
@@ -314,7 +314,7 @@ if (fs_open(&file_desc, "logfile.txt", SF_OPEN_CREATE | SF_OPEN_RAW) == 0) {
 
 ---
 
-### 6️⃣ Close File
+### 6. Close File
 
 ```c
 int16_t res;
@@ -333,7 +333,7 @@ if (res) {
 
 ---
 
-### 7️⃣ Delete File
+### 7. Delete File
 
 ```c
 FS_DESC file_desc;
@@ -351,7 +351,7 @@ if (res == 0) {
 
 ---
 
-### 8️⃣ Rename File
+### 8. Rename File
 
 ```c
 FS_DESC old_desc, new_desc;
@@ -374,7 +374,7 @@ if (res == 0) {
 
 ---
 
-### 9️⃣ Get File List
+### 9. Get File List
 
 ```c
 FS_STAT file_stat;
@@ -404,7 +404,7 @@ while (1) {
 
 ---
 
-### 🔟 Deep Sleep for Power Saving
+### 10. Deep Sleep for Power Saving
 
 ```c
 // Put flash into deep sleep (saves power)
@@ -425,12 +425,12 @@ if (res) {
 
 ---
 
-## 🚀 Advanced Features
+## Advanced Features
 
-### 1️⃣ Unclosed Files (RAW Mode)
+### 1. Unclosed Files (RAW Mode)
 
 > [!TIP]
-> ### ⚡ A Unique Feature of JesFs
+> ### A Unique Feature of JesFs
 > Files can be continued after power failure! This is ideal for data loggers that must not lose data even during power outages.
 
 ```c
@@ -454,7 +454,7 @@ fs_write(&data_desc, data, len);
 
 ---
 
-### 2️⃣ CRC32 Validation
+### 2. CRC32 Validation
 
 ```c
 FS_DESC file_desc;
@@ -482,10 +482,10 @@ if (stat.file_crc32 == crc_calculated) {
 
 ---
 
-### 3️⃣ Date/Time Functions
+### 3. Date/Time Functions
 
 > [!NOTE]
-> JesFs uses an unsigned UNIX timestamp, which goes up to approximately year 2100 😉
+> JesFs uses an unsigned UNIX timestamp, which goes up to approximately year 2100.
 
 ```c
 #include "jesfs_int.h"  // For time functions
@@ -507,7 +507,7 @@ printf("Date: %02d.%02d.%04d %02d:%02d:%02d\n",
 
 ---
 
-### 4️⃣ File System Check
+### 4. File System Check
 
 ```c
 extern SFLASH_INFO sflash_info;  // Global flash info
@@ -530,7 +530,7 @@ printf("Free sectors: %u\n", sflash_info.sectors_clear);
 
 ---
 
-### 5️⃣ Error Handling and Recovery
+### 5. Error Handling and Recovery
 
 ```c
 // Test file system
@@ -565,7 +565,7 @@ switch (res) {
 
 ---
 
-## ⚠️ Important Error Codes
+## Important Error Codes
 
 | Code | Meaning | Solution |
 |------|---------|----------|
@@ -583,9 +583,9 @@ Complete list in [jesfs.h](https://github.com/joembedded/JesFs/blob/master/jesfs
 
 ---
 
-## 📝 Practical Examples from This Project
+## Practical Examples from This Project
 
-### 📋 Example 1: Save Parameter File
+### Example 1: Save Parameter File
 
 ```c
 // From internet.c - Save parameters
@@ -611,7 +611,7 @@ int16_t save_parameters(void) {
 }
 ```
 
-### 📊 Example 2: Measurement Data Logger (Unclosed File)
+### Example 2: Measurement Data Logger (Unclosed File)
 
 ```c
 // From measure.c - Append measurement data
@@ -643,7 +643,7 @@ void log_measurement(float temperature, float humidity) {
 }
 ```
 
-### 🔄 Example 3: Log File with Rotation
+### Example 3: Log File with Rotation
 
 ```c
 // From logfiles.c - Rotate log file
@@ -685,9 +685,9 @@ void write_log_with_rotation(char *message) {
 
 ---
 
-## ⚡ Performance Tips
+## Performance Tips
 
-### 1️⃣ Optimize Start Mode
+### 1. Optimize Start Mode
 
 ```c
 // First start after power-on
@@ -697,7 +697,7 @@ fs_start(FS_START_NORMAL);
 fs_start(FS_START_FAST | FS_START_RESTART);
 ```
 
-### 2️⃣ Use Deep Sleep
+### 2. Use Deep Sleep
 
 ```c
 // Put flash to sleep after operations
@@ -707,7 +707,7 @@ fs_deepsleep();
 fs_start(FS_START_RESTART);
 ```
 
-### 3️⃣ Bundle Write Accesses
+### 3. Bundle Write Accesses
 
 ```c
 // BAD: Many small writes
@@ -721,7 +721,7 @@ fs_write(&desc, data, 100);
 
 ---
 
-## ⚠️ Known Limitations
+## Known Limitations
 
 > [!WARNING]
 > The following limitations should be noted:
@@ -733,16 +733,16 @@ fs_write(&desc, data, 100);
 
 ---
 
-## 🔗 Further Resources
+## Further Resources
 
-- 📦 **JesFs Repository**: [github.com/joembedded/JesFs](https://github.com/joembedded/JesFs)
-- 📖 **Detailed Documentation**: `../JesFs/README.md`
-- 🎯 **Example Project**: `../JesFs/usecase_BlackBox/`
-- 🔧 **Platform Info**: `../JesFs/platform_nRF52/ReadMe.txt`
+- **JesFs Repository**: [github.com/joembedded/JesFs](https://github.com/joembedded/JesFs)
+- **Detailed Documentation**: `../JesFs/README.md`
+- **Example Project**: `../JesFs/usecase_BlackBox/`
+- **Platform Info**: `../JesFs/platform_nRF52/ReadMe.txt`
 
 ---
 
-## 📋 Summary - Quick Reference
+## Summary - Quick Reference
 
 ```c
 // Init
@@ -774,10 +774,10 @@ extern SFLASH_INFO sflash_info;
 ---
 
 > [!NOTE]
-> ### 📄 Documentation Info
+> ### Documentation Info
 > - **Date**: February 13, 2026  
 > - **Project**: LTX Logger System
 >
-> 💬 **Questions or feedback?** Always welcome!
+> **Questions or feedback?** Always welcome.
 
 ***
