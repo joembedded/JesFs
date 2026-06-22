@@ -3,15 +3,12 @@
 *
 * JesFs - Jo's Embedded Serial File System
 *
-* Tested on
-* - Win
-* - TI-RTOS CC13xx/CC26xx Launchpad
-* - nRF52840 on PCA10056 DK Board
-*
 * (C) joembedded@gmail.com - www.joembedded.de
-* Version:
-* 0.0  / ca. 1994 - The idea: 'detailed Files' evolved
-* 1.5  / 25.11.2019
+*
+* Versions:
+* 0.0  / ca. 1994 - Preliminary versions 
+* 1.0  / 16.09.2016 Initial Version on TI's CC1310
+* 1.5  / 25.11.2019 Open Sourced on GitHub
 * 1.6  / 22.12.2019 added fs_check_disk()
 * 1.7  / 12.03.2020 added fs_date2sec1970()
 * 1.8  / 25.09.2020 added fs_set_static_secs() to set a static time for JesFs
@@ -260,7 +257,7 @@ typedef struct{
     // e.g.
     // M25P40:     512kbB Manufacturer:20 Type:20 Density:13 ! ATTENTEION: No 4k-Ops, hence: not useabale for JesFs - > NotOK
     // MX25R8035:  1MByte Manufacturer:C2 Type:28 Density:14 -> Ok, tested
-    // MX25R6435F: 8MByte Manufacturer:C2 Type:28 Density:17 -> Ok (should work)
+    // MX25R6435F: 8MByte Manufacturer:C2 Type:28 Density:17 -> Ok, tested
     // MT25QL128ABA 16Byte Manufacturer:20 Type:BA Density:18 -> Ok (should work)
     // etc..
 
