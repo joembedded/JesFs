@@ -66,6 +66,12 @@ And I couldn't find one. So I built it.
 - **Unclosed files support** – unique feature for IoT applications!
 - Works **standalone** or with **RTOS**
 
+### Intentionally Not POSIX
+
+JesFs is deliberately **not POSIX-compliant**. It is not meant to emulate a desktop or operating-system file system; it is a purpose-built embedded file system for real IoT devices, data loggers, bootloaders, mirrored cloud workflows, and very small targets.
+
+This also allows JesFs to provide behavior that POSIX does not model well, such as **unclosed files**, power-loss-safe append-style logging, and application-level external synchronization. By avoiding a full POSIX abstraction, JesFs stays small, deterministic, easy to port, and suitable for systems where minimal code size and RAM usage matter more than generic OS compatibility.
+
 ### Wide Platform Support
 - **Flash sizes:** 8 kByte to 16 MByte (optionally up to 2 GByte)
 - **Tested with:** Macronix MX25Rxx, GigaDevices GD25WDxx/GD25WQxx, and more
@@ -86,7 +92,7 @@ And I couldn't find one. So I built it.
 ```bash
 # Built with SES (V6.22a) and SDK 17.1.0
 # Set Macro $SDK_ROOT in SES -> Tools -> Options -> Building
-# Example: "SDK_ROOT=C:\nordic\nRF5_SDK_17.1.0_ddde560"
+# Example: "SDK_ROOT=C:/nordic/nRF5_SDK_17.1.0_ddde560"
 ```
 
 #### **For TI CC13xx/CC26xx:**
@@ -472,4 +478,3 @@ Whether you're building a weather station at 3000m altitude, a smart home device
 | **Status** | Production-ready, thousands of deployments |
 
 ---
-
