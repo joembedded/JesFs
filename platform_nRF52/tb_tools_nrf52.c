@@ -190,7 +190,7 @@ int16_t tb_getc(void){
 }
 
 // tb_putsl - as puts, but without CR/NL
-void tb_putsl(char* pc){
+void tb_putsl(const char* pc){
     if(_tb_uart_init_flag==false) return; // Not init...
     while(*pc){
       if(tb_putc(*pc++)) break; 
@@ -198,7 +198,7 @@ void tb_putsl(char* pc){
 }
 
 // tb_printf(): printf() to toolbox uart. Wait if busy
-void tb_printf(char* fmt, ...){
+void tb_printf(const char* fmt, ...){
     ret_code_t ret;
     size_t ulen;
     uint8_t *pl;

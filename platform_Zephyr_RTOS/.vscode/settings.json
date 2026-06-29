@@ -1,0 +1,11 @@
+{
+    "[c]": {
+        "editor.formatOnSave": true
+    },
+    "breadcrumbs.enabled": true,
+    "C_Cpp.intelliSenseEngine": "default",
+    "nrf-connect.debugging.bindings": {
+        "${workspaceFolder}/build": "Launch jesfs_port/build",
+        "${workspaceFolder}/build/jesfs_port": "Launch jesfs_port/build/jesfs_port"
+    }
+}

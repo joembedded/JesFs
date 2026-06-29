@@ -1,0 +1,22 @@
+mainmenu "MAIN-JESFS-Shell"
+
+menu "MAIN-JESFS-Shell Options"
+
+config BLUETOOTH_UART
+	bool "Enable Bluetooth UART module"
+	default n
+	help
+	  Enables compilation of Bluetooth UART code paths.
+
+config JESFS_SHELL
+	bool "Enable JesFs with shell module"
+	default n
+	select FLASH
+	select FLASH_JESD216_API
+	help
+	  Enables compilation of JesFs shell code paths.
+
+endmenu
+
+# Include Zephyr's Kconfig tree so CONFIG_* symbols from prj.conf exist.
+source "Kconfig.zephyr"

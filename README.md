@@ -1,480 +1,253 @@
 # ![JesFs Logo](Documentation/jesfs_logo.jpg)
 
-> _"I have detailed Files."_ - A literary nod to the T800 in Terminator II (Blockbuster, 1991).
+> _"I have detailed Files."_ - A literary nod to the T800 in Terminator II.
 
-# JesFs – Jo's Embedded Serial File System
+# JesFs - Jo's Embedded Serial File System
 
-## **The File System for real IoT**
+## The File System for real IoT
 
-Welcome to **JesFs** – a file system that's currently running on **thousands of IoT devices worldwide**, from mountain peaks to industrial floors, keeping data safe and devices smart since its first deployment!
+JesFs is a small, robust file system for NOR flash in embedded and low-power IoT devices. It was built for systems that must survive resets, power loss, remote updates, long field deployments, and years of unattended operation.
+
+It is already used on thousands of devices, from mountain stations to industrial loggers. The original deployments were bare-metal. The current direction is clear: **bare-metal nRF52 remains useful, but Zephyr RTOS is the future-facing platform path.**
 
 ![JesFs on LTraX](Documentation/ltx_jesfs.jpg)  
-*Yes, that's 4MB of file system power on a 2x3 mm chip!*
+_4 MB of file system power on a 2 x 3 mm flash chip._
 
 ---
 
-## Why JesFs? The Story Behind It
+## Why JesFs Exists
 
-Picture this: You're standing in 3000 meters altitude, -20°C, digging holes in the snow to access your IoT device. Not fun, right? That's exactly why JesFs was born.
+If an IoT device fails in the field, the next question is simple: what happened before it died?
 
-My daily work is the IoT, and I needed a file system that could:
-- **Survive power losses** without breaking a sweat
-- Run on **ultra-small devices** with minimal resources  
-- Work **reliably for years** without maintenance
-- Handle **firmware updates and parameter changes remotely** and securely
-- Be easily **mirrored to a digital twin in the Cloud**
-  (As used e.g. in the [LTX project](https://github.com/joembedded/LTX_server))
+JesFs was written for exactly that class of devices:
 
-And I couldn't find one. So I built it.
+- Data loggers that must keep their last records after power loss.
+- Devices that receive parameters, resources, or firmware remotely.
+- Small systems where a POSIX file system is too large or too generic.
+- Products that mirror selected files to a server-side digital twin.
+- Battery-powered hardware where wakeup time and sleep current matter.
 
-**JesFs** is designed for **"Small and Ultra-Low-Power IoT Devices"** that need to communicate over many different channels (WiFi, Mobile Internet, Bluetooth, UART, Radio-Link, LoRa, Satellite, ...) and must work reliably for years.
+JesFs is intentionally **not POSIX-compliant**. It is a flat, deterministic embedded file system for NOR flash. No directories, no desktop abstraction, no unnecessary operating-system baggage.
 
 ---
 
-## What Makes JesFs Special?
+## What Makes JesFs Different
 
-### Field-Proven & Production-Ready
-- **Used on thousands of IoT devices** worldwide
-- **Several years** of real-world experience
-- Proven in **professional, scientific, and hobbyist** applications
-- **MIT License** – completely open source and free
+### Small
 
-### Incredibly Small Footprint
-- Works on MCUs with only **8kByte program memory** (yes, really!)
-- Requires only **200 Bytes of RAM** minimum
-- Supports devices from tiny **16-Bit** to powerful **ARM** cores
-- Perfect for battery-powered devices
+- Typical minimum RAM use is about **200 bytes**.
+- File descriptors are small enough for tiny MCUs.
+- The core was originally designed for very small bare-metal targets.
 
-### Blazing Fast Performance
-- **Reading:** 0.5 - 3.75 MB/sec (depending on SPI speed & CRC usage)
-- **Silent reading:** ~100 MB/sec (for finding file ends)
-- **Writing:** 30-70 kB/sec
-- **Deep Sleep to Ready:** Just a few microseconds!
-- **Power consumption in Deep Sleep:** <0.5µA (with MX25Rxxxx chips)
+### Robust
 
-### Robust & Secure
-- **No data loss** on power failure or reset
-- **CRC32 integrity checking** (ISO 3309 standard)
-- Works with the **JesFsBoot secure bootloader**
-- **AES-128 encrypted** firmware updates possible via OTA, BLE, ...
-- Optimized **wear leveling** for maximum flash lifetime
+- Power-loss-safe design for sequential files.
+- CRC32 support for closed files that must be verified.
+- Files can intentionally remain unclosed, which is useful for loggers.
+- Sector allocation and reuse are designed around real NOR-flash behavior.
 
-### Developer Friendly
-- **Intuitive API** – if you know `fopen()`, you know JesFs! (Note: But JesFs is not POSIX-compliant)
-- **Flat file system** – no complex directory structures
-- **Up to ~1000 files** on standard 4KB sector flash
-- **Unclosed files support** – unique feature for IoT applications!
-- Works **standalone** or with **RTOS**
+### Fast Enough for Real Products
 
-### Intentionally Not POSIX
+- Typical read speed: **0.5 to 3.75 MB/s**, depending on SPI and CRC use.
+- Typical write speed: **30 to 70 kB/s**.
+- Silent reads can be much faster when scanning for the end of an unclosed file.
+- Deep-sleep wakeup is in the microsecond range on suitable hardware.
 
-JesFs is deliberately **not POSIX-compliant**. It is not meant to emulate a desktop or operating-system file system; it is a purpose-built embedded file system for real IoT devices, data loggers, bootloaders, mirrored cloud workflows, and very small targets.
+For measured details, see [PerformanceTests.pdf](Documentation/PerformanceTests.pdf).
 
-This also allows JesFs to provide behavior that POSIX does not model well, such as **unclosed files**, power-loss-safe append-style logging, and application-level external synchronization. By avoiding a full POSIX abstraction, JesFs stays small, deterministic, easy to port, and suitable for systems where minimal code size and RAM usage matter more than generic OS compatibility.
+### Built for IoT Workflows
 
-### Wide Platform Support
-- **Flash sizes:** 8 kByte to 16 MByte (optionally up to 2 GByte)
-- **Tested with:** Macronix MX25Rxx, GigaDevices GD25WDxx/GD25WQxx, and more
-- **Platforms:** nRF52840, nRF52832, CC13xx/CC26xx, SAMD20, Windows (for development), and others
+- Configuration files, language files, resource files, calibration data.
+- Blackbox/event logs for post-mortem analysis.
+- Firmware files for OTA workflows and secure bootloaders.
+- Application-level synchronization through the `SF_OPEN_EXT_SYNC` flag.
 
 ---
 
-> [!IMPORTANT]
-> **Statement on AI Usage:** The entire codebase was authored, manually entered, and thoroughly reviewed by qualified human engineers. However AI tools supported documentation and review processes. No AI-generated source code was directly copied or integrated. 
+## Quick Start
+
+Start here:
+
+- [jesfs_quick.md](jesfs_quick.md) - compact JesFs quickstart with Zephyr and bare-metal API examples.
+- [platform_Zephyr_RTOS/docu_jesfs_zephyr/readme.md](platform_Zephyr_RTOS/docu_jesfs_zephyr/readme.md) - Zephyr-specific setup notes, build configuration, shell commands, and SPI NOR hints.
+- [Documentation/Use_JesFs_en.md](Documentation/Use_JesFs_en.md) - real-world integration guide based on the LTX logger project.
+
+For the public API, use [jesfs.h](jesfs.h) as the source of truth. It contains the current version history, error codes, flags, and data structures.
 
 ---
 
-## Quick Start – The "I Have Detailed Files" Experience
+## API Snapshot
 
-### Installation (Examples)
-
-#### **For Nordic nRF52 CPUs:**
-```bash
-# Built with SES (V6.22a) and SDK 17.1.0
-# Set Macro $SDK_ROOT in SES -> Tools -> Options -> Building
-# Example: "SDK_ROOT=C:/nordic/nRF5_SDK_17.1.0_ddde560"
-```
-
-#### **For TI CC13xx/CC26xx:**
-- Start with TI-RTOS "empty" project via Resource Explorer
-- Add JesFs files to your project
-- Add **CC13XX_CC26XX** as Preprocessor Definition
-- Done.
-
-#### **For Windows Development:**
-- Use the included Windows demo project
-- Perfect for testing and development before deployment
-
----
-
-## The API – Simple & Powerful
+The application-facing API is deliberately small:
 
 ```c
-// Core Functions
-int16_t fs_start(uint8_t mode);                  // Initialize JesFs
-int16_t fs_format(uint32_t f_id);                // Format the flash
-void    fs_deepsleep(void);                      // Ultra-low power mode
+int16_t jesfs_start(uint8_t mode);
+int16_t jesfs_deepsleep(void);
+int16_t jesfs_format(uint8_t fmode); /* bare-metal */
+int16_t jesfs_format(uint8_t fmode, void cb_prog(uint32_t cur_sect, uint32_t total_sect)); /* Zephyr */
 
-// File Operations  
-int16_t fs_open(FS_DESC *pdesc, char* pname, uint8_t flags);
-int32_t fs_read(FS_DESC *pdesc, uint8_t *pdest, uint32_t anz);
-int16_t fs_write(FS_DESC *pdesc, uint8_t *pdata, uint32_t len);
-int16_t fs_close(FS_DESC *pdesc);
-int16_t fs_delete(FS_DESC *pdesc);
-int16_t fs_rewind(FS_DESC *pdesc);
-int16_t fs_rename(FS_DESC *pd_odesc, FS_DESC *pd_ndesc);
-
-// File System Info
-int16_t  fs_info(FS_STAT *pstat, uint16_t fno);
-uint32_t fs_get_crc32(FS_DESC *pdesc);
-int16_t  fs_check_disk(void cb_printf(char *fmt, ...), uint8_t *pline, uint32_t line_size);
-void     fs_sec1970_to_date(uint32_t asecs, FS_DATE *pd);
+int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags);
+int32_t jesfs_read(struct jesfs_desc *pdesc, uint8_t *pdest, uint32_t len);
+int16_t jesfs_write(struct jesfs_desc *pdesc, const uint8_t *pdata, uint32_t len);
+int16_t jesfs_close(struct jesfs_desc *pdesc);
+int16_t jesfs_delete(struct jesfs_desc *pdesc);
+int16_t jesfs_rename(struct jesfs_desc *pd_odesc, struct jesfs_desc *pd_ndesc);
+int16_t jesfs_info(struct jesfs_stat *pstat, uint16_t fno);
+int16_t jesfs_check_disk(void cb_printf(const char *fmt, ...));
 ```
 
-*Looks familiar? That's the point.* 😁
+Older bare-metal code can still use the historic `fs_` names through compatibility macros where enabled. New Zephyr code should use the `jesfs_` names to avoid confusion with Zephyr's own `fs_` APIs.
 
 ---
 
-## Technical Highlights
+## Technical Core in One Page
 
-### How JesFs Works with NOR-Flash
-
-NOR-Flash has a special characteristic: you can only write **"0"**, never directly write **"1"**. To set bits back to "1", you must **erase** entire sectors (typically 4KB blocks). This is why smart file systems are essential!
+NOR flash can program bits from `1` to `0`, but setting bits back to `1` requires erasing a complete sector. JesFs embraces that instead of hiding it behind a large abstraction.
 
 ![Sector Layout](Documentation/sector_layout.jpg)
 
-**JesFs uses a 3-level sector architecture:**
-- **Index:** The master table (never erased!)
-- **Head:** Where each file starts
-- **Sector Pool:** The rest of your storage
+The layout is intentionally simple:
 
-### The Magic of Unclosed Files
+- **Index sector**: master table with file start-sector references.
+- **HEAD sector**: one file starts here; metadata lives here.
+- **DATA sectors**: linked sectors containing the payload.
+- **Deleted sectors**: marked first, erased later when reused.
 
-This is something you won't find in traditional file systems! 
+The special logger feature is the **unclosed file**. Empty flash reads as `0xFF`, so JesFs can scan forward and rediscover the real end of an append-style file after reset or power loss. For binary payloads in unclosed files, avoid plain `0xFF` bytes by escaping or encoding them.
 
-**The Problem:** Traditional systems must close files to update directory tables. If power fails during close → data corruption or loss!
-
-**JesFs Solution:** Because empty flash is `0xFF`, we can always find file ends without closing! Just avoid writing `0xFF` bytes (use escape sequences or ASCII/Base64 encoding). Ideal for continuously growing files, like on a data logger.
-
-**Result:** Power loss? No problem. Your data is safe.
-
-### Performance Stats
-
-Real-world measurements on nRF52840:
-- Finding end of 16MB file: **<100 msec**
-- Sector scan speed: **~25 µsec/sector** (CC1310)
-- CRC32 calculation: Minimal CPU overhead
-
-See [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf) for detailed benchmarks!
+More detailed behavior, flags, examples, and edge cases are documented in [jesfs_quick.md](jesfs_quick.md).
 
 ---
 
-## Real-World Use Cases
+## Platform Direction
 
-### The BlackBox Demo – An IoT *Flight Recorder*
+### Zephyr RTOS
 
-Ever wondered what went wrong when a device fails after years of reliable operation?
+The Zephyr port is the current forward-looking path. It uses Zephyr's flash and device model instead of custom SPI flash bit handling in the JesFs low-level layer.
 
-**JesFs BlackBox** creates an embedded flight recorder for your devices:
-- Continuous event logging
-- Millions of write cycles support
-- Perfect for debugging field failures
-- No data loss on power failures
+Read the Zephyr notes here:
 
-Read more: [usecase_BlackBox/BlackBox_Eval.pdf](usecase_BlackBox/BlackBox_Eval.pdf)
+- [Zephyr documentation](platform_Zephyr_RTOS/docu_jesfs_zephyr/readme.md)
+- [SFDP / `sfdp-bfp` note](platform_Zephyr_RTOS/src/jesfs/sfdp_decode.md)
 
-### Remote Firmware Updates possible
+### Bare-Metal nRF52
 
-Think of your embedded devices updating themselves:
-- Via **WiFi**, **Mobile Internet**, **Bluetooth**, **UART**, or **Radio-Link**
-- **Completely secure** with AES-128 encryption
-- No physical access needed!
-- Works seamlessly with **JesFsBoot** secure bootloader (only 8kB!)
+The nRF52 bare-metal demos are still relevant for small, low-power Nordic systems and for understanding the original JesFs integration style.
 
-### Configuration & Language Files
+![nRF52840 DK with external flash](Documentation/Nrf52840_DK.jpg)
 
-Change device behavior without recompiling:
-- Store settings, calibration data, language files
-- Update graphics, sounds, or any resource
-- Make changes in the field – easy!
+Project folders:
 
-###  A real World JesFs Integration - Guide Based on an nRF52 Project "LTX Logger"
+- [platform_nRF52/](platform_nRF52/)
+- [Documentation/Use_JesFs_en.md](Documentation/Use_JesFs_en.md)
+- [nRF52840 CPU / board image](Documentation/nrf52840.jpg)
+- [nRF52832 CPU / board image](Documentation/nrf52832.jpg)
+- [nRF52840 DK connection image](Documentation/Nrf52840_DK.jpg)
 
-![LTX Type1500 - An example logger with LTE-M/-NB and SDI-12 sensor bus](Documentation/intent1500.jpg)
+### Legacy Bare-Metal Platforms
 
-*LTX Type1500 - An example logger with BLE, LTE-M/-NB and SDI-12 sensor bus. Also available with: LoRaWAN, LTE cat-1, LTE450 (Critical Infrastructure), NTN (Non-terrestrial networks)*
+Older ports for TI CC13xx/CC26xx and SAMD20 remain in the repository for reference and migration help. They are no longer the main story for new projects.
 
-Read the full story [How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
+Reference folders:
 
----
+- [platform_CC13XX_CC26XX/](platform_CC13XX_CC26XX/)
+- [platform_SAMD20/](platform_SAMD20/)
+- [platform_SAMD20/Configure_JesFs_for_SAMD20.pdf](platform_SAMD20/Configure_JesFs_for_SAMD20.pdf)
 
-## Supported Hardware
+### Windows Development
 
-### Serial Flash Chips (Wide Voltage Range 1.6V-3.6V)
-- **Macronix:** MX25R-Series (MX25Rxx)
-- **GigaDevices:** GD25W-Series (GD25WD80C, GD25WQ64E, ...)
-- And many more – typically any standard Serial NOR-Flash!
+The Windows platform is useful for algorithm tests, file-system experiments, and flash-image inspection before deployment.
 
-### Development Boards
-
-#### **Nordic nRF52 Family:**
-![nRF52840](Documentation/nrf52840.jpg) ![nRF52832](Documentation/nrf52832.jpg)
-
-#### **TI CC13xx/CC26xx Family:**
-![CC13xx/26xx](Documentation/CC13xx26xx.jpg)
-
-#### **Tiny Modules:**
-![RC-CC1310F Module](Documentation/rc1310_module.jpg)  
-
-*The RC-CC1310F module from radiocontrolli.com with 2MB built-in!*
-
-#### **Flash Chips:**
-![CC13xx Flash](Documentation/cc13xx_flash.jpg) &nbsp;&nbsp;&nbsp; 
-![nRF52840 DK](Documentation/Nrf52840_DK.jpg)
-
-*Up to 16MB – plenty of room for your files!*
+- [platform_WIN/](platform_WIN/)
 
 ---
 
-## Detailed Technical Documentation
+## Use Cases
 
-### File System Structure
+### Embedded Blackbox
 
-**JesFs is a "flat" file system** – no directories, just files. Simple and effective!
+JesFs can act as a small flight recorder: event log, state changes, diagnostics, and last-known-good traces survive power loss.
 
-- **Up to ~1000 files** (on 4KB sector flash)
-- **Filenames:** Up to 21 characters, almost any character allowed
-- Examples of *valid* names: `*$abc/hello\world&.bin$*`, `sensor_data.log`, `fw_v2.3.1.bin`
+- [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
+- [usecase_BlackBox/BlackBox_Eval.pdf](usecase_BlackBox/BlackBox_Eval.pdf)
 
-### Memory Requirements
+### LTX Logger Integration
 
-**Minimal RAM usage:**
-- **File Descriptor:** ~28 Bytes per open file
-- **Stat Descriptor:** ~30 Bytes for directory scanning
-- **SF_INFO structure:** 164-256 Bytes (static flash info)
-- **Total minimum:** ~200 Bytes!
+![LTX Type1500](Documentation/intent1500.jpg)
 
-### Code Architecture
-- **Only for test on PC:** `JesFs_main.c`
-  Compile the demo either within an IDE or as a 'single liner' with 'gcc' (optionally with `-std=c99`):
+The LTX Type1500 integration shows JesFs in a real data logger with BLE, LTE-M/-NB, SDI-12 sensor bus, and field-update workflows.
 
-  ```bash
-  gcc -o jesfs.exe JesFs_main.c jesfs_hl.c jesfs_ml.c platform_WIN/JesFs_ll_pc.c platform_WIN/tb_tools_win.c -I. -DWIN32 -Wall
-  ```
+- [How JesFs is used on LTX Type1500](Documentation/Use_JesFs_en.md)
+- [LTX server project](https://github.com/joembedded/LTX_server)
 
-**JesFs itself is modular and portable:**
-- **Low-level drivers:** `JesFs_ll_xxxxx.c` (platform-specific)
-  - `JesFs_ll_pca100xx.c` for nRF52
-  - `JesFs_ll_tirtos.c` for CC13xx/CC26xx
-  - `JesFs_ll_pc.c` for Windows
-  - Other Hardware: Adapt one of the above '_ll_'
+### Firmware and Resource Updates
 
-- **Mid-level:** `jesfs_ml.c` (flash management, hardware-independent)
-
-- **High-level:** `jesfs_hl.c` (file API, hardware-independent)
-- **Header:** `jesfs.h` (your main interface)
-
-**Per platform a toolbox defines some helpers:**
-- **Tools:** `tb_tools_xxx.c` (UART, Clock, LEDs, etc.)
-- Also 2 callback functions are required:
-  - `uint32_t _time_get(void)`: returns the unsigned UNIX timestamp, which goes up to approximately year 2100.
-  - `int16_t _supply_voltage_check(void)`: returns 0 if the power is valid, at least for the time of the operation (see code).
-  > 
-  > As a Rule-of-thumb: 1Farad is 1Volt/1Coulomb. This means e.g. for 100µF and an average 10mA for 2msec, the Voltage will drop 0.2V. Hence VDD should be at least 0.2V higher here than the minimum.
-  
-
-
-### External File Sync
-
-Special flag `SF_OPEN_EXT_SYNC` marks files that are relevant for external synchronization.
-
-Important: this bit is not used internally by JesFs core logic. That is exactly why it is useful for application-level workflows, for example to automatically mirror relevant files to a cloud-side "digital twin".
-
-There's even a PHP framework for mapping JesFs files to web servers.
-
-Visit [joembedded.de](https://joembedded.de/) for more details.
+JesFs can store firmware images, settings, calibration data, graphics, language files, or other resources. Together with a bootloader, this enables remote updates through WiFi, mobile internet, Bluetooth, UART, radio links, LoRa, satellite links, or other application transports.
 
 ---
 
-## Demos & Getting Started
+## Documentation and Media Map
 
-### 1️⃣ Nordic nRF52840 DK (PCA10056) Demo
+### Main Documentation
 
-The nRF52840 DK comes with a massive **8 MB Serial Flash** – perfect for JesFs!
+- [jesfs_quick.md](jesfs_quick.md) - quickstart and API examples.
+- [Documentation/Use_JesFs_en.md](Documentation/Use_JesFs_en.md) - LTX integration guide.
+- [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf) - performance measurements.
+- [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md) - BlackBox overview.
+- [usecase_BlackBox/BlackBox_Eval.pdf](usecase_BlackBox/BlackBox_Eval.pdf) - BlackBox evaluation.
+- [platform_Zephyr_RTOS/docu_jesfs_zephyr/readme.md](platform_Zephyr_RTOS/docu_jesfs_zephyr/readme.md) - Zephyr platform notes.
+- [platform_Zephyr_RTOS/src/jesfs/sfdp_decode.md](platform_Zephyr_RTOS/src/jesfs/sfdp_decode.md) - Zephyr SFDP extraction note.
+- [platform_SAMD20/Configure_JesFs_for_SAMD20.pdf](platform_SAMD20/Configure_JesFs_for_SAMD20.pdf) - legacy SAMD20 setup guide.
 
-**Setup:**
-1. Copy demo to your SDK directory
-2. Example path: `C:/nordic/nRF5_SDK_16.0.0_98a08e2/own_projects/test/JesFsDemo/`
-3. Open with SEGGER Embedded Studio
-4. Compile and run!
-5. Connect via virtual COM-Port (115200 8N1)
+### Images
 
-**Project location:** use the SES projects in:
-- `platform_nRF52/nrf52832/ses/`
-- `platform_nRF52/nrf52840/ses/`
-
-### 2️⃣ TI CC1310/CC1350 Launchpad Demo
-
-Works with most CC13xx/CC26xx family chips!
-
-**Setup:**
-
-<img src="Documentation/setup_step1.jpg" width="400" />
-
-**Step 1:** Select your Launchpad in Resource Explorer
-
-<img src="Documentation/setup_step1b.jpg" width="400" />
-
-**Step 2:** Import "empty" project
-
-<img src="Documentation/setup_step2.jpg" width="300" />
-
-**Step 3:** Delete `empty.c` and add all JesFs files
-
-<img src="Documentation/setup_step3.jpg" width="400" />
-
-**Step 4:** Add `CC13XX_CC26XX` as Preprocessor Definition  
-(Project Options -> Preprocessor Definitions)
-
-**Step 5:** Start Terminal and test!
-
-**Demo commands:**
-```
-> O test.dat        // Open "test.dat" for writing
-> W 5               // Write 5 test blocks
-> c                 // Close file
-> v                 // View directory (show files)
-```
-
-**Tips:** 
-- The XDS110 emulator's COM port can be unreliable
-- Consider using a separate FTDI 3.3V TTL-UART cable
-
-### 3️⃣ Windows Development Demo
-
-Perfect for developing and testing on your PC!
-
-**Features:**
-- Uses `JesFs_ll_pc.c` driver (simulates flash in RAM)
-- Read/write **binary flash images**
-- Hex dump command: `m HEXADDR`
-- Great for algorithm development before deployment
-
-**Flash image example:**
-
-<img src="Documentation/hex_dump.png" width="600" />
-
-*(Magic value "4A 65 73 46" = "JesF", followed by Flash ID and format timestamp)*
+- [Documentation/jesfs_logo.jpg](Documentation/jesfs_logo.jpg)
+- [Documentation/ltx_jesfs.jpg](Documentation/ltx_jesfs.jpg)
+- [Documentation/intent1500.jpg](Documentation/intent1500.jpg)
+- [Documentation/sector_layout.jpg](Documentation/sector_layout.jpg)
+- [Documentation/hex_dump.png](Documentation/hex_dump.png)
+- [Documentation/nrf52840.jpg](Documentation/nrf52840.jpg)
+- [Documentation/nrf52832.jpg](Documentation/nrf52832.jpg)
+- [Documentation/Nrf52840_DK.jpg](Documentation/Nrf52840_DK.jpg)
+- [Documentation/CC13xx26xx.jpg](Documentation/CC13xx26xx.jpg)
+- [Documentation/cc13xx_flash.jpg](Documentation/cc13xx_flash.jpg)
+- [Documentation/rc1310_module.jpg](Documentation/rc1310_module.jpg)
+- [Documentation/setup_step1.jpg](Documentation/setup_step1.jpg)
+- [Documentation/setup_step1b.jpg](Documentation/setup_step1b.jpg)
+- [Documentation/setup_step2.jpg](Documentation/setup_step2.jpg)
+- [Documentation/setup_step3.jpg](Documentation/setup_step3.jpg)
+- [platform_Zephyr_RTOS/docu_jesfs_zephyr/img/set_build_config_a.png](platform_Zephyr_RTOS/docu_jesfs_zephyr/img/set_build_config_a.png)
+- [platform_Zephyr_RTOS/docu_jesfs_zephyr/img/set_build_config_b.png](platform_Zephyr_RTOS/docu_jesfs_zephyr/img/set_build_config_b.png)
 
 ---
 
-## The Secure Bootloader – JesFsBoot
+## Version Status
 
-JesFs plays perfectly with **JesFsBoot**, a secure bootloader for ARM Cortex-M cores!
+Source-of-truth: [jesfs.h](jesfs.h)
 
-### Features:
-- **Tiny footprint:** Only 8kB on CC13xx/CC26xx
-- **Reads JesFs directly** – no intermediate buffers needed
-- **AES-128-CBC encryption** – firmware is cryptographically secure
-- **No external modification possible** – keys stay inside the CPU
-- **Written in C** – easier and more flexible than scripts
+- Core JesFs: **V1.94 / 21.06.2026**
+- Zephyr port milestone: **V2.00 / 21.06.2026**
+- License: [MIT](LICENSE)
 
-### How It Works:
-1. Firmware file stored in JesFs (encrypted)
-2. Bootloader reads and decrypts on-the-fly
-3. Programs the application flash
-4. Boots into new firmware
-5. All secure and automatic.
-
-*Note: Bootloader is optional – JesFs works perfectly standalone too!*
-Documentation for JesFsBoot: Just drop me a note.
+> [!IMPORTANT]
+> **Statement on AI Usage:** The source code was authored, manually entered, and reviewed by qualified human engineers. AI tools supported documentation and review work. No AI-generated source code was directly copied or integrated.
 
 ---
 
-## Version History
-
-### Latest: V2.72
-- JesFs_hl.c (File V1.92)
-- All global fs_* functions check supply voltage on entry
-- Added feature: supply voltage check
-
-### Recent Updates:
-- **V2.61:** Atmel SAMD20 support (community contributed – kudos!)
-- **V2.60:** Global Macro $SDK_ROOT for flexible paths
-- **V2.55:** SDK 17.1.0 and SES 5.42a support
-- **V2.30:** Added Flash ID printing for analysis
-- **V2.10:** nRF52832 support
-- **V2.0:** Enhanced UART driver for multi-use
-- **V1.6:** Added careful disk check function
-- **V1.5:** nRF52840 port with Deep Sleep support (<3µA!)
-- **V1.0:** Initial release for CC13xx/CC26xx and Windows
-
-*Full changelog in source files*
-
----
-
-## FAQ & Pro Tips
-
-### Q: What if I accidentally write 0xFF?
-**A:** Use escape sequences (0xFE 0x01 for 0xFF) or use ASCII/Base64 encoding for your data!
-
-### Q: Can I use JesFs on internal CPU flash?
-**A:** Yes! JesFs works with any NOR-flash, internal or external. Only check if single byte writes are possible.
-
-### Q: How many write cycles can I expect?
-**A:** Typically 1,000 to 1,000,000 erases per sector (check your flash datasheet). JesFs's wear leveling maximizes lifetime.
-
-### Q: Do I need an RTOS?
-**A:** Nope! JesFs works standalone, but can leverage RTOS benefits if available.
-
-### Q: How do I handle multiple simultaneous writes?
-**A:** You can have as many files open as RAM allows, but only one write instance per file (which makes sense, right?).
-
----
-
-## Community & Support
-
-### Resources:
-- **Homepage:** [joembedded.de](https://joembedded.de/)
-- **Detailed API Docs:** [jesfs.h](jesfs.h) and inline source comments
-- **Performance Tests:** [Documentation/PerformanceTests.pdf](Documentation/PerformanceTests.pdf)
-- **Use Case - BlackBox:** [usecase_BlackBox/readme.md](usecase_BlackBox/readme.md)
-- **LTX project** [LTX project](https://github.com/joembedded/LTX_server)
-
-### License:
-**MIT License** – Use it freely in commercial, scientific, or hobbyist projects!
-
-### Get Involved:
-JesFs is actively maintained and used in thousands of devices. Found a bug? Have a feature idea? Contributions welcome!
-
----
-
-## Final Words
-
-Whether you're building a weather station at 3000m altitude, a smart home device, an industrial sensor, or just tinkering with IoT – **JesFs has got your back**!
-
-**Thank you for your interest in JesFs!**
-
-*– Jo*
-
----
-
-### Quick Reference Card
+## Quick Reference
 
 | Feature | Specification |
 |---------|---------------|
-| **Min. RAM** | ~200 Bytes |
-| **Min. Code Size** | ~8kB (with bootloader) |
-| **Flash Support** | 8kB - 16MB (opt. 2GB) |
-| **Max Files** | ~1000 (4KB sectors) |
-| **Filename Length** | 21 characters |
-| **Read Speed** | 0.5 - 3.75 MB/s |
-| **Write Speed** | 30 - 70 kB/s |
-| **Deep Sleep Current** | <0.5µA |
-| **Wakeup Time** | Few µsec |
-| **CRC Support** | CRC32 (ISO 3309) |
-| **Platforms** | nRF52, CC13xx/26xx, SAMD20, MSP430, Windows, ... |
-| **License** | MIT |
-| **Status** | Production-ready, thousands of deployments |
+| Minimum RAM | About 200 bytes |
+| Flash type | NOR flash, internal or external |
+| Typical sector size | 4 kB |
+| Flash size | 8 kB to 16 MB, optionally larger |
+| File model | Flat, no directories |
+| Filename length | `FNAMELEN`, currently 21 characters |
+| Integrity | Optional CRC32, ISO 3309 |
+| Special mode | Unclosed RAW files for power-loss-safe logging |
+| Current platform focus | Zephyr RTOS |
+| Still useful | Bare-metal nRF52 |
+| Legacy reference | CC13xx/CC26xx, SAMD20 |
 
----
+JesFs is not trying to be a desktop file system. It is a small field-proven storage tool for embedded products that need detailed files, even when the power disappears at the worst possible moment.

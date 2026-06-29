@@ -5,5 +5,6 @@ Output/
 _firmware.sec
 _firmware.bin
 privat*
-
+.agent*
 .local/*
+build*
