@@ -121,7 +121,7 @@ More detailed behavior, flags, examples, and edge cases are documented in [jesfs
 
 For reliable SPI/QSPI operation, keep these points in mind:
 
-- Prefer standard SPI (Clock, In, Out) unless QSPI byte-transfer support is verified on your target. Some controllers expose QSPI but do not support the transfer mode JesFs needs (for example, nRF52840 QSPI is limited to 4-byte blocks), so SPI is often the safer default. On Zephyr, the most suitable low-level driver is selected by configuration.
+- Prefer standard SPI (Clock, In, Out) unless QSPI byte-transfer support is verified on your target. Some controllers expose QSPI but do not support the SPI compatible transfer mode JesFs needs (for example, nRF52840 QSPI is limited to 4-byte blocks). On Zephyr, the most suitable low-level driver is selected by configuration.
 
 - Verify the selected IO pins against your MCU and board constraints. Some SPI/QSPI peripherals can only use specific pin mappings.
 
