@@ -11,7 +11,7 @@ JesFs is a small, robust file system for NOR flash in embedded and low-power IoT
 It is already used on thousands of devices, from mountain stations to industrial loggers. The original deployments were bare-metal. The current direction is clear: **bare-metal nRF52 remains useful, but Zephyr RTOS is the future-facing platform path.**
 
 ![JesFs on LTraX](Documentation/ltx_jesfs.jpg)  
-_4 MB of file system power on a 2 x 3 mm flash chip._
+_4 MB of file system power on a small flash chip._
 
 ---
 
@@ -116,6 +116,20 @@ The layout is intentionally simple:
 The special logger feature is the **unclosed file**. Empty flash reads as `0xFF`, so JesFs can scan forward and rediscover the real end of an append-style file after reset or power loss. For binary payloads in unclosed files, avoid plain `0xFF` bytes by escaping or encoding them.
 
 More detailed behavior, flags, examples, and edge cases are documented in [jesfs_quick.md](jesfs_quick.md).
+
+### Hardware topics
+
+For reliable SPI/QSPI operation, keep these points in mind:
+
+- Prefer standard SPI (Clock, In, Out) unless QSPI byte-transfer support is verified on your target. Some controllers expose QSPI but do not support the transfer mode JesFs needs (for example, nRF52840 QSPI is limited to 4-byte blocks), so SPI is often the safer default. On Zephyr, the most suitable low-level driver is selected by configuration.
+
+- Verify the selected IO pins against your MCU and board constraints. Some SPI/QSPI peripherals can only use specific pin mappings.
+
+- Add a small pull-up resistor on the chip-select line, even if the dev kit schematic omits it.
+
+![nRF52840 SPI connection example](Documentation/nrf52840.jpg)
+
+*Example SPI connection on an nRF52840 with R7 as pull-up.*
 
 ---
 
