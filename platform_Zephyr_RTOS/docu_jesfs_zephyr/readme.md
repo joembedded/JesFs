@@ -107,10 +107,13 @@ file delete
 file rename <new-name>
 file deepsleep
 file ll jedec
-file ll read <addr> [len]
-file ll write <addr> <byte>...
-file ll erase <addr> <len>
+file ll sread <addr> [len]
+file ll swrite <addr> <byte>...
+file ll serase <addr> <len>
 ```
+
+The `s`-prefixed low-level commands are sector diagnostics (`sread`, `swrite`,
+`serase`) and map directly to Zephyr flash operations.
 
 Common flag letters:
 
@@ -148,6 +151,33 @@ file start restart
 - Protect JesFs calls with an application mutex if multiple Zephyr threads can access the same filesystem.
 - Implement the voltage check meaningfully before using JesFs in hardware that can lose power during flash writes.
 - CRC is best for closed files. RAW/unclosed logger files are intentionally different and should not depend on a final stored CRC.
+
+## Test Logger in main.c
+
+`src/main.c` includes a simple periodic logger command for timing and append
+tests:
+
+```text
+test period <sec>
+```
+
+- `test period 0`: disable periodic test logging.
+- `test period N`: every N seconds, append `TIME: <runtime_sec>` to `test.log`
+	in RAW/unclosed mode.
+
+This intentionally exercises the sequence "find end of unclosed RAW file, then
+append" and optionally includes `jesfs_start()` when the flash is asleep.
+
+Measured elapsed time from this logger (as documented in `src/main.c`):
+
+| Existing `test.log` RAW size | Flash already awake (find-end + write) | Flash deepsleep (start + find-end + write) |
+|---|---:|---:|
+| 0 MB | 12 ms | 168 ms |
+| 1 MB | 46 ms | 198 ms |
+| 4 MB | 140 ms | 296 ms |
+
+These values show the expected growth of append latency with RAW file size,
+because the end marker search must scan farther before each write.
 
 ## More Reading
 

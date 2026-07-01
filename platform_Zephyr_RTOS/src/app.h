@@ -1,9 +1,6 @@
 /*
- * MAIN-JESFS-Shell-Skeleton
- * (C) JoEmbedded.de
+ * Public application interface for the MAIN-Shell skeleton.
  *
- * Public application interface
- * ----------------------------
  * External modules should use this header for shared runtime state,
  * text command dispatch, logging, LED helpers and console access.
  */
@@ -18,7 +15,7 @@
 extern "C" {
 #endif
 
-/* Multiplexer for tb_log(). (add more as needed (UDP/MODEM/WIFI/...))*/
+/* Multiplexer for tb_log(). */
 #define TB_LOG_NONE 0x00U
 #define TB_LOG_CON 0x01U
 

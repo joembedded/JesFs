@@ -344,10 +344,36 @@ file delete
 file rename <new-name>
 file deepsleep
 file ll jedec
-file ll read <addr> [len]
-file ll write <addr> <byte>...
-file ll erase <addr> <len>
+file ll sread <addr> [len]
+file ll swrite <addr> <byte>...
+file ll serase <addr> <len>
 ```
+
+`sread`, `swrite`, and `serase` are sector-level diagnostics routed through
+Zephyr's flash API. The `s` prefix intentionally marks them as low-level sector
+operations.
+
+The Zephyr sample in `platform_Zephyr_RTOS/src/main.c` also includes a small
+test logger command:
+
+```text
+test period <sec>
+```
+
+`test period 0` disables it. With a non-zero period, the app appends
+`TIME: <runtime_sec>` to an intentionally unclosed RAW file (`test.log`).
+This path is used to measure startup and append timing.
+
+Measured elapsed time per logging cycle (nRF54L15 DK test setup):
+
+| Existing RAW log size | Flash already awake (find-end + write) | Flash in deepsleep (start + find-end + write) |
+|---|---:|---:|
+| 0 MB | 12 ms | 168 ms |
+| 1 MB | 46 ms | 198 ms |
+| 4 MB | 140 ms | 296 ms |
+
+Interpretation: the append path scales with current RAW-log length because
+JesFs must rediscover the end of the unclosed file before appending.
 
 Open flags in the shell are single letters:
 

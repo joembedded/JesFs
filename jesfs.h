@@ -27,7 +27,7 @@
  * 1.93 / 21.06.2026 reformatted errors for better reading and configurable JESFS_ERR_BASE
  * 1.94 / 21.06.2026 hardened jesfs_read(), jesfs_check_disk(), and jesfs_open()
  * ----
- * 2.00 / 21.06.2026 Zephyr-OS port
+ * 2.00 / 21.06.2026 Zephyr-OS port, added jesfs_is_awake()
  *
  *******************************************************************************/
 
@@ -314,6 +314,9 @@ int16_t jesfs_start(uint8_t mode);
 /** Put the flash/filesystem into low-power mode. */
 int16_t jesfs_deepsleep(void);
 
+/** Check if the filesystem is already awake. */
+int16_t jesfs_is_awake(void);
+
 #if !defined(__ZEPHYR__)
 /** Format the filesystem. */
 int16_t jesfs_format(uint8_t fmode);
@@ -376,13 +379,14 @@ typedef struct jesfs_stat FS_STAT;
 typedef struct jesfs_date FS_DATE;
 
 #define _time_get jesfs_time_get
-#define _supply_voltage_check  jesfs_supply_voltage_check
+#define _supply_voltage_check jesfs_supply_voltage_check
 
 #define fs_strlen jesfs_strlen
 #define fs_track_crc32 jesfs_track_crc32
 
 #define fs_start jesfs_start
 #define fs_deepsleep jesfs_deepsleep
+#define fs_is_awake jesfs_is_awake
 #define fs_format jesfs_format
 #define fs_read jesfs_read
 #define fs_rewind jesfs_rewind

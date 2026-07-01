@@ -1,7 +1,11 @@
 /*
- * MAIN-JESFS-Shell-Skeleton
- * (C) JoEmbedded.de
+ * Z-Shell Datenlogger-Geruest.
  *
+ * Die Firmware wacht periodisch auf, bedient anstehende Aufgaben
+ * (z.B. Messen, Speichern, Textkommandos) und geht danach wieder in
+ * einen sparsamen Sleep-Zustand. Textkommandos koennen spaeter von
+ * Debug-UART oder BLE-UART kommen; die zentrale Auswertung laeuft ueber
+ * tb_sys_command(), Ausgaben ueber tb_log().
  */
 
 #include "app.h"
@@ -12,16 +16,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <zephyr/kernel.h>
+
+#include <zephyr/sys/reboot.h>
+#include <zephyr/sys/util.h>
+
 #include <zephyr/drivers/gpio.h>
 #include <zephyr/drivers/hwinfo.h>
 #include <zephyr/drivers/uart.h>
 
-#include <zephyr/kernel.h>
-
 #include <zephyr/pm/device.h>
 #include <zephyr/pm/device_runtime.h>
-
-#include <zephyr/sys/util.h>
 
 #if defined(CONFIG_JESFS_SHELL)
 #include "jesfs/jesfs_shell.h"
@@ -90,6 +95,103 @@ static int16_t tb_uart_poll_task(void);
 static int16_t tb_handle_sys_command(uint8_t log_flags, char *args);
 static int16_t tb_handle_help_command(uint8_t log_flags, char *args);
 
+// //------- TEST START--------
+#include "jesfs/jesfs.h"
+#define START_LOG_DELAY_SEC 10 /* secs a log starts after new period is set */
+uint32_t test_log_period_sec = 0;
+uint32_t test_log_last_sec = 0;
+uint32_t test_log_next_sec = 0;
+
+int16_t test_handle_command(uint8_t log_flags, char *args)
+{
+
+	char *args2 = tb_match_str_prefix("period", args);
+	if (args2 != NULL) {
+		while (*args2 == ' ') {
+			args2++;
+		}
+		if (*args2) {
+			uint32_t period_sec = strtoul(args2, NULL, 10);
+			test_log_period_sec = period_sec;
+			test_log_next_sec = tb_now_runtime_sec + START_LOG_DELAY_SEC;
+		}
+		tb_log(log_flags, "Period:%u sec (0:OFF)\n", test_log_period_sec);
+		return 0;
+	}
+
+	return TB_CMD_INVALID_PARAM;
+}
+
+int16_t test_periodic(void)
+{
+	if (test_log_period_sec && (tb_now_runtime_sec >= test_log_next_sec)) {
+		test_log_next_sec = tb_now_runtime_sec + test_log_period_sec;
+
+		uint32_t millis0 = (uint32_t)k_uptime_get();
+
+		tb_log(255, "Test log at:%u sec\n", tb_now_runtime_sec);
+		bool jesfs_ready = (jesfs_is_awake() == 0);
+		int16_t res;
+		if (!jesfs_ready) {
+			res = jesfs_start(FS_START_NORMAL);
+			if (res) {
+				tb_log(255, "JesFs start error:%d\n", res);
+				return res;
+			}
+		} else {
+			tb_log(255, "JesFs already awake\n");
+		}
+		char buf[128];
+		snprintf(buf, sizeof(buf), "TIME: %u\n", tb_now_runtime_sec);
+		struct jesfs_desc desc;
+
+		// 'test.log' either new or existing; if existing, overread old data first
+		res = jesfs_open(&desc, "test.log", SF_OPEN_READ | SF_OPEN_RAW);
+		if (!res) {
+			int32_t lres = jesfs_read(&desc, NULL, 0xFFFFFFFF);
+			tb_log(255, "Found 'test.log': %d Bytes\n", lres);
+		} else {
+			/* SF_OPEN_RAW for unclosed files, (SF_OPEN_WRITE for intentionally closed
+			 * files) */
+			res = jesfs_open(&desc, "test.log", SF_OPEN_CREATE | SF_OPEN_RAW);
+			if (res) {
+				tb_log(255, "JesFs open error:%d\n", res);
+				return res;
+			}
+			tb_log(255, "'test.log' created\n");
+		}
+
+		res = jesfs_write(&desc, (const uint8_t *)buf, strlen(buf));
+		if (res < 0) {
+			tb_log(255, "JesFs write error:%d\n", res);
+			return res;
+		}
+		/* File is UNCLOSED intintionally */
+
+		if (!jesfs_ready) {
+			res = jesfs_deepsleep();
+			if (res) {
+				tb_log(255, "JesFs deepsleep error:%d\n", res);
+				return res;
+			}
+		}
+		/* Nur zum Test - Wie lange jesfs_start() und find-end/write dauert.
+		 *
+		 * Ergebnisse
+		 *    Flash already    init	Flash deepsleep
+		 * 0M 12 msec           168 msec
+		 * 1M 46 msec           198 msec
+		 * 4M 140 msec          296 msec
+		 */
+
+		uint32_t millis1 = (uint32_t)k_uptime_get();
+		tb_log(255, "Elapsed time: %u ms\n", millis1 - millis0);
+	}
+
+	return 0;
+}
+//------- TEST END--------
+
 // Top-level command table for the debug console.
 static const tb_command_entry_t system_commands[] = {
 // Sub-shell commands.
@@ -97,17 +199,34 @@ static const tb_command_entry_t system_commands[] = {
 	{"file", jesfs_shell, "<subcommand> (JESFS shell)"},
 #endif
 
+	// Shell Test commands.
+	{"test", test_handle_command, "<subcommand> (Test shell)"},
+
 	// System commands.
 	{"sys", tb_handle_sys_command, "time [unix_sec] | info"},
 	{"help", tb_handle_help_command, NULL},
 };
 
-void tb_led_on(void) { gpio_pin_set_raw(led0.port, led0.pin, 1); }
+static bool led0_state = false; // Cache for LED0 state
+void tb_led_on(void)
+{
+	led0_state = true;
+	gpio_pin_set_raw(led0.port, led0.pin, 1);
+}
 
-void tb_led_off(void) { gpio_pin_set_raw(led0.port, led0.pin, 0); }
+void tb_led_off(void)
+{
+	led0_state = false;
+	gpio_pin_set_raw(led0.port, led0.pin, 0);
+}
 
-void tb_led_set(uint8_t state) { gpio_pin_set_raw(led0.port, led0.pin, state); }
+void tb_led_set(uint8_t state)
+{
+	led0_state = state;
+	gpio_pin_set_raw(led0.port, led0.pin, state);
+}
 
+// No Cache for DEBUG_LED
 void tb_debug_led_on(void) { gpio_pin_set_raw(debug_led.port, debug_led.pin, 1); }
 
 void tb_debug_led_off(void) { gpio_pin_set_raw(debug_led.port, debug_led.pin, 0); }
@@ -362,6 +481,13 @@ static int16_t tb_handle_sys_command(uint8_t log_flags, char *args)
 		return 0;
 	}
 
+	if (strcmp(args, "reset") == 0) {
+		tb_log(log_flags, "System Reset\n");
+		k_msleep(10);
+		sys_reboot(SYS_REBOOT_COLD);
+		return 0;
+	}
+
 	return TB_CMD_INVALID_PARAM;
 }
 
@@ -552,6 +678,7 @@ int main(void)
 	while (true) {
 		tb_now_runtime_sec = tb_runtime_now_get();
 
+		// Weck-logik UART
 		if (tb_con_is_connected()) {
 			if (tb_con_state <= TB_CON_POWERDOWN) {
 				tb_con_wake();
@@ -562,9 +689,10 @@ int main(void)
 		} else if (tb_con_state >= TB_CON_READY_UNCHECKED) {
 			tb_con_powerdown();
 		}
+		//--- User-Perodics---
+		(void)test_periodic();
 
 		tb_led_off();
-
 		/* VDD 3V: BLE on ~12 uA bei 1 s Zyklus, BLE off <5 uA. */
 		k_sleep(K_MSEC(1000));
 	}

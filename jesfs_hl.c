@@ -88,10 +88,7 @@ int16_t jesfs_strcmp(const char *s1, const char *s2)
 }
 
 /* Set a static timestamp for deterministic tests; pass 0 to use jesfs_time_get(). */
-void jesfs_set_static_secs(uint32_t newsecs)
-{
-	static_time = newsecs;
-}
+void jesfs_set_static_secs(uint32_t newsecs) { static_time = newsecs; }
 
 uint32_t jesfs_get_secs(void)
 {
@@ -189,8 +186,9 @@ uint32_t jesfs_date_to_sec1970(const struct jesfs_date *pd)
 	}
 
 	nsec = ((uint32_t)year_base / 4) * (1461 * SEC_DAY); /* Complete 4-years */
-	nsec += ((uint32_t)year_idx) * (365 * SEC_DAY); /* */
-	nsec += ((uint32_t)days_summed[pd->m - 1] + (pd->d - 1)) * SEC_DAY; /* plus days for 4-years */
+	nsec += ((uint32_t)year_idx) * (365 * SEC_DAY);	     /* */
+	nsec += ((uint32_t)days_summed[pd->m - 1] + (pd->d - 1)) *
+		SEC_DAY; /* plus days for 4-years */
 	if (year_idx == 3 || (year_idx == 2 && pd->m > 2)) {
 		nsec += SEC_DAY; /* Add leap day */
 	}
@@ -392,7 +390,7 @@ int16_t jesfs_start(uint8_t mode)
 #endif
 		sflash_info.state_flags &= ~(STATE_DEEPSLEEP_OR_POWERFAIL);
 
-/* ID read and get setup */
+		/* ID read and get setup */
 		id = sflash_quick_scan_identification();
 		/* Quickstart without structural checks: wake up and check ID only. */
 		if (mode & FS_START_RESTART) {
@@ -412,7 +410,7 @@ int16_t jesfs_start(uint8_t mode)
 		return res;
 	}
 
-/* Flash is known. Read the 12-byte filesystem header. */
+	/* Flash is known. Read the 12-byte filesystem header. */
 	res = sflash_read(0, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B);
 	if (res) {
 		return res;
@@ -443,10 +441,11 @@ int16_t jesfs_start(uint8_t mode)
 	sflash_info.files_active = 0;
 
 	sflash_info.lusect_adr = 0;
-/* Scan Headers of all sectors (FAST or normal) */
-/* Scan  Takes on 1M-Flash 12msec, 16M-Flash: 200msec (12 MHz SPI) */
+	/* Scan Headers of all sectors (FAST or normal) */
+	/* Scan  Takes on 1M-Flash 12msec, 16M-Flash: 200msec (12 MHz SPI) */
 	for (sadr = SF_SECTOR_PH; sadr < sflash_info.total_flash_size; sadr += SF_SECTOR_PH) {
-		int16_t res = sflash_read(sadr, (uint8_t *)&sflash_info.databuf, (mode & FS_START_FAST) ? 4 : 12);
+		int16_t res = sflash_read(sadr, (uint8_t *)&sflash_info.databuf,
+					  (mode & FS_START_FAST) ? 4 : 12);
 		if (res) {
 			return res;
 		}
@@ -463,7 +462,7 @@ int16_t jesfs_start(uint8_t mode)
 			sflash_info.lusect_adr = sadr;
 			break;
 
-/* Count 'used' and find last used sector */
+			/* Count 'used' and find last used sector */
 		case SECTOR_MAGIC_HEAD_ACTIVE: /* Head of active file */
 			sflash_info.files_active++;
 		case SECTOR_MAGIC_HEAD_DELETED: /* Head of deleted file */
@@ -483,7 +482,8 @@ int16_t jesfs_start(uint8_t mode)
 		if (!(mode & FS_START_FAST)) {
 			switch (sflash_info.databuf.u32[0]) {
 			case 0xFFFFFFFF:
-				if (sflash_info.databuf.u32[1] != 0xFFFFFFFF || sflash_info.databuf.u32[2] != 0xFFFFFFFF) {
+				if (sflash_info.databuf.u32[1] != 0xFFFFFFFF ||
+				    sflash_info.databuf.u32[2] != 0xFFFFFFFF) {
 					err++;
 				}
 				break;
@@ -527,7 +527,8 @@ int16_t jesfs_start(uint8_t mode)
 				if (res) {
 					return res;
 				}
-				if (dir_typ == SECTOR_MAGIC_HEAD_ACTIVE || dir_typ == SECTOR_MAGIC_HEAD_DELETED) {
+				if (dir_typ == SECTOR_MAGIC_HEAD_ACTIVE ||
+				    dir_typ == SECTOR_MAGIC_HEAD_DELETED) {
 					id++;
 				} else {
 					err++;
@@ -543,17 +544,27 @@ int16_t jesfs_start(uint8_t mode)
 	return 0; /* OK */
 }
 
+/* Check if the filesystem is already awake */
+int16_t jesfs_is_awake(void)
+{
+	if (sflash_info.state_flags & STATE_DEEPSLEEP) {
+		return JESFS_ERR_FS_SLEEPING; /* Filesystem is sleeping */
+	}
+	return 0; /* OK, Ready */
+}
+
 /* Put the flash/filesystem into low-power mode. Use jesfs_start(FS_START_RESTART) to wake it. */
 int16_t jesfs_deepsleep(void)
 {
 	if (sflash_info.state_flags & STATE_DEEPSLEEP) {
-		return JESFS_ERR_DEEPSLEEP_ALREADY; /* Already sleeping, 2.nd command could wake FS again */
+		return JESFS_ERR_DEEPSLEEP_ALREADY; /* Already sleeping, 2.nd command could wake FS
+						       again */
 	}
 #if !defined(__ZEPHYR__)
 	sflash_info.state_flags |= STATE_DEEPSLEEP;
 	sflash_deep_power_down();
 	sflash_spi_close(); /* Added V1.51 */
-	return 0; /* No Errors possible */
+	return 0;	    /* No Errors possible */
 #else
 	int16_t res = zephyr_flash_deepsleep();
 
@@ -612,7 +623,8 @@ int16_t jesfs_format(uint8_t fmode, void cb_prog(uint32_t cur_sect, uint32_t tot
 			}
 #if defined(__ZEPHYR__)
 			if (cb_prog != NULL) {
-				cb_prog(sect_cnt++, total_sect); /* Call user callback to show progress */
+				cb_prog(sect_cnt++,
+					total_sect); /* Call user callback to show progress */
 			}
 #endif
 			/* Header says empty; verify all bytes are really 0xFF. */
@@ -631,7 +643,7 @@ int16_t jesfs_format(uint8_t fmode, void cb_prog(uint32_t cur_sect, uint32_t tot
 				return res;
 			}
 		}
-#if !defined(__ZEPHYR__) /* Zephyr has own timing, so we do not need to wait here */
+#if !defined(__ZEPHYR__)		/* Zephyr has own timing, so we do not need to wait here */
 		sflash_wait_usec(1000); /* Wait 1 msec for last erase to finish */
 #endif
 #if !defined(__ZEPHYR__) /* No BulkErase in Zephyr */
@@ -664,10 +676,10 @@ static uint32_t sflash_get_free_sector(void)
 {
 	uint32_t thdr;
 	uint32_t max_sect;
-/*
- * Some embedded compilers complain about the division. It will result in a
- * shift, so the warning can be ignored.
- */
+	/*
+	 * Some embedded compilers complain about the division. It will result in a
+	 * shift, so the warning can be ignored.
+	 */
 	max_sect = (sflash_info.total_flash_size / SF_SECTOR_PH);
 	while (--max_sect) {
 		sflash_info.lusect_adr += SF_SECTOR_PH;
@@ -678,7 +690,8 @@ static uint32_t sflash_get_free_sector(void)
 		if (res) {
 			return 0;
 		}
-/* This sector is free if it is marked as 'to delete' or if it is empty (0xFFFFFFFF) */
+		/* This sector is free if it is marked as 'to delete' or if it is empty (0xFFFFFFFF)
+		 */
 		if (thdr == SECTOR_MAGIC_TODELETE || thdr == 0xFFFFFFFF) {
 			if (thdr == SECTOR_MAGIC_TODELETE) {
 				if (sflash_sector_erase(sflash_info.lusect_adr)) {
@@ -748,12 +761,14 @@ int32_t jesfs_read(struct jesfs_desc *pdesc, uint8_t *pdest, uint32_t anz)
 				}
 
 			} else if (next_sect == 0xFFFFFFFF) {
-				int32_t mlen = sflash_find_mlen(pdesc->_wrk_sadr + pdesc->_sadr_rel, max_sec_rd);
+				int32_t mlen = sflash_find_mlen(pdesc->_wrk_sadr + pdesc->_sadr_rel,
+								max_sec_rd);
 
 				if (mlen < 0) {
 					return mlen;
 				}
-				pdesc->file_len = pdesc->file_pos + (uint32_t)mlen; /* Now we know the End */
+				pdesc->file_len =
+					pdesc->file_pos + (uint32_t)mlen; /* Now we know the End */
 				if (anz > (uint32_t)mlen) {
 					anz = (uint32_t)mlen;
 				}
@@ -770,12 +785,14 @@ int32_t jesfs_read(struct jesfs_desc *pdesc, uint8_t *pdest, uint32_t anz)
 				max_sec_rd = anz;
 			}
 			if (pdest) {
-				int16_t res = sflash_read(pdesc->_wrk_sadr + pdesc->_sadr_rel, pdest, max_sec_rd);
+				int16_t res = sflash_read(pdesc->_wrk_sadr + pdesc->_sadr_rel,
+							  pdest, max_sec_rd);
 				if (res) {
 					return res;
 				}
 				if (pdesc->open_flags & SF_OPEN_CRC) {
-					pdesc->file_crc32 = jesfs_track_crc32(pdest, max_sec_rd, pdesc->file_crc32);
+					pdesc->file_crc32 = jesfs_track_crc32(pdest, max_sec_rd,
+									      pdesc->file_crc32);
 				}
 				pdest += max_sec_rd;
 			}
@@ -854,7 +871,8 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 		if (res) {
 			return res;
 		}
-		res = sflash_read(sadr, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B + FINFO_SIZE_B);
+		res = sflash_read(sadr, (uint8_t *)&sflash_info.databuf,
+				  HEADER_SIZE_B + FINFO_SIZE_B);
 		if (res) {
 			return res;
 		}
@@ -862,7 +880,8 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 			sfun_adr = sadr;
 		} else if (sflash_info.databuf.u32[0] != SECTOR_MAGIC_HEAD_ACTIVE) {
 			return JESFS_ERR_INDEX_CORRUPTED;
-		} else if (!jesfs_strcmp(pname, (char *)&sflash_info.databuf.u8[HEADER_SIZE_B + 12])) {
+		} else if (!jesfs_strcmp(pname,
+					 (char *)&sflash_info.databuf.u8[HEADER_SIZE_B + 12])) {
 			break;
 		}
 		sadr = 0;
@@ -876,7 +895,8 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 		pdesc->_head_sadr = sadr;
 		pdesc->_wrk_sadr = sadr;
 		/* Reject CRC-open requests for files that were created without on-disk CRC flag. */
-		if ((flags & SF_OPEN_CRC) && !(sflash_info.databuf.u8[HEADER_SIZE_B + 34] & SF_OPEN_CRC)) {
+		if ((flags & SF_OPEN_CRC) &&
+		    !(sflash_info.databuf.u8[HEADER_SIZE_B + 34] & SF_OPEN_CRC)) {
 			return JESFS_ERR_BAD_FILE_FLAGS;
 		}
 		if (flags & (SF_OPEN_READ | SF_OPEN_RAW)) {
@@ -885,10 +905,11 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 			if (pdesc->file_len == 0xFFFFFFFF) {
 				pdesc->open_flags |= SF_XOPEN_UNCLOSED;
 			}
-			pdesc->open_flags |=
-				(sflash_info.databuf.u8[HEADER_SIZE_B + 34] &
-				 (SF_OPEN_EXT_SYNC | _SF_OPEN_RES));
-			pdesc->file_ctime = sflash_info.databuf.u32[HEADER_SIZE_L + 2]; /* get file creation time */
+			pdesc->open_flags |= (sflash_info.databuf.u8[HEADER_SIZE_B + 34] &
+					      (SF_OPEN_EXT_SYNC | _SF_OPEN_RES));
+			pdesc->file_ctime =
+				sflash_info.databuf
+					.u32[HEADER_SIZE_L + 2]; /* get file creation time */
 			return 0;
 		}
 		if (!(flags & SF_OPEN_CREATE)) {
@@ -918,7 +939,8 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 		if (HEADER_SIZE_B + sflash_info.files_used * 4 >= (SF_SECTOR_PH - 4)) {
 			return JESFS_ERR_INDEX_FULL;
 		}
-		res = sflash_sector_write(HEADER_SIZE_B + sflash_info.files_used * 4, (uint8_t *)&sfun_adr, 4);
+		res = sflash_sector_write(HEADER_SIZE_B + sflash_info.files_used * 4,
+					  (uint8_t *)&sfun_adr, 4);
 		if (res) {
 			return res;
 		}
@@ -936,7 +958,8 @@ int16_t jesfs_open(struct jesfs_desc *pdesc, const char *pname, uint8_t flags)
 	pdesc->file_ctime = jesfs_get_secs();
 	sflash_info.databuf.u32[HEADER_SIZE_L + 2] = pdesc->file_ctime;
 	sflash_info.databuf.u8[HEADER_SIZE_B + 34] = flags;
-	res = sflash_sector_write(sfun_adr, (uint8_t *)&sflash_info.databuf, HEADER_SIZE_B + FINFO_SIZE_B);
+	res = sflash_sector_write(sfun_adr, (uint8_t *)&sflash_info.databuf,
+				  HEADER_SIZE_B + FINFO_SIZE_B);
 	if (res) {
 		return res;
 	}
@@ -1007,7 +1030,8 @@ int16_t jesfs_write(struct jesfs_desc *pdesc, const uint8_t *pdata, uint32_t len
 			maxwrite = SF_SECTOR_PH - HEADER_SIZE_B;
 			sflash_info.databuf.u32[0] = SECTOR_MAGIC_DATA;
 			sflash_info.databuf.u32[1] = pdesc->_head_sadr;
-			res = sflash_sector_write(pdesc->_wrk_sadr, (uint8_t *)&sflash_info.databuf, 8);
+			res = sflash_sector_write(pdesc->_wrk_sadr, (uint8_t *)&sflash_info.databuf,
+						  8);
 			if (res) {
 				return res;
 			}
@@ -1057,7 +1081,8 @@ int16_t jesfs_close(struct jesfs_desc *pdesc)
 
 		if (jesfs_supply_voltage_check()) {
 			sflash_info.state_flags |= STATE_POWERFAIL; /* Lock Flash until DEEPSLEEP */
-			return JESFS_ERR_VOLTAGE_TOO_LOW; /* Lock Flash Access if power is too low */
+			return JESFS_ERR_VOLTAGE_TOO_LOW; /* Lock Flash Access if power is too low
+							   */
 		}
 
 		hinfo[0] = pdesc->file_pos;
@@ -1068,7 +1093,7 @@ int16_t jesfs_close(struct jesfs_desc *pdesc)
 		}
 	}
 	pdesc->_head_sadr = 0; /* Invalidate descriptor */
-	return 0; /* OK */
+	return 0;	       /* OK */
 }
 
 uint32_t jesfs_get_crc32(struct jesfs_desc *pdesc)
@@ -1165,8 +1190,7 @@ int16_t jesfs_rename(struct jesfs_desc *pd_odesc, struct jesfs_desc *pd_ndesc)
 		return res;
 	}
 	res = flash_intrasec_copy(pd_odesc->_head_sadr + HEADER_SIZE_B + FINFO_SIZE_B,
-				  pd_ndesc->_head_sadr + HEADER_SIZE_B + FINFO_SIZE_B,
-				  mlen);
+				  pd_ndesc->_head_sadr + HEADER_SIZE_B + FINFO_SIZE_B, mlen);
 	if (res) {
 		return res;
 	}
@@ -1208,7 +1232,8 @@ int16_t jesfs_info(struct jesfs_stat *pstat, uint16_t fno)
 	if (idx_adr > SF_SECTOR_PH - 4) {
 		return FS_STAT_INDEX;
 	}
-	ret = sflash_read(idx_adr, (uint8_t *)&sadr, 4); /* Read Sector, where Index(fno) points to */
+	ret = sflash_read(idx_adr, (uint8_t *)&sadr,
+			  4); /* Read Sector, where Index(fno) points to */
 	if (ret) {
 		return ret;
 	}
@@ -1227,7 +1252,7 @@ int16_t jesfs_info(struct jesfs_stat *pstat, uint16_t fno)
 		return ret;
 	}
 
-/* Each Index-Entry points to a HEAD: Either ACTIVE or DELETED. All other is an Error */
+	/* Each Index-Entry points to a HEAD: Either ACTIVE or DELETED. All other is an Error */
 	switch (sflash_info.databuf.u32[0]) {
 	case SECTOR_MAGIC_HEAD_ACTIVE:
 		ret = FS_STAT_ACTIVE;
@@ -1236,7 +1261,7 @@ int16_t jesfs_info(struct jesfs_stat *pstat, uint16_t fno)
 		ret = FS_STAT_INACTIVE;
 		break;
 
-/* Entry points to unidentified Head. Possible Reason: */
+		/* Entry points to unidentified Head. Possible Reason: */
 		/*
 		 * Power loss on jesfs_open() for write/create or on nRF52 JTAG,
 		 * which can access the serial flash.
@@ -1277,7 +1302,7 @@ int16_t jesfs_check_disk(void cb_printf(const char *fmt, ...))
 	uint32_t aval;
 	int16_t err = 0;
 
-/* Might consume some stack space: */
+	/* Might consume some stack space: */
 	struct jesfs_stat lfs_stat;
 	struct jesfs_desc lfs_desc;
 
@@ -1336,49 +1361,66 @@ int16_t jesfs_check_disk(void cb_printf(const char *fmt, ...))
 
 		if (res > 0 && (res & FS_STAT_ACTIVE)) {
 			if (res & FS_STAT_UNCLOSED) {
-				res = jesfs_open(&lfs_desc, lfs_stat.fname, SF_OPEN_READ | SF_OPEN_RAW);
+				res = jesfs_open(&lfs_desc, lfs_stat.fname,
+						 SF_OPEN_READ | SF_OPEN_RAW);
 				if (res < 0) {
 					if (cb_printf) {
-						cb_printf("ERROR: Open '%s':%d\n", lfs_stat.fname, res);
+						cb_printf("ERROR: Open '%s':%d\n", lfs_stat.fname,
+							  res);
 					}
 					err++;
 				} else {
 					if (lfs_stat.disk_flags & SF_OPEN_CRC) {
-/* CRC cannot be verified before an unclosed file has a final length. */
+						/* CRC cannot be verified before an unclosed file
+						 * has a final length. */
 						if (cb_printf) {
-							cb_printf("ERROR: Unclosed File with CRC '%s'\n", lfs_stat.fname);
+							cb_printf("ERROR: Unclosed File with CRC "
+								  "'%s'\n",
+								  lfs_stat.fname);
 						}
 						err++;
 					}
 					lres = jesfs_read(&lfs_desc, NULL, 0xFFFFFFFF);
 					if (lres < 0) {
 						if (cb_printf) {
-							cb_printf("ERROR: Unclosed Read '%s':%d\n", lfs_stat.fname, lres);
+							cb_printf("ERROR: Unclosed Read '%s':%d\n",
+								  lfs_stat.fname, lres);
 						}
 						err++;
 					}
 					(void)jesfs_close(&lfs_desc);
 				}
 			} else if (lfs_stat.disk_flags & SF_OPEN_CRC) {
-				res = jesfs_open(&lfs_desc, lfs_stat.fname, SF_OPEN_READ | SF_OPEN_CRC);
+				res = jesfs_open(&lfs_desc, lfs_stat.fname,
+						 SF_OPEN_READ | SF_OPEN_CRC);
 				if (res < 0) {
 					if (cb_printf) {
-						cb_printf("ERROR: Open '%s':%d\n", lfs_stat.fname, res);
+						cb_printf("ERROR: Open '%s':%d\n", lfs_stat.fname,
+							  res);
 					}
 					err++;
 				} else {
 					aval = lfs_stat.file_len;
 					if (aval > sflash_info.total_flash_size) {
 						if (cb_printf) {
-							cb_printf("ERROR: Illegal File Size '%s':%u Bytes\n", lfs_stat.fname, aval);
+							cb_printf("ERROR: Illegal File Size "
+								  "'%s':%u Bytes\n",
+								  lfs_stat.fname, aval);
 						}
 						err++;
 					} else {
 						while (aval) {
-							res = jesfs_read(&lfs_desc, (uint8_t *)&sflash_info.databuf, SF_BUFFER_SIZE_B);
-							if (res <= 0 || res > SF_BUFFER_SIZE_B || res > aval) {
+							res = jesfs_read(
+								&lfs_desc,
+								(uint8_t *)&sflash_info.databuf,
+								SF_BUFFER_SIZE_B);
+							if (res <= 0 || res > SF_BUFFER_SIZE_B ||
+							    res > aval) {
 								if (cb_printf) {
-									cb_printf("ERROR: Read Data '%s':%d\n", lfs_stat.fname, res);
+									cb_printf("ERROR: Read "
+										  "Data '%s':%d\n",
+										  lfs_stat.fname,
+										  res);
 								}
 								err++;
 								break;
@@ -1387,7 +1429,8 @@ int16_t jesfs_check_disk(void cb_printf(const char *fmt, ...))
 						}
 						if (lfs_stat.file_crc32 != lfs_desc.file_crc32) {
 							if (cb_printf) {
-								cb_printf("ERROR: CRC false '%s'\n", lfs_stat.fname);
+								cb_printf("ERROR: CRC false '%s'\n",
+									  lfs_stat.fname);
 							}
 							err++;
 						}

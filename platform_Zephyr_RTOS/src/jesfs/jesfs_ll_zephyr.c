@@ -21,8 +21,8 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/pm/device_runtime.h>
 
-#include <jesfs.h>
-#include <jesfs_int.h>
+#include "jesfs.h"
+#include "jesfs_int.h"
 
 BUILD_ASSERT(DT_HAS_COMPAT_STATUS_OKAY(jedec_spi_nor), "No okay jedec,spi-nor node in devicetree");
 #define SPI_FLASH_NODE DT_COMPAT_GET_ANY_STATUS_OKAY(jedec_spi_nor)

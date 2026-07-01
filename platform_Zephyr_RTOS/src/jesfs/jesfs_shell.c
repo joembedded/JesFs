@@ -21,8 +21,9 @@
 #include "app.h"
 #include "jesfs_shell.h"
 
-#include <jesfs.h>
-#include <jesfs_int.h> // Only for Flash Internals
+#include "jesfs.h"
+
+#include "jesfs_int.h" // Only for Flash Internals
 
 //=========== Helper Functions ===============
 //=== Platform specific ===
@@ -261,17 +262,17 @@ static int16_t js_handle_lowlevel_command(uint8_t flags, char *args)
 		return js_subcmd_jedec_command(flags, flash_dev);
 	}
 
-	char *nargs = tb_match_str_prefix("read", args);
+	char *nargs = tb_match_str_prefix("sread", args);
 	if (nargs != NULL) {
 		return js_subcmd_read_command(flags, nargs);
 	}
 
-	char *margs = tb_match_str_prefix("erase", args);
+	char *margs = tb_match_str_prefix("serase", args);
 	if (margs != NULL) {
 		return js_subcmd_erase_command(flags, margs);
 	}
 
-	char *wargs = tb_match_str_prefix("write", args);
+	char *wargs = tb_match_str_prefix("swrite", args);
 	if (wargs != NULL) {
 		return js_subcmd_write_command(flags, wargs);
 	}
@@ -572,7 +573,12 @@ int16_t js_handle_read_command(uint8_t flags, char *args)
 				}
 				break; // EOF
 			}
-			line_buf[rlen] = '\0';			    // Null-Terminator
+			line_buf[rlen] = '\0';		     // Null-Terminator
+			for (int16_t i = 0; i < rlen; i++) { // Only Visibles
+				if (line_buf[i] < ' ' || line_buf[i] > '~') {
+					line_buf[i] = '.';
+				}
+			}
 			tb_log(flags, "%u:'%s'\n", rlen, line_buf); // Show in ASCII
 			rlen_total += rlen;
 			if (rlen_total >= ranz)
@@ -730,7 +736,7 @@ static int16_t js_handle_help_command(uint8_t flags, char *args);
 static const tb_command_entry_t js_commands[] = {
 	// Low-level flash diagnostics via Zephyr flash API.
 	{"ll", js_handle_lowlevel_command,
-	 "jedec | read <addr> [len] | write <addr> <b0..b15> | erase <addr> <len>"},
+	 "jedec | sread <addr> [len] | swrite <addr> <b0..b15> | serase <addr> <len>"},
 
 	// Filesystem lifecycle commands.
 	{"start", js_handle_start_command, "[normal|fast|restart] (Default: normal)"},
